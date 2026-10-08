@@ -13,7 +13,7 @@ from urllib.parse import parse_qs, urlparse
 from playwright.sync_api import expect, sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
-URL = os.environ.get('SIGIN_TEST_URL', 'http://127.0.0.1:4173/SIGIN-ULEAM/')
+URL = os.environ.get('SIGIN_TEST_URL', 'http://127.0.0.1:4173/')
 STUDENT_ID = '00000000-0000-4000-8000-000000000001'
 STUDENT_NUMBER = '0000000000'
 EMAIL = f'e{STUDENT_NUMBER}@live.uleam.edu.ec'
