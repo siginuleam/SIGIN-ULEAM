@@ -4,7 +4,9 @@ La web exige inicio de sesión. Las cuentas aún no estarán activas hasta compl
 
 ## Estado de esta entrega
 
-La URL y la clave publicable del proyecto elegido ya están configuradas en el repositorio. Aún falta aplicar el esquema en ese proyecto, crear el perfil docente, desplegar la función de altas y configurar/probar el envío de correo. Las pruebas locales no verifican esos servicios remotos. Si el proyecto ya existe, continúa directamente en el paso 2.
+La URL y la clave publicable del proyecto elegido ya están configuradas en el repositorio. El esquema se ejecutó correctamente; la API confirma que las tablas existen y deniega el acceso anónimo. La dirección académica es https://siginuleam.github.io/SIGIN-ULEAM/. Aún falta crear las cuentas y sus perfiles, desplegar la función de altas y configurar/probar el envío de correo. Las pruebas locales no verifican esos servicios remotos.
+
+Para completar estos pasos desde el entorno cloud, configura `SUPABASE_ACCESS_TOKEN` en **Secretos** del entorno. Se genera en https://supabase.com/dashboard/account/tokens y solo se utiliza contra `api.supabase.com` para administrar el proyecto elegido. No lo envíes al chat, no lo añadas a GitHub ni al frontend. La clave publicable no sustituye este acceso administrativo. También hace falta indicar el correo que se asociará a `DocenteULEAM`, distinto del correo de estudiante. Si prefieres usar el panel de Supabase, los pasos siguientes permiten hacerlo sin compartir acceso administrativo.
 
 ## 1. Crear el proyecto
 
@@ -43,8 +45,8 @@ La cédula, nombres y clave acordados no están en el repositorio público. Aña
 
 ```sh
 supabase login
-supabase link --project-ref REFERENCIA-DEL-PROYECTO
-supabase secrets set SIGIN_ALLOWED_ORIGINS=https://TU-SITIO-ACADEMICO
+supabase link --project-ref safynzirineolyxeitqh
+supabase secrets set SIGIN_ALLOWED_ORIGINS=https://siginuleam.github.io
 supabase functions deploy manage-students
 ```
 
@@ -104,7 +106,7 @@ La plantilla ejemplifica el contrato; al estar documentada públicamente no es u
 
 Prueba con dos cuentas temporales matriculadas en materias diferentes: cada una debe ver solo su matrícula y resultados. Un alumno no debe poder escribir su rol, editar notas, acceder a perfiles ajenos, abrir otra evaluación por URL ni leer `private.assessment_keys`. Comprueba cierre, límite de intentos, entrega concurrente, cambio de contraseña, recuperación de correo y sincronización en dos dispositivos. Guarda una copia de seguridad y revisa privacidad y retención antes de cargar listados completos.
 
-La integración está preparada en el código, pero **no está activada ni verificada contra tu proyecto** hasta crear Supabase, cargar el esquema, desplegar la función y probar estos flujos. No es suficiente pegar una URL para afirmar que el sistema institucional funciona.
+El proyecto y el esquema ya existen, pero **las cuentas, la función de altas y la recuperación por correo aún no están activadas ni verificadas contra el proyecto**. Hay que terminar su configuración y probar estos flujos antes de usar la plataforma para calificaciones reales.
 
 ## Pruebas locales del adaptador y permisos
 

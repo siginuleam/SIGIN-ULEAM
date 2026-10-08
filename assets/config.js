@@ -4,5 +4,5 @@ export const APP_CONFIG = Object.freeze({
   supabasePublishableKey: "sb_publishable_NS7UMv4BTFbxM2LrH2ljSA_OE0jom1O",
   teacherEmail: "",
   previewEnabled: false,
-  siteUrl: "https://ssj-ariel.github.io/SIGIN-ULEAM/",
+  siteUrl: "https://siginuleam.github.io/SIGIN-ULEAM/",
 });

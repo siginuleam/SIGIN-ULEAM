@@ -1,4 +1,4 @@
-name: Publicar demostración en GitHub Pages
+name: Publicar SIGIN en GitHub Pages
 on:
   push:
     branches: [main]

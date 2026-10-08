@@ -1,24 +1,23 @@
 # Dirección académica gratuita
 
-La organización `siginuleam` ya existe. Cambiar el nombre del repositorio dentro de la cuenta personal no elimina ese nombre de la URL de Pages. Publicarlo desde la organización permite usar `https://siginuleam.github.io/SIGIN-ULEAM/` sin comprar un dominio.
+El repositorio fue transferido a la organización `siginuleam`. GitHub confirma acceso administrativo desde este entorno y GitHub Pages configurado con HTTPS en:
 
-El intento de traslado por API fue rechazado por GitHub con `403 Resource not accessible by integration`. No se ha transferido el repositorio ni activado la dirección nueva.
+https://siginuleam.github.io/SIGIN-ULEAM/
 
-## Acción del propietario
+No hace falta pagar por un dominio ni abrir otra cuenta personal. No se usa un archivo CNAME: la dirección corresponde al subdominio gratuito de GitHub Pages de la organización.
 
-1. Abrir https://github.com/SSJ-ARIEL/SIGIN-ULEAM/settings.
-2. En **General**, bajar a **Danger Zone** y elegir **Transfer ownership / Transfer**.
-3. Elegir `siginuleam` como propietario nuevo, conservar el nombre `SIGIN-ULEAM` y confirmar lo que solicita GitHub. Esto traslada el mismo proyecto e historial, sin duplicar archivos ni borrar el desarrollo.
-4. En el repositorio trasladado, revisar **Settings → Pages**: Source **GitHub Actions**.
-5. Revisar o ejecutar el workflow **Publicar demostración en GitHub Pages** desde `main`.
+## Publicación
 
-Antes de afirmar que terminó: verificar que el repositorio está en `siginuleam/SIGIN-ULEAM`, que el workflow `build` y `deploy` está en verde y que la dirección HTTPS responde con la nueva aplicación.
+El repositorio es https://github.com/siginuleam/SIGIN-ULEAM. En **Settings → Pages**, Source debe ser **GitHub Actions**. El workflow **Publicar SIGIN en GitHub Pages** publica los cambios de `main` después de ejecutar las pruebas y preparar el sitio.
 
-## Ajustes después del traslado
+La configuración `siteUrl` de `assets/config.js` y el remoto Git `origin` ya utilizan el nuevo propietario en este entorno. La publicación de este ajuste está pendiente: después del traslado, tanto Git como la API devolvieron `403` al intentar escribir. El propietario debe habilitar la integración GitHub de Codex/ChatGPT para `SIGIN-ULEAM` dentro de la organización `siginuleam`. Después se puede publicar el cambio sin volver a transferir el repositorio.
 
-- Actualizar `siteUrl` en `assets/config.js` a la dirección nueva.
-- Actualizar **Supabase → Authentication → URL Configuration**: Site URL y Redirect URLs.
-- Actualizar `SIGIN_ALLOWED_ORIGINS` de la función de altas al origen `https://siginuleam.github.io` (sin ruta).
-- Comprobar que la conexión GitHub del entorno conserva acceso al repositorio de la organización; si GitHub lo deniega, habilitar la integración para ese repositorio desde la organización.
+La dirección académica ya responde con la versión publicada antes del traslado. Después de publicar el ajuste preparado, comprobar que `build` y `deploy` terminen correctamente y que `assets/config.js` entregue el nuevo `siteUrl`.
 
-No se crea un archivo CNAME: se usa el subdominio gratuito de GitHub con HTTPS. La dirección actual se mantiene en la configuración hasta comprobar el traslado, para no romper recuperación de contraseñas con una dirección inexistente.
+## Supabase
+
+- **Authentication → URL Configuration → Site URL**: `https://siginuleam.github.io/SIGIN-ULEAM/`.
+- **Redirect URLs**: incluir esa misma dirección completa, con la ruta y la barra final.
+- Secreto de la función `SIGIN_ALLOWED_ORIGINS`: `https://siginuleam.github.io`, sin ruta.
+
+Estos ajustes administrativos siguen pendientes hasta disponer de acceso a Supabase. Tras configurarlos, comprobar inicio de sesión, recuperación por correo y altas manuales/Excel desde la dirección académica. El traslado del repositorio no configura automáticamente esos servicios.
