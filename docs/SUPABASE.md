@@ -1,6 +1,6 @@
 # Activar cuentas y datos compartidos
 
-La web funciona como demostración hasta completar estos pasos. El plan Free de Supabase permite empezar sin pagar, con cuotas y posibles pausas por inactividad. Revisa los límites actuales en https://supabase.com/pricing. Un correo enviado realmente y una sesión en dos dispositivos deben comprobarse antes de usar notas reales.
+La web exige inicio de sesión. Las cuentas aún no estarán activas hasta completar estos pasos. El plan Free de Supabase permite empezar sin pagar, con cuotas y posibles pausas por inactividad. Revisa los límites actuales en https://supabase.com/pricing. Un correo enviado realmente y una sesión en dos dispositivos deben comprobarse antes de usar notas reales.
 
 ## Estado de esta entrega
 
@@ -98,7 +98,7 @@ Ejemplo mínimo de **formato**, para adaptar con un caso y datos propios antes d
 
 La plantilla ejemplifica el contrato; al estar documentada públicamente no es una evaluación secreta. El banco docente debe aportar preguntas diferentes. Cada pregunta pública necesita `id` y `type` iguales a su clave; las palabras del crucigrama pertenecen solo a `answer_key`, mientras sus pistas y posiciones van en el enunciado público.
 
-Después de validar las cuentas, establece `previewEnabled: false` en `assets/config.js` para retirar los accesos de vista previa de la página de ingreso. Las cuentas y permisos reales siempre se validan en el servidor.
+`previewEnabled: false` ya está establecido: no hay botón de acceso público al aula. Las pruebas de navegador habilitan la vista previa solo mediante una configuración simulada. Las cuentas y permisos reales siempre se validan en el servidor.
 
 ## 6. Comprobación antes de producción
 

@@ -145,6 +145,8 @@ with sync_playwright() as playwright:
     page.on('pageerror', lambda error: errors.append(str(error)))
     page.on('dialog', lambda dialog: dialog.accept())
     page.goto(URL)
+    page.locator('#login-form').wait_for()
+    assert page.locator('[data-action="preview"]').count() == 0
     page.locator('#username').fill(STUDENT_NUMBER)
     page.locator('#password').fill('ClaveTemporalDePrueba')
     page.get_by_role('button', name='Entrar a mi aula', exact=False).click()
@@ -155,6 +157,12 @@ with sync_playwright() as playwright:
     assert page.locator('[data-action="switchRole"]').count() == 0
     assert page.locator('[data-course="gig-502"], [data-course="gig-308"]').count() == 0
     assert 'Docente' not in page.locator('.profile').inner_text(), 'Untrusted user_metadata leaked into role'
+
+    page.evaluate("""() => { const b=document.createElement('button');b.dataset.action='switchRole';b.textContent='Intentar cambiar rol';document.querySelector('#app').append(b); }""")
+    page.get_by_role('button', name='Intentar cambiar rol').click()
+    assert page.locator('#toast').inner_text() == 'Cambiar de rol solo está disponible en la vista previa.'
+    assert 'Docente' not in page.locator('.profile').inner_text()
+    assert page.locator('[data-action="admin"]').count() == 0
 
     # Attempt navigation with injected controls; enrollment/profile guards must still apply.
     page.evaluate("""() => { const b=document.createElement('button');b.dataset.action='course';b.dataset.course='gig-502';b.textContent='Intentar otra materia';document.querySelector('#app').append(b); }""")

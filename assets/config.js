@@ -3,6 +3,6 @@ export const APP_CONFIG = Object.freeze({
   supabaseUrl: "https://safynzirineolyxeitqh.supabase.co",
   supabasePublishableKey: "sb_publishable_NS7UMv4BTFbxM2LrH2ljSA_OE0jom1O",
   teacherEmail: "",
-  previewEnabled: true,
+  previewEnabled: false,
   siteUrl: "https://ssj-ariel.github.io/SIGIN-ULEAM/",
 });

@@ -52,8 +52,9 @@ const logo = () =>
 const button = (action, text, attrs = "") =>
   `<button data-action="${action}" ${attrs}>${text}</button>`;
 let state,
-  mode = "preview",
+  mode = "guest",
   identity = null,
+  liveWorkspaceReady = false,
   currentCourse = null,
   route = "home",
   adminTab = "weeks",
@@ -68,6 +69,41 @@ try {
 if (state?.version !== 2) state = initialState();
 const userId = () => identity?.profile.id || "visitor";
 const teacher = () => identity?.profile.role === "teacher";
+const workspaceAllowed = () =>
+  Boolean(
+    identity &&
+      ((mode === "preview" && APP_CONFIG.previewEnabled) ||
+        (mode === "live" &&
+          liveWorkspaceReady &&
+          identity.user?.id === identity.profile?.id &&
+          !identity.profile.must_change_password)),
+  );
+function requireWorkspace() {
+  if (workspaceAllowed()) return true;
+  if (mode === "live" && identity?.profile.must_change_password)
+    changePassword(true);
+  else login("Inicia sesión para entrar a tu aula.");
+  return false;
+}
+const publicActions = new Set([
+  "loginRole",
+  "showPassword",
+  "login",
+  "recover",
+  "preview",
+  "logout",
+]);
+const teacherActions = new Set([
+  "admin",
+  "adminTab",
+  "template",
+  "confirmImport",
+  "deactivateEnrollment",
+  "editGrade",
+  "exportGrades",
+  "addAuthorQuestion",
+  "removeAuthorQuestion",
+]);
 const course = () => courses.find((c) => c.id === currentCourse);
 const setting = (id, w) =>
   state.settings.find((s) => s.courseId === id && s.week === w) || {
@@ -109,6 +145,7 @@ function focus() {
   window.scrollTo(0, 0);
 }
 function visibleCourses() {
+  if (!workspaceAllowed()) return [];
   if (mode === "preview" || teacher()) return courses;
   const enrolled = identity?.enrollments || [];
   return courses.filter((c) =>
@@ -116,6 +153,7 @@ function visibleCourses() {
   );
 }
 function shell(content, title = "Inicio") {
+  if (!requireWorkspace()) return;
   const name = identity?.profile.display_name || "Visitante";
   app.innerHTML = `<div class="app-shell"><aside class="sidebar" id="sidebar">${logo()}<div><p class="sidebar-label">Tu espacio de aprendizaje</p><nav class="side-nav" aria-label="Principal">${button("home", icon("home") + "Inicio", `class="${route === "home" ? "active" : ""}"`)}${button("myCourses", icon("book") + "Mis materias", `class="${route === "course" || route === "lesson" ? "active" : ""}"`)}${button("grades", icon("chart") + "Mis resultados", `class="${route === "grades" ? "active" : ""}"`)}${teacher() ? button("admin", icon("users") + "Espacio docente", `class="${route === "admin" ? "active" : ""}"`) : ""}</nav></div><div><p class="sidebar-label">Tus materias</p><nav class="side-nav" aria-label="Materias">${visibleCourses()
     .map((c) =>
@@ -139,9 +177,11 @@ function shell(content, title = "Inicio") {
 }
 function login(error = "") {
   identity = null;
+  mode = "guest";
+  liveWorkspaceReady = false;
   quiz = null;
   route = "login";
-  app.innerHTML = `<header class="login-top">${logo()}<span class="institution">Gestión de la Información Gerencial</span></header><div class="landing"><section class="landing-story"><span class="eyebrow">${icon("spark")} Más que estudiar. Aprender haciendo.</span><h1>Tu conocimiento,<br><em>en acción.</em></h1><p>Explora casos, conecta ideas y toma decisiones. Un aula pensada para aprender con la práctica, semana a semana.</p><div class="story-list"><div class="story-item">${icon("book")} Tres materias. Un recorrido propio.</div><div class="story-item">${icon("globe")} Expedientes, cifras y problemas del mundo real.</div><div class="story-item">${icon("spark")} Crucigramas, conexiones y retos interactivos.</div></div></section><section class="landing-login"><div class="login-panel"><span class="eyebrow">Bienvenido a SIGIN</span><h2>Entra a tu aula</h2><p class="muted">Tu siguiente aprendizaje empieza aquí.</p><div class="role-switch">${button("loginRole", "Estudiante", `data-role="student" class="${loginRole === "student" ? "active" : ""}"`)}${button("loginRole", "Docente", `data-role="teacher" class="${loginRole === "teacher" ? "active" : ""}"`)}</div><form id="login-form"><label for="username">${loginRole === "teacher" ? "Usuario docente" : "Número de cédula"}</label><input id="username" name="username" autocomplete="username" ${loginRole === "student" ? 'inputmode="numeric" maxlength="10" pattern="[0-9]{10}"' : 'value="DocenteULEAM"'} required placeholder="${loginRole === "student" ? "Tu cédula de diez dígitos" : "Usuario"}"><label for="password">Contraseña</label><div class="password-field"><input id="password" name="password" type="password" autocomplete="current-password" required>${button("showPassword", icon("eye"), 'aria-label="Mostrar contraseña"')}</div><p class="error" id="login-error" role="alert">${escape(error)}</p><button type="submit" class="primary full">Entrar a mi aula ${icon("arrow")}</button></form>${button("recover", "Olvidé mi contraseña", 'class="link full"')}<p class="note">${backendConfigured ? "El acceso requiere una cuenta registrada y una matrícula activa." : "El aula se está preparando. Puedes recorrer las tres materias mientras se conecta el acceso institucional."}</p>${APP_CONFIG.previewEnabled ? button("preview", "Explorar las tres materias", 'class="full"') : ""}</div></section></div>`;
+  app.innerHTML = `<header class="login-top">${logo()}<span class="institution">Gestión de la Información Gerencial</span></header><div class="landing"><section class="landing-story"><span class="eyebrow">${icon("spark")} Más que estudiar. Aprender haciendo.</span><h1>Tu conocimiento,<br><em>en acción.</em></h1><p>Explora casos, conecta ideas y toma decisiones. Un aula pensada para aprender con la práctica, semana a semana.</p><div class="story-list"><div class="story-item">${icon("book")} Tres materias. Un recorrido propio.</div><div class="story-item">${icon("globe")} Expedientes, cifras y problemas del mundo real.</div><div class="story-item">${icon("spark")} Crucigramas, conexiones y retos interactivos.</div></div></section><section class="landing-login"><div class="login-panel"><span class="eyebrow">Bienvenido a SIGIN</span><h2>Entra a tu aula</h2><p class="muted">Tu siguiente aprendizaje empieza aquí.</p><div class="role-switch">${button("loginRole", "Estudiante", `data-role="student" class="${loginRole === "student" ? "active" : ""}"`)}${button("loginRole", "Docente", `data-role="teacher" class="${loginRole === "teacher" ? "active" : ""}"`)}</div><form id="login-form"><label for="username">${loginRole === "teacher" ? "Usuario docente" : "Número de cédula"}</label><input id="username" name="username" autocomplete="username" ${loginRole === "student" ? 'inputmode="numeric" maxlength="10" pattern="[0-9]{10}"' : 'value="DocenteULEAM"'} required placeholder="${loginRole === "student" ? "Tu cédula de diez dígitos" : "Usuario"}"><label for="password">Contraseña</label><div class="password-field"><input id="password" name="password" type="password" autocomplete="current-password" required>${button("showPassword", icon("eye"), 'aria-label="Mostrar contraseña"')}</div><p class="error" id="login-error" role="alert">${escape(error)}</p><button type="submit" class="primary full">Entrar a mi aula ${icon("arrow")}</button></form>${button("recover", "Olvidé mi contraseña", 'class="link full"')}<p class="note">${backendConfigured ? "El acceso requiere una cuenta registrada y una matrícula activa." : "El aula se está preparando. El acceso estará disponible al conectar las cuentas institucionales."}</p>${APP_CONFIG.previewEnabled ? button("preview", "Explorar las tres materias", 'class="full"') : ""}</div></section></div>`;
 }
 function enterPreview(role = "student") {
   if (!APP_CONFIG.previewEnabled)
@@ -162,6 +202,7 @@ function enterPreview(role = "student") {
   home();
 }
 async function loadLive() {
+  liveWorkspaceReady = false;
   const w = await backend.loadWorkspace();
   mode = "live";
   identity = { ...identity, ...w };
@@ -200,6 +241,7 @@ async function loadLive() {
     state.practice[p.student_id][`${p.course_id}:${p.week}`] = true;
   }
   if (identity.profile.must_change_password) return changePassword(true);
+  liveWorkspaceReady = true;
   home();
 }
 function heading(eyebrow, title, description = "", extra = "") {
@@ -517,6 +559,7 @@ function grades() {
   );
 }
 function admin() {
+  if (!requireWorkspace()) return;
   if (!teacher()) return toast("Esta sección requiere una cuenta docente.");
   route = "admin";
   currentCourse = currentCourse || courses[0].id;
@@ -843,6 +886,9 @@ app.addEventListener("click", async (event) => {
   if (!b || b.disabled) return;
   const action = b.dataset.action,
     w = Number(b.dataset.week);
+  if (!publicActions.has(action) && !requireWorkspace()) return;
+  if (teacherActions.has(action) && !teacher())
+    return toast("Esta sección requiere una cuenta docente.");
   b.disabled = true;
   try {
     switch (action) {
@@ -881,6 +927,10 @@ app.addEventListener("click", async (event) => {
         document.querySelector("#sidebar").classList.toggle("open");
         break;
       case "switchRole":
+        if (mode !== "preview" || !APP_CONFIG.previewEnabled)
+          return toast(
+            "Cambiar de rol solo está disponible en la vista previa.",
+          );
         identity.profile.role = teacher() ? "student" : "teacher";
         teacher() ? admin() : home();
         break;
@@ -917,7 +967,8 @@ app.addEventListener("click", async (event) => {
         if (mode === "live") await backend.logout();
         quiz = null;
         identity = null;
-        mode = "preview";
+        mode = "guest";
+        liveWorkspaceReady = false;
         try {
           state = JSON.parse(localStorage.getItem(stateKey)) || initialState();
         } catch {
@@ -1116,6 +1167,17 @@ app.addEventListener("submit", async (event) => {
   event.preventDefault();
   const f = event.target,
     b = f.querySelector('button[type="submit"]');
+  if (
+    !["login-form", "recovery-form", "password-form"].includes(f.id) &&
+    !requireWorkspace()
+  )
+    return;
+  if (
+    (f.dataset.schedule ||
+      ["add-student", "assessment-author"].includes(f.id)) &&
+    !teacher()
+  )
+    return toast("Esta sección requiere una cuenta docente.");
   if (b?.disabled) return;
   if (b) b.disabled = true;
   try {
@@ -1228,6 +1290,19 @@ app.addEventListener("submit", async (event) => {
 });
 app.addEventListener("change", (event) => {
   const el = event.target;
+  if (
+    !["admin-course", "import-file"].includes(el.id) &&
+    el.dataset.authorType === undefined &&
+    !(quiz && el.name === "choice")
+  )
+    return;
+  if (!requireWorkspace()) return;
+  if (
+    (["admin-course", "import-file"].includes(el.id) ||
+      el.dataset.authorType !== undefined) &&
+    !teacher()
+  )
+    return toast("Esta sección requiere una cuenta docente.");
   if (el.id === "admin-course") {
     currentCourse = el.value;
     admin();
@@ -1245,7 +1320,9 @@ app.addEventListener("change", (event) => {
 });
 app.addEventListener("input", (event) => {
   const el = event.target;
+  if (!workspaceAllowed()) return;
   if (el.id === "student-search") {
+    if (!teacher()) return;
     const q = el.value.toLocaleLowerCase("es");
     document.querySelector("#student-list").innerHTML = studentTable(
       state.students.filter(

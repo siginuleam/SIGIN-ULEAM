@@ -1,4 +1,4 @@
-"""Run with Python Playwright installed; tests public practice and preview only."""
+"""Test closed public access, then opt into preview through a local test fixture."""
 import json, os, subprocess, unicodedata
 from pathlib import Path
 from playwright.sync_api import sync_playwright
@@ -7,7 +7,38 @@ data=json.loads(subprocess.check_output(['node','--input-type=module','-e',"impo
 def word(s):return ''.join(c for c in unicodedata.normalize('NFD',s) if c.isascii() and c.isalnum()).upper()
 with sync_playwright() as p:
  browser=p.chromium.launch(headless=True,executable_path='/usr/bin/chromium',args=['--no-sandbox'])
- page=browser.new_page(viewport={'width':1440,'height':1000})
+ public_page=browser.new_page()
+ public_errors=[]
+ public_page.on('pageerror', lambda e: public_errors.append(str(e)))
+ public_page.goto(os.environ.get('SIGIN_TEST_URL','http://127.0.0.1:4173/'))
+ public_page.locator('#login-form').wait_for()
+ assert public_page.get_by_role('button',name='Explorar las tres materias').count()==0
+ # Old browser data and controls inserted into the DOM must not grant access.
+ public_page.evaluate("""() => localStorage.setItem('sigin-preview-v2', JSON.stringify({version:2,profile:{role:'teacher'},students:[],settings:[],attempts:[],practice:{}}))""")
+ public_page.reload()
+ public_page.locator('#login-form').wait_for()
+ for action in ['home','myCourses','course','lesson','admin','switchRole','preview']:
+  public_page.evaluate("""action => {const b=document.createElement('button');b.dataset.action=action;b.dataset.course='gig-502';b.dataset.week='1';b.textContent='Intentar acceso';document.querySelector('#app').append(b);} """,action)
+  public_page.get_by_role('button',name='Intentar acceso').click()
+  assert public_page.locator('#login-form').count()==1,action
+  assert public_page.locator('.app-shell,.course-card,.context-card,#admin-course').count()==0,action
+  public_page.locator('button').filter(has_text='Intentar acceso').evaluate_all('(buttons)=>buttons.forEach(b=>b.remove())')
+ public_page.screenshot(path='/tmp/sigin-login-locked.png',full_page=True)
+ # Restoring a token also requires server validation before the workspace opens.
+ public_page.route('https://*.supabase.co/**',lambda route:route.fulfill(status=401,content_type='application/json',body='{"message":"JWT invalid"}'))
+ public_page.evaluate("""() => sessionStorage.setItem('sigin-auth-session-v1', JSON.stringify({access_token:'forged',refresh_token:'forged',expires_at:9999999999,role:'teacher'}))""")
+ public_page.reload()
+ public_page.locator('#login-form').wait_for()
+ assert public_page.locator('.app-shell,.course-card,#admin-course').count()==0
+ assert public_page.locator('#login-error').inner_text()=='La sesión venció. Vuelve a ingresar.'
+ assert public_page.evaluate("sessionStorage.getItem('sigin-auth-session-v1')")==None
+ assert not public_errors,public_errors
+ public_page.close()
+ context=browser.new_context(viewport={'width':1440,'height':1000})
+ config=(root/'assets/config.js').read_text()
+ assert 'previewEnabled: false' in config
+ context.route('**/assets/config.js',lambda route:route.fulfill(content_type='text/javascript',body=config.replace('previewEnabled: false','previewEnabled: true')))
+ page=context.new_page()
  errors=[]
  page.on('pageerror',lambda e: errors.append(str(e)))
  page.on('dialog',lambda d:d.accept())
@@ -81,5 +112,5 @@ with sync_playwright() as p:
   page.set_viewport_size({'width':width,'height':900});width_ok()
   if width==390:page.screenshot(path='/tmp/sigin-home-mobile.png',full_page=True)
  assert not errors,errors
- print('PASS: 3 courses; 5 interaction types; practice & assessment; Excel roundtrip; 6 widths; no JS errors')
+ print('PASS: anonymous access closed; injected guest routes blocked; explicit preview fixture; 3 courses; 5 interaction types; practice & assessment; Excel roundtrip; 6 widths; no JS errors')
  browser.close()
