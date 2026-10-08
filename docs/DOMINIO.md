@@ -10,9 +10,9 @@ No hace falta pagar por un dominio ni abrir otra cuenta personal. No se usa un a
 
 El repositorio es https://github.com/siginuleam/SIGIN-ULEAM. En **Settings → Pages**, Source debe ser **GitHub Actions**. El workflow **Publicar SIGIN en GitHub Pages** publica los cambios de `main` después de ejecutar las pruebas y preparar el sitio.
 
-La configuración `siteUrl` de `assets/config.js` y el remoto Git `origin` ya utilizan el nuevo propietario en este entorno. La publicación de este ajuste está pendiente: después del traslado, tanto Git como la API devolvieron `403` al intentar escribir. El propietario debe habilitar la integración GitHub de Codex/ChatGPT para `SIGIN-ULEAM` dentro de la organización `siginuleam`. Después se puede publicar el cambio sin volver a transferir el repositorio.
+La configuración `siteUrl` de `assets/config.js` y el remoto Git `origin` ya utilizan el nuevo propietario. El propietario habilitó la integración GitHub de Codex/ChatGPT para la organización y se verificó la escritura publicando el cambio en `main`.
 
-La dirección académica ya responde con la versión publicada antes del traslado. Después de publicar el ajuste preparado, comprobar que `build` y `deploy` terminen correctamente y que `assets/config.js` entregue el nuevo `siteUrl`.
+Después de cada publicación, comprobar que `build` y `deploy` terminen correctamente y que `assets/config.js` entregue el `siteUrl` de la organización.
 
 ## Supabase
 
