@@ -96,6 +96,7 @@ const publicActions = new Set([
 const teacherActions = new Set([
   "admin",
   "adminTab",
+  "reviewAssessment",
   "template",
   "confirmImport",
   "deactivateEnrollment",
@@ -588,9 +589,47 @@ function adminWeeks() {
   return course()
     .weeks.map((w) => {
       const s = setting(currentCourse, w.weekNumber);
-      return `<details class="week"><summary><span class="week-number">${w.weekNumber}</span><div class="week-summary-text"><h3>${escape(w.title)}</h3><span class="badge ${availability(s).kind}">${availability(s).label}</span></div><span class="chevron">${icon("chevron")}</span></summary><div class="week-content"><form data-schedule="${w.weekNumber}"><label><input type="checkbox" name="locked" ${s.locked ? "checked" : ""}> Cerrar esta evaluación</label><p class="muted" style="font-size:13px">La práctica continúa disponible. El cierre manual prevalece sobre las fechas.</p><div class="two-equal"><div><label>Apertura (hora de Ecuador)<input type="datetime-local" name="open" value="${s.open ? localDateTime(s.open) : ""}"></label></div><div><label>Cierre (hora de Ecuador)<input type="datetime-local" name="close" value="${s.close ? localDateTime(s.close) : ""}"></label></div></div><label>Intentos máximos<input type="number" name="maxAttempts" min="1" max="10" value="${s.maxAttempts}" required></label><button type="submit" class="primary">Guardar semana</button><p role="status" class="schedule-status"></p></form></div></details>`;
+      return `<details class="week"><summary><span class="week-number">${w.weekNumber}</span><div class="week-summary-text"><h3>${escape(w.title)}</h3><span class="badge ${availability(s).kind}">${availability(s).label}</span></div><span class="chevron">${icon("chevron")}</span></summary><div class="week-content">${button("reviewAssessment", icon("eye") + "Ver evaluación", `data-week="${w.weekNumber}"`)}<p class="muted" style="font-size:13px">Revisa el expediente y los enunciados en modo de solo lectura, incluso si la semana está cerrada.</p><form data-schedule="${w.weekNumber}"><label><input type="checkbox" name="locked" ${s.locked ? "checked" : ""}> Cerrar esta evaluación</label><p class="muted" style="font-size:13px">La práctica continúa disponible. El cierre manual prevalece sobre las fechas.</p><div class="two-equal"><div><label>Apertura (hora de Ecuador)<input type="datetime-local" name="open" value="${s.open ? localDateTime(s.open) : ""}"></label></div><div><label>Cierre (hora de Ecuador)<input type="datetime-local" name="close" value="${s.close ? localDateTime(s.close) : ""}"></label></div></div><label>Intentos máximos<input type="number" name="maxAttempts" min="1" max="10" value="${s.maxAttempts}" required></label><button type="submit" class="primary">Guardar semana</button><p role="status" class="schedule-status"></p></form></div></details>`;
     })
     .join("");
+}
+function assessmentReviewQuestion(q, index) {
+  const list = (items) =>
+    `<ul>${items.map((item) => `<li>${escape(item)}</li>`).join("")}</ul>`;
+  let detail = "";
+  if (q.type === "choice") detail = list(q.options || []);
+  else if (q.type === "matching")
+    detail = `<div class="two-equal"><div><h3>Conceptos</h3>${list(q.lefts || [])}</div><div><h3>Relaciones disponibles</h3>${list(q.rights || [])}</div></div>`;
+  else if (["order", "ordering"].includes(q.type))
+    detail = `<p class="muted">Elementos que el estudiante debe ordenar:</p>${list(q.items || [])}`;
+  else if (q.type === "crossword")
+    detail = list(
+      (q.entries || []).map(
+        (entry, i) =>
+          `${i + 1}. ${entry.clue} · ${entry.length} letras`,
+      ),
+    );
+  else if (q.type === "numeric")
+    detail = `<p class="muted">Respuesta numérica${q.unit ? ` · Unidad: ${escape(q.unit)}` : ""}.</p>`;
+  return `<article class="card assessment-review-question"><span class="eyebrow">Reto ${index + 1} · ${escape(taskLabel[q.type] || "Actividad")}</span><h2>${escape(q.prompt)}</h2>${detail}</article>`;
+}
+async function reviewAssessment(week) {
+  if (!requireWorkspace()) return;
+  if (!teacher()) return toast("Esta sección requiere una cuenta docente.");
+  if (mode !== "live")
+    return toast("Conecta una cuenta docente para revisar las evaluaciones guardadas.");
+  const c = course();
+  if (!c?.weeks.some((w) => w.weekNumber === week))
+    throw Error("Selecciona una semana de esta materia.");
+  const assessment = await backend.getAssessment(c.id, week);
+  if (!requireWorkspace() || !teacher()) return;
+  currentCourse = c.id;
+  quiz = null;
+  route = "assessmentReview";
+  shell(
+    `${heading(`Semana ${week} · ${escape(c.code)}`, "Vista de evaluación", "Solo lectura. Consultar esta vista no consume intentos ni cambia calificaciones.", button("adminTab", icon("back") + "Volver a semanas y horarios", 'data-tab="weeks"'))}<section class="assessment-review">${dossier(assessment)}${assessment.questions.map(assessmentReviewQuestion).join("")}</section>`,
+    "Vista de evaluación",
+  );
 }
 function localDateTime(value) {
   const d = new Date(Date.parse(value) - 5 * 60 * 60 * 1000);
@@ -940,6 +979,9 @@ app.addEventListener("click", async (event) => {
       case "adminTab":
         adminTab = b.dataset.tab;
         admin();
+        break;
+      case "reviewAssessment":
+        await reviewAssessment(w);
         break;
       case "grades":
         currentCourse = null;

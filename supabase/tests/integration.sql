@@ -1,5 +1,10 @@
 \set ON_ERROR_STOP on
 -- Fixtures ficticios y desechables; sin identidades de estudiantes reales.
+do $$ begin
+ if (select count(*) from public.week_settings where not enabled)<>48 then raise exception 'FAIL: blank weeks initialize closed'; end if;
+ if exists(select 1 from private.assessment_keys) then raise exception 'FAIL: unexpected initial assessment bank'; end if;
+end $$;
+
 insert into auth.users(id,encrypted_password) values
  ('00000000-0000-4000-8000-000000000001','fixture'),
  ('00000000-0000-4000-8000-000000000002','fixture'),
@@ -14,11 +19,12 @@ insert into public.enrollments(student_id,course_id) values
  ('00000000-0000-4000-8000-000000000002','gig-502'),
  ('00000000-0000-4000-8000-000000000003','cex-103'),
  ('00000000-0000-4000-8000-000000000004','gig-502');
-update public.week_settings set enabled=true,max_attempts=2 where course_id='gig-502' and week in (1,2);
 insert into private.assessment_keys(course_id,week,public_payload,answer_key) values('gig-502',1,
  '{"context":"Caso ficticio","questions":[{"id":"a","type":"choice"},{"id":"b","type":"numeric"},{"id":"c","type":"matching"},{"id":"d","type":"order"},{"id":"e","type":"crossword"}]}',
  '[{"id":"a","type":"choice","correct":1,"explanation":"Criterio A"},{"id":"b","type":"numeric","correct":20.5,"tolerance":0.01},{"id":"c","type":"matching","correct":[1,0,2]},{"id":"d","type":"order","correct":[2,0,1]},{"id":"e","type":"crossword","correct":["INFORMACIÓN","DATOS"]}]');
 insert into private.assessment_keys select course_id,2,public_payload,answer_key from private.assessment_keys where week=1;
+update public.week_settings set enabled=true,max_attempts=2 where course_id='gig-502' and week in (1,2);
+
 
 do $$ begin
  begin
@@ -135,8 +141,28 @@ declare n integer;
 begin
  select count(*) into n from public.profiles;
  if n<>4 then raise exception 'FAIL: teacher profile list'; end if;
+ -- La docente no tiene SELECT de claves privadas; el trigger consulta con permisos del servidor.
+ begin
+  update public.week_settings set enabled=true where course_id='gig-502' and week=4;
+  raise exception 'FAIL: opens empty assessment';
+ exception when others then
+  if sqlerrm<>'NO_ASSESSMENT_KEY' then raise; end if;
+ end;
+ if exists(select 1 from public.week_settings where course_id='gig-502' and week=4 and enabled) then raise exception 'FAIL: failed opening changed row'; end if;
+ insert into public.week_settings(course_id,week,enabled) values('gig-502',17,false);
+ if not exists(select 1 from public.week_settings where course_id='gig-502' and week=17 and not enabled) then raise exception 'FAIL: closed blank insert'; end if;
+ begin
+  insert into public.week_settings(course_id,week,enabled) values('gig-502',18,true);
+  raise exception 'FAIL: inserts open empty assessment';
+ exception when others then
+  if sqlerrm<>'NO_ASSESSMENT_KEY' then raise; end if;
+ end;
+
  perform public.publish_assessment('gig-502',3,'{"context":"nuevo caso","questions":[{"id":"fresh","type":"numeric"}]}','[{"id":"fresh","type":"numeric","correct":20}]');
  if public.get_assessment('gig-502',3)->>'context'<>'nuevo caso' then raise exception 'FAIL: teacher bank publication'; end if;
+ update public.week_settings set enabled=true where course_id='gig-502' and week=3;
+ if not exists(select 1 from public.week_settings where course_id='gig-502' and week=3 and enabled) then raise exception 'FAIL: configured bank cannot open'; end if;
+
  begin
   perform public.publish_assessment('gig-502',1,'{"questions":[{"id":"fresh","type":"numeric"}]}','[{"id":"fresh","type":"numeric","correct":20}]');
   raise exception 'FAIL: modifies active bank';

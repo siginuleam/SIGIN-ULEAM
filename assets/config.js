@@ -2,7 +2,7 @@
 export const APP_CONFIG = Object.freeze({
   supabaseUrl: "https://safynzirineolyxeitqh.supabase.co",
   supabasePublishableKey: "sb_publishable_NS7UMv4BTFbxM2LrH2ljSA_OE0jom1O",
-  teacherEmail: "",
+  teacherEmail: "patricia.andrade@uleam.edu.ec",
   previewEnabled: false,
   siteUrl: "https://siginuleam.github.io/SIGIN-ULEAM/",
 });

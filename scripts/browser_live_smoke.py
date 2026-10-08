@@ -75,7 +75,7 @@ user = {'id': STUDENT_ID, 'email': EMAIL, 'user_metadata': {'role': 'teacher'}}
 requests = []
 attempts = []
 errors = []
-state = {'recovery_error': False}
+state = {'recovery_error': False, 'teacher_mode': False, 'bank_missing': False}
 
 def mock_supabase(route):
     request = route.request
@@ -104,14 +104,17 @@ def mock_supabase(route):
         else:
             response = {}
     elif path == '/rest/v1/profiles':
-        assert 'role=eq.student' not in url.query, 'Student requested a teacher-only roster'
-        response = [profile]
+        if 'role=eq.student' in url.query:
+            assert state['teacher_mode'], 'Student requested a teacher-only roster'
+            response = [profile]
+        else:
+            response = [{**profile, 'role': 'teacher', 'display_name': 'Docente ficticia'}] if state['teacher_mode'] else [profile]
     elif path == '/rest/v1/courses':
         response = [{'id': course['id'], 'code': course['code'], 'name': course['name']}]
     elif path == '/rest/v1/enrollments':
         response = [{'student_id': STUDENT_ID, 'course_id': course['id'], 'active': True, 'parallel': 'A'}]
     elif path == '/rest/v1/week_settings':
-        response = [{'course_id': course['id'], 'week': 1, 'enabled': True, 'max_attempts': 2,
+        response = [{'course_id': course['id'], 'week': 1, 'enabled': not state['teacher_mode'], 'max_attempts': 2,
                      'opens_at': None, 'closes_at': None}]
     elif path == '/rest/v1/attempts':
         response = attempts
@@ -119,7 +122,10 @@ def mock_supabase(route):
         response = []
     elif path == '/rest/v1/rpc/get_assessment':
         assert body == {'p_course_id': 'gig-406', 'p_week': 1}
-        response = public_payload
+        if state['bank_missing']:
+            response, status = {'message': 'NO_ASSESSMENT_KEY'}, 400
+        else:
+            response = public_payload
     elif path == '/rest/v1/rpc/submit_assessment':
         assert body['p_course_id'] == 'gig-406' and body['p_week'] == 1
         assert body['p_answers'] == answers, f"Unexpected submitted answers: {body['p_answers']}"
@@ -173,6 +179,13 @@ with sync_playwright() as playwright:
     page.get_by_role('button', name='Intentar panel docente').click()
     assert page.locator('#toast').inner_text() == 'Esta sección requiere una cuenta docente.'
     assert page.locator('#admin-course').count() == 0
+
+    # Review is a teacher-only action, including controls inserted by a student.
+    requests_before_review = len([r for r in requests if r['path'].endswith('/get_assessment')])
+    page.evaluate("""() => { const b=document.createElement('button');b.dataset.action='reviewAssessment';b.dataset.week='1';b.textContent='Intentar revisión docente';document.querySelector('#app').append(b); }""")
+    page.get_by_role('button', name='Intentar revisión docente').click()
+    assert page.locator('#toast').inner_text() == 'Esta sección requiere una cuenta docente.'
+    assert len([r for r in requests if r['path'].endswith('/get_assessment')]) == requests_before_review
 
     page.locator('.course-card').get_by_role('button').click()
     page.get_by_role('button', name='Explorar el caso', exact=False).first.click()
@@ -239,7 +252,47 @@ with sync_playwright() as playwright:
     assert 'Si la cuenta existe y el correo está habilitado' in status
     recoveries = [r for r in requests if r['path'] == '/auth/v1/recover']
     assert len(recoveries) == 2 and all(r['body']['email'] == EMAIL for r in recoveries)
+
+    # A validated teacher can inspect a closed bank without attempts or writes.
+    page.get_by_role('button', name='Volver al acceso').click()
+    state['teacher_mode'] = True
+    page.locator('#username').fill(STUDENT_NUMBER)
+    page.locator('#password').fill('ClaveTemporalDePrueba')
+    page.get_by_role('button', name='Entrar a mi aula', exact=False).click()
+    page.get_by_role('button', name='Espacio docente', exact=False).wait_for()
+    page.get_by_role('button', name='Espacio docente', exact=False).click()
+    page.locator('#admin-course').select_option(course['id'])
+    week = page.locator('details.week').first
+    week.locator('summary').click()
+    assert week.locator('[name="locked"]').is_checked()
+    state['bank_missing'] = True
+    week.get_by_role('button', name='Ver evaluación', exact=False).click()
+    expect(page.locator('#toast')).to_have_text('La docente todavía no ha publicado esta evaluación.')
+    assert page.locator('.assessment-review').count() == 0
+    state['bank_missing'] = False
+    readonly_start = len(requests)
+    attempt_count = len(attempts)
+    week.get_by_role('button', name='Ver evaluación', exact=False).click()
+    page.get_by_role('heading', name='Vista de evaluación', exact=True).wait_for()
+    review = page.locator('.assessment-review')
+    assert review.locator('.assessment-review-question').count() == 5
+    assert review.locator('input,textarea,select,form,button').count() == 0
+    for q in public_payload['questions']:
+        assert review.get_by_role('heading', name=q['prompt'], exact=True).is_visible()
+    assert review.get_by_text(public_payload['context'], exact=True).is_visible()
+    assert review.get_by_text(public_payload['questions'][0]['options'][0], exact=True).is_visible()
+    matching = next(q for q in public_payload['questions'] if q['type'] == 'matching')
+    assert review.get_by_text(matching['lefts'][0], exact=True).is_visible()
+    assert review.get_by_text(matching['rights'][0], exact=True).is_visible()
+    crossword = next(q for q in public_payload['questions'] if q['type'] == 'crossword')
+    assert review.get_by_text(crossword['entries'][0]['clue'], exact=False).is_visible()
+    assert len(attempts) == attempt_count
+    assert [r['path'] for r in requests[readonly_start:]] == ['/rest/v1/rpc/get_assessment']
+    page.get_by_role('button', name='Volver a semanas y horarios', exact=False).click()
+    page.locator('#admin-course').wait_for()
+    assert page.locator('#admin-course').input_value() == course['id']
+    assert page.locator('.assessment-review').count() == 0
     assert not errors, errors
     assert not [r for r in requests if r['path'].endswith('/publish_assessment') or r['path'].endswith('/manage-students')]
-    print('PASS: isolated live login; enrollment/role guards; five private interactions; server grading; password change; recovery success/failure; no JS errors')
+    print('PASS: isolated live login; enrollment/role guards; five private interactions; server grading; password change; recovery success/failure; teacher read-only review of closed bank and missing-bank errors; no JS errors')
     browser.close()

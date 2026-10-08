@@ -24,23 +24,23 @@ npm start
 
 ## Supabase y estado real
 
-La URL y clave publicable del proyecto están en `assets/config.js`. Una clave publicable no autoriza administrar la base, crear roles ni desplegar funciones. La web puede iniciar sesión, recuperar contraseña y usar el backend **después** de ejecutar el esquema, crear la docente, desplegar la función y configurar correo/URLs. Ver [docs/SUPABASE.md](docs/SUPABASE.md).
+La URL y clave publicable del proyecto están en `assets/config.js`. Supabase está activo: esquema aplicado, cuenta docente y único estudiante de prueba creados, este último matriculado en las tres materias. La función de altas está desplegada y sus permisos se comprobaron con sesiones reales. Auth usa la dirección académica final, tiene el registro público desactivado y exige cambiar la clave temporal del estudiante antes de cargar el aula. Ver [docs/SUPABASE.md](docs/SUPABASE.md).
 
-La entrada pública de vista previa está desactivada. Para usar el aula es obligatorio iniciar sesión con una cuenta válida; mientras se activa Supabase no se pueden usar las cuentas. La vista previa se habilita únicamente dentro de las pruebas de navegador con configuración simulada. Es contenido público; no debe usarse para almacenar datos sensibles ni notas institucionales. Los ejemplos de práctica tienen respuestas públicas para aprender. Las evaluaciones reales se crean aparte con el autor docente y se guardan en el esquema privado. Nunca cargar los mismos ejercicios públicos como evaluación secreta.
+La entrada pública de vista previa está desactivada. Para usar el aula es obligatorio iniciar sesión con una cuenta válida. La vista previa se habilita únicamente dentro de las pruebas de navegador con configuración simulada. Los contenidos estáticos son públicos; los datos personales y notas se guardan en Supabase con RLS. Los ejemplos de práctica tienen respuestas públicas para aprender. Las evaluaciones reales se crean aparte con el autor docente y se guardan en el esquema privado. Nunca cargar los mismos ejercicios públicos como evaluación secreta.
 
 Cuenta estudiantil: correo `e{cedula}@live.uleam.edu.ec`, contraseña temporal igual a la cédula, cambio obligatorio antes del acceso. El alta ocurre en el servidor; no se guarda su clave en el repositorio. La matrícula no confirma la existencia del buzón. Como la clave inicial es predecible, activar mediante correo institucional es preferible antes de incorporar alumnado real.
 
-Cuenta docente: usuario visible `DocenteULEAM`, asociado al correo controlado configurado en `teacherEmail`. Crear la contraseña inicial en Auth, sin incluirla en archivos. La aplicación obtiene el rol del servidor, no de un valor editable local.
+Cuenta docente: usuario visible `DocenteULEAM`, asociado al correo configurado en `teacherEmail`. La cuenta y perfil ya existen en Auth y la base de datos; la contraseña no se incluye en archivos. La aplicación obtiene el rol del servidor, no de un valor editable local.
 
 RLS protege perfiles, matrículas y resultados. La evaluación valida inscripción, fechas y número de intentos, y calcula notas en una operación transaccional. No hay fallback a calificación local en una evaluación real. Los ajustes docentes conservan historial.
 
-**No se ha verificado todavía el proyecto remoto, envío SMTP ni las cuentas reales.** Las pruebas de integración PostgreSQL y los mocks HTTP comprueban implementación; no prueban esos servicios externos.
+Se comprobaron inicios de sesión remotos de ambos roles, las tres materias de la docente, el perfil propio y bloqueo por contraseña temporal del estudiante, el rechazo de altas desde el rol estudiante y el rechazo de lecturas anónimas. Una solicitud de recuperación respondió HTTP 200 y el usuario confirmó la llegada al buzón institucional; el restablecimiento completo todavía no se ejecutó como prueba. Custom SMTP no está configurado: debe prepararse antes de incorporar más estudiantes por los límites del correo predeterminado. La preparación de los 48 bancos privados y las comprobaciones adicionales de horarios y vista docente de lectura siguen en curso; las evaluaciones están cerradas.
 
 ## Publicar y cambiar dirección
 
 El workflow `.github/workflows/pages.yml` ejecuta pruebas y despliega `dist/` a GitHub Pages al subir a `main`. Seleccionar GitHub Actions en Settings → Pages. Rutas relativas permiten trasladar el mismo sitio a otro repositorio sin editar todos los enlaces.
 
-GitHub Pages ya utiliza HTTPS. Para una dirección gratuita sin el nombre personal, crear una organización GitHub con nombre académico y trasladar el repositorio allí; GitHub requiere esa creación desde la cuenta del usuario. No hace falta abrir otra cuenta personal ni comprar un dominio. Después actualizar `siteUrl`, las Redirect URLs de Auth y `SIGIN_ALLOWED_ORIGINS`. No crear `CNAME` sin controlar un dominio real.
+El repositorio está en la organización académica `siginuleam` y la dirección gratuita con HTTPS es https://siginuleam.github.io/SIGIN-ULEAM/. `siteUrl`, las Redirect URLs de Auth y `SIGIN_ALLOWED_ORIGINS` usan esa dirección y su origen. No se necesita comprar un dominio ni configurar `CNAME`.
 
 ## Validación
 

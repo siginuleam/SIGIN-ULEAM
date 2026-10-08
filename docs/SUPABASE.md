@@ -1,12 +1,20 @@
 # Activar cuentas y datos compartidos
 
-La web exige inicio de sesión. Las cuentas aún no estarán activas hasta completar estos pasos. El plan Free de Supabase permite empezar sin pagar, con cuotas y posibles pausas por inactividad. Revisa los límites actuales en https://supabase.com/pricing. Un correo enviado realmente y una sesión en dos dispositivos deben comprobarse antes de usar notas reales.
+La web exige inicio de sesión. El proyecto ya tiene las cuentas iniciales y la función de altas activas; el estado comprobado y lo pendiente aparecen a continuación. El plan Free de Supabase permite empezar sin pagar, con cuotas y posibles pausas por inactividad. Revisa los límites actuales en https://supabase.com/pricing.
 
 ## Estado de esta entrega
 
-La URL y la clave publicable del proyecto elegido ya están configuradas en el repositorio. El esquema se ejecutó correctamente; la API confirma que las tablas existen y deniega el acceso anónimo. La dirección académica es https://siginuleam.github.io/SIGIN-ULEAM/. Aún falta crear las cuentas y sus perfiles, desplegar la función de altas y configurar/probar el envío de correo. Las pruebas locales no verifican esos servicios remotos.
+El proyecto remoto está activo. El esquema está aplicado y la URL y clave publicable están configuradas en el repositorio. La dirección académica https://siginuleam.github.io/SIGIN-ULEAM/ también está configurada en Auth como Site URL y Redirect URL. El registro público está desactivado y Auth admite claves temporales de diez caracteres.
 
-Para completar estos pasos desde el entorno cloud, configura `SUPABASE_ACCESS_TOKEN` en **Secretos** del entorno. Se genera en https://supabase.com/dashboard/account/tokens y solo se utiliza contra `api.supabase.com` para administrar el proyecto elegido. No lo envíes al chat, no lo añadas a GitHub ni al frontend. La clave publicable no sustituye este acceso administrativo. También hace falta indicar el correo que se asociará a `DocenteULEAM`, distinto del correo de estudiante. Si prefieres usar el panel de Supabase, los pasos siguientes permiten hacerlo sin compartir acceso administrativo.
+- La cuenta docente y su perfil están creados. `DocenteULEAM` usa el correo configurado en `teacherEmail`; el inicio de sesión remoto devuelve las tres materias y el rol docente.
+- Existe únicamente el estudiante de prueba autorizado, matriculado en las tres materias. Su sesión solo puede consultar su propio perfil y exige cambiar la contraseña temporal antes de cargar el aula.
+- `manage-students` está desplegada y activa, con la comprobación JWT heredada desactivada porque verifica cada sesión con Auth. Su secreto de orígenes admite `https://siginuleam.github.io`. Una petición docente sobre el estudiante existente respondió 200 y conservó la contraseña; una petición con rol estudiante fue rechazada con 403. La lectura anónima de perfiles devuelve 401.
+- Una solicitud de recuperación fue aceptada con HTTP 200 y el usuario confirmó que el mensaje llegó a su buzón institucional. El restablecimiento completo mediante ese enlace todavía no fue ejecutado como prueba. Custom SMTP no está configurado: antes de incorporar más estudiantes, prepara un proveedor SMTP y revisa los límites del servicio de correo predeterminado.
+- La creación de los 48 bancos privados y las comprobaciones adicionales de horarios y vista docente de lectura están en curso. Las evaluaciones permanecen cerradas hasta completar su preparación y revisión.
+
+Los pasos siguientes se conservan como instrucciones para mantener o reinstalar el proyecto; no hace falta repetir altas que ya existen. No se publican cédulas, contraseñas ni listados de personas.
+
+El acceso administrativo del entorno cloud se configura mediante `SUPABASE_ACCESS_TOKEN` en **Secretos**. Se genera en https://supabase.com/dashboard/account/tokens y solo se utiliza contra `api.supabase.com` para administrar el proyecto elegido. No lo envíes al chat, no lo añadas a GitHub ni al frontend. La clave publicable no sustituye este acceso administrativo. El correo docente ya está asociado a `DocenteULEAM`; también puedes mantener la configuración desde el panel de Supabase.
 
 ## 1. Crear el proyecto
 
@@ -35,13 +43,13 @@ Para completar estos pasos desde el entorno cloud, configura `SUPABASE_ACCESS_TO
 
 1. En **Authentication → URL Configuration**, establece **Site URL** a la dirección HTTPS final y agrega esa misma dirección a **Redirect URLs**. Incluye la ruta del proyecto y barra final cuando uses Pages bajo un repositorio.
 2. Escribe la misma dirección en `siteUrl` en `assets/config.js`.
-3. Configura **Custom SMTP** en Authentication antes de probar correo institucional. El servicio de correo predeterminado de Supabase tiene restricciones de destinatarios y límites; no garantiza enviar a todos los estudiantes. Introduce credenciales SMTP únicamente en el panel de Supabase.
+3. El correo de recuperación del único estudiante de prueba ya llegó usando el servicio predeterminado. Antes de incorporar más estudiantes, configura **Custom SMTP** en Authentication: el servicio predeterminado tiene restricciones de destinatarios y límites. Introduce credenciales SMTP únicamente en el panel de Supabase.
 4. La recuperación usa `e{cedula}@live.uleam.edu.ec`. La respuesta de la web confirma la solicitud; no prueba que el correo haya llegado ni revela si la cuenta existe.
 5. Comprueba que llega el correo a tu buzón institucional, abre el enlace, cambia la clave y verifica que puedes entrar con la nueva. Los enlaces expiran y son de un solo uso; ante error solicita otro.
 
 ## 4. Alta segura del único estudiante de prueba
 
-La cédula, nombres y clave acordados no están en el repositorio público. Añade únicamente tu cuenta mediante el panel docente después de desplegar esta función:
+La única cuenta de estudiante autorizada ya está creada y matriculada. Su cédula, nombre y clave no están en el repositorio público. Las altas futuras se realizan desde el panel docente. Para reinstalar la función de altas:
 
 ```sh
 supabase login
@@ -106,7 +114,7 @@ La plantilla ejemplifica el contrato; al estar documentada públicamente no es u
 
 Prueba con dos cuentas temporales matriculadas en materias diferentes: cada una debe ver solo su matrícula y resultados. Un alumno no debe poder escribir su rol, editar notas, acceder a perfiles ajenos, abrir otra evaluación por URL ni leer `private.assessment_keys`. Comprueba cierre, límite de intentos, entrega concurrente, cambio de contraseña, recuperación de correo y sincronización en dos dispositivos. Guarda una copia de seguridad y revisa privacidad y retención antes de cargar listados completos.
 
-El proyecto y el esquema ya existen, pero **las cuentas, la función de altas y la recuperación por correo aún no están activadas ni verificadas contra el proyecto**. Hay que terminar su configuración y probar estos flujos antes de usar la plataforma para calificaciones reales.
+El proyecto, las cuentas iniciales y la función de altas ya se comprobaron contra Supabase remoto. El usuario confirmó la llegada del correo de recuperación al buzón institucional. Sigue pendiente probar el restablecimiento completo, completar y revisar los bancos privados y comprobar los flujos de evaluación antes de usar calificaciones reales. Las pruebas locales no sustituyen esas comprobaciones externas.
 
 ## Pruebas locales del adaptador y permisos
 

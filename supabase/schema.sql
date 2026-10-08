@@ -45,6 +45,23 @@ create table if not exists private.assessment_keys (
   primary key (course_id, week),
   foreign key (course_id, week) references public.week_settings(course_id, week) on delete cascade
 );
+-- Una semana solo puede abrirse cuando existe su evaluación privada.
+-- SECURITY DEFINER permite comprobar el banco sin conceder lectura de respuestas a la docente.
+create or replace function private.require_assessment_before_open() returns trigger
+language plpgsql security definer set search_path = '' as $$
+begin
+  if new.enabled and not exists (
+    select 1 from private.assessment_keys where course_id = new.course_id and week = new.week
+  ) then
+    raise exception 'NO_ASSESSMENT_KEY';
+  end if;
+  return new;
+end $$;
+revoke all on function private.require_assessment_before_open() from public, anon, authenticated;
+drop trigger if exists sigin_week_requires_assessment on public.week_settings;
+create trigger sigin_week_requires_assessment before insert or update of enabled, course_id, week on public.week_settings
+for each row execute function private.require_assessment_before_open();
+
 -- Rechazar bancos mal formados y respuestas que se hayan copiado por error al enunciado público.
 create or replace function private.validate_assessment_bank() returns trigger
 language plpgsql set search_path = '' as $$
