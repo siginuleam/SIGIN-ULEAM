@@ -1,10 +1,10 @@
-# SIGIN · Demostración de una materia
+# SIGIN · Aula de aprendizaje práctico
 
-Rediseño de Alfabetización y Competencias Informacionales (GIG-502), preparado para revisión docente y GitHub Pages. Conserva exactamente los títulos, unidades, orden y casos empresariales de las 16 semanas del HTML recibido.
+Tres materias, 48 semanas y 240 retos: Alfabetización y Competencias Informacionales (GIG-502), Comercio Exterior (CEX-103-AC) y Gobierno Electrónico y Administración Pública (GIG-406). Los títulos semanales proceden del HTML y los dos sílabos proporcionados. Las actividades nuevas son simulaciones didácticas: expedientes con documentos, cifras, reglas y límites de interpretación; no describen procedimientos reales de las empresas citadas en el sílabo.
 
-## Probar
+## Desarrollo
 
-Requisitos: Node.js 20 o posterior y Python 3. No se necesitan instalaciones npm.
+Node.js >=22.18 y Python 3. Sin instalación npm ni dependencias de CDN durante el uso.
 
 ```sh
 npm test
@@ -12,42 +12,38 @@ npm run build
 npm start
 ```
 
-El servidor local escucha en el puerto 4173. La interfaz tiene dos entradas explícitas de demostración: estudiante y docente. No pide las credenciales del HTML original.
+`npm start` sirve el checkout en el puerto 4173. Las tareas cloud ya están aisladas; usar este checkout, no crear worktrees. Playwright/Chromium permiten ejecutar `python scripts/browser_smoke.py` cuando estén instalados. `SIGIN_TEST_URL` ajusta la dirección local del runner.
 
-Cada semana incluye expediente ficticio, objetivo, tres decisiones diferentes, práctica con explicación inmediata y evaluación con revisión previa a la entrega. Los expedientes no atribuyen prácticas reales a las empresas del sílabo. Los enlaces externos son referencias complementarias, no evidencia de los datos ficticios.
+## Experiencia
 
-La práctica está siempre disponible. El cierre manual de una evaluación prevalece sobre sus fechas. Los horarios se interpretan como hora de Ecuador (UTC−05:00). Se conserva el mejor intento; un ajuste docente establece una nueva nota base sin eliminar registros anteriores. La recuperación de respuestas funciona al volver a la actividad en el mismo navegador.
+- Escritorio con navegación lateral y contenido que aprovecha el ancho; móvil con menú y tarjetas apiladas.
+- Materias separadas; semanas agrupadas por unidad. Práctica libre y evaluación programada por semana.
+- Elección razonada, emparejamiento, secuencias, cálculos y crucigramas con cruces reales cuando los términos permiten conectar. Cada tarea tiene explicación. Todos los ejercicios se resuelven con su expediente.
+- Panel docente: horarios de Ecuador, límite de intentos, autor de evaluaciones privadas de cinco tipos, estudiantes manuales/Excel con vista previa, exportación y ajuste de notas con motivo.
+- La vista previa usa un visitante ficticio y almacenamiento local. No hay estudiantes reales precargados, contraseñas en código, ni recuperación simulada.
 
-## GitHub Pages
+## Supabase y estado real
 
-1. Subir estos archivos a `main`.
-2. En Settings → Pages → Build and deployment seleccionar **GitHub Actions**.
-3. Ejecutar o revisar el workflow “Publicar demostración en GitHub Pages”.
+La URL y clave publicable del proyecto están en `assets/config.js`. Una clave publicable no autoriza administrar la base, crear roles ni desplegar funciones. La web puede iniciar sesión, recuperar contraseña y usar el backend **después** de ejecutar el esquema, crear la docente, desplegar la función y configurar correo/URLs. Ver [docs/SUPABASE.md](docs/SUPABASE.md).
 
-El workflow ejecuta pruebas, construye `dist/` y publica ese directorio. Todos los recursos usan rutas relativas para funcionar bajo `/SIGIN-ULEAM/`. No hay fuentes o bibliotecas cargadas desde CDNs durante el uso del sitio. ExcelJS 4.4.0 está incluido con su licencia MIT.
+La vista previa permanece disponible para revisar diseño y contenido mientras se activa el proyecto. Es contenido público; no debe usarse para almacenar datos sensibles ni notas institucionales. Los ejemplos de práctica tienen respuestas públicas para aprender. Las evaluaciones reales se crean aparte con el autor docente y se guardan en el esquema privado. Nunca cargar los mismos ejercicios públicos como evaluación secreta.
 
-## Alcance y privacidad
+Cuenta estudiantil: correo `e{cedula}@live.uleam.edu.ec`, contraseña temporal igual a la cédula, cambio obligatorio antes del acceso. El alta ocurre en el servidor; no se guarda su clave en el repositorio. La matrícula no confirma la existencia del buzón. Como la clave inicial es predecible, activar mediante correo institucional es preferible antes de incorporar alumnado real.
 
-**Demostración local, no sistema institucional de producción.** Los botones de rol no autentican usuarios. Datos, notas y configuraciones viven en localStorage, accesibles y modificables por quien usa el navegador. No hay sincronización entre equipos, correos, cuentas privadas ni autorización real. No introducir listas reales de estudiantes en una demostración pública.
+Cuenta docente: usuario visible `DocenteULEAM`, asociado al correo controlado configurado en `teacherEmail`. Crear la contraseña inicial en Auth, sin incluirla en archivos. La aplicación obtiene el rol del servidor, no de un valor editable local.
 
-Importación `.xlsx`: hasta 2000 filas y 5 MB, con vista previa y confirmación. Columnas `Cédula`, `Nombres y Apellidos`, `Materia` (gig-502). Las cédulas deben estar como texto; se valida longitud de diez dígitos, no el dígito verificador ni la identidad. El correo sugerido es `e{cedula}@live.uleam.edu.ec`, todavía no verificado. Los duplicados e inscripciones ajenas se rechazan. No se admiten fórmulas.
+RLS protege perfiles, matrículas y resultados. La evaluación valida inscripción, fechas y número de intentos, y calcula notas en una operación transaccional. No hay fallback a calificación local en una evaluación real. Los ajustes docentes conservan historial.
 
-## Conectar Supabase después de la aprobación docente
+**No se ha verificado todavía el proyecto remoto, envío SMTP ni las cuentas reales.** Las pruebas de integración PostgreSQL y los mocks HTTP comprueban implementación; no prueban esos servicios externos.
 
-Supabase ofrece un plan gratuito con cuotas; consultar sus condiciones vigentes antes de elegirlo. GitHub Pages sigue alojando la interfaz. Para acceso privado real faltan:
+## Publicar y cambiar dirección
 
-- Crear un proyecto Supabase y configurar su URL y clave **publicable**. Nunca exponer una clave service_role ni secretos de correo en GitHub.
-- Crear tablas de perfiles, materias, matrículas, actividades, ventanas e intentos. Usar matrículas separadas para soportar varias materias por estudiante.
-- Activar RLS: un estudiante solo consulta su matrícula y resultados; la docente gestiona sus materias. Los roles no deben poder modificarse desde el navegador.
-- Guardar claves de respuesta fuera del acceso estudiantil y calificar con una función de servidor que valide inscripción, fechas e intentos de forma atómica.
-- Crear usuarios desde un servicio autorizado, no desde código público. Preferir invitación institucional y cambio de contraseña; no almacenar claves en texto plano.
-- Configurar autenticación, verificación, recuperación, URLs de redirección de Pages y proveedor de correo. Generar una dirección no demuestra que la cuenta exista.
-- Sustituir el adaptador local y probar aislamiento entre cuentas, recuperación y acceso desde dos dispositivos antes de usar datos reales.
+El workflow `.github/workflows/pages.yml` ejecuta pruebas y despliega `dist/` a GitHub Pages al subir a `main`. Seleccionar GitHub Actions en Settings → Pages. Rutas relativas permiten trasladar el mismo sitio a otro repositorio sin editar todos los enlaces.
 
-La integración no está implementada ni verificada en esta entrega; no basta con pegar una clave para convertir la demostración en una aplicación privada.
+GitHub Pages ya utiliza HTTPS. Para una dirección gratuita sin el nombre personal, crear una organización GitHub con nombre académico y trasladar el repositorio allí; GitHub requiere esa creación desde la cuenta del usuario. No hace falta abrir otra cuenta personal ni comprar un dominio. Después actualizar `siteUrl`, las Redirect URLs de Auth y `SIGIN_ALLOWED_ORIGINS`. No crear `CNAME` sin controlar un dominio real.
 
 ## Validación
 
-Pruebas de modelo: contenido semanal, importación de múltiples filas, duplicados, ventanas, calificación y ajuste docente. Pruebas manuales automatizadas con Playwright y Chromium del entorno: recorrido estudiantil, práctica, evaluación, persistencia de respuestas, plantilla Excel y panel móvil/escritorio.
+Pruebas Node: 48 semanas/240 tareas, contexto suficiente, conservación de títulos, PDF, corrección de los cinco formatos, cuadrículas, importación y matrículas múltiples. Pruebas de adaptador/Edge: autenticación servidor, recuperación, refresh concurrente, altas autorizadas y rollback. PostgreSQL16 real: RLS, servidor de notas, límites simultáneos, horarios, cambio obligatorio y publicación privada.
 
-Mantener esta implementación como demostración de una sola materia hasta la revisión de la docente.
+Navegador: tres materias, cinco formatos, prácticas y evaluación de vista previa, plantilla Excel y layout en 360/390/768/1024/1440/1920 px. No equivale a validación de correo o permisos en el proyecto publicado.

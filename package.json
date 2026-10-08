@@ -1,1 +1,13 @@
-{"name":"sigin-uleam-demo","private":true,"type":"module","scripts":{"test":"node --test","start":"python3 -m http.server 4173 --bind 0.0.0.0","build":"node scripts/build.js"},"engines":{"node":">=20"}}
+{
+  "name": "sigin-uleam",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "start": "python3 -m http.server 4173 --bind 0.0.0.0",
+    "build": "node scripts/build.js"
+  },
+  "engines": {
+    "node": ">=22.18"
+  }
+}

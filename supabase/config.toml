@@ -1,0 +1,3 @@
+[functions.manage-students]
+# Las claves publicables nuevas y JWT de Auth se validan dentro de la función mediante GET /auth/v1/user.
+verify_jwt = false

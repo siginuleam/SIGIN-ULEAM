@@ -1,11 +1,101 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import {activities} from '../assets/activities.js';
-import {syllabus} from '../assets/syllabus.js';
-import {initialState,normalizeRows,commitImport,availability,grade,bestGrade} from '../assets/model.js';
-test('16 semanas con expedientes, preguntas diferentes y respuestas válidas',()=>{assert.equal(syllabus.weeks.length,16);assert.equal(activities.length,16);const prompts=new Set();for(const a of activities){assert.ok(a.context.length>150);for(const q of a.questions){assert.ok(q.options[q.correct]);assert.ok(q.explanation);assert.ok(!prompts.has(q.prompt));prompts.add(q.prompt)}}});
-test('plantilla y carga de varias filas conservan todos los estudiantes',()=>{const s=initialState();const rows=normalizeRows([{'Cédula':'0123456789','Nombres y Apellidos':'Ana','Materia':'gig-502'},{cedula:'1234567890',nombre:'Luis'}],s.students);assert.equal(commitImport(s,rows),2);assert.equal(s.students.length,3);assert.equal(s.students[1].email,'e0123456789@live.uleam.edu.ec')});
-test('duplicados, cédulas inválidas y cursos ajenos se detectan',()=>{const rows=normalizeRows([{cedula:'1234567890',nombre:'A'},{cedula:'1234567890',nombre:'B'},{cedula:'123',nombre:'C'},{cedula:'0123456789',nombre:'D',materia:'otra'}],[]);assert.equal(rows.filter(r=>r.error).length,3)});
-test('cierre manual prevalece; ventanas excluyen fechas fuera del rango',()=>{const s={locked:false,open:'2026-10-01T10:00:00-05:00',close:'2026-10-02T10:00:00-05:00'};assert.equal(availability(s,Date.parse('2026-10-01T16:00:00Z')).open,true);assert.equal(availability({...s,locked:true},Date.parse('2026-10-01T16:00:00Z')).open,false);assert.equal(availability(s,Date.parse('2026-10-02T15:00:00Z')).open,false)});
-test('calificación y mejor intento solo para estudiante y semana seleccionados',()=>{const q=activities[0].questions;assert.equal(grade(q,q.map(x=>x.correct)),10);assert.equal(bestGrade([{courseId:'gig-502',studentId:'a',week:1,score:6},{courseId:'gig-502',studentId:'a',week:1,score:9},{courseId:'otro',studentId:'a',week:1,score:10}], 'a',1),9)});
-test('ajuste docente permite bajar una nota sin borrar intentos',()=>{const attempts=[{courseId:'gig-502',studentId:'a',week:1,score:10},{courseId:'gig-502',studentId:'a',week:1,score:7,teacherAdjustment:true}];assert.equal(bestGrade(attempts,'a',1),7);assert.equal(attempts.length,2)});
+import test from "node:test";
+import assert from "node:assert/strict";
+import {
+  initialState,
+  normalizeRows,
+  commitImport,
+  availability,
+  bestGrade,
+  answerComplete,
+} from "../assets/model.js";
+test("inicio sin estudiantes: no publicar datos reales", () => {
+  assert.equal(initialState().students.length, 0);
+  assert.equal(initialState().settings.length, 48);
+});
+test("plantilla compatible, varias filas y ceros iniciales", () => {
+  const s = initialState();
+  const rows = normalizeRows(
+    [
+      {
+        Cédula: "0123456789",
+        "Nombres y Apellidos": "Ana",
+        Materia: "gig-502",
+      },
+      { cedula: "1234567890", nombre: "Luis", materia: "cex-103" },
+    ],
+    s.students,
+  );
+  assert.equal(commitImport(s, rows), 2);
+  assert.equal(s.students.length, 2);
+  assert.equal(s.students[0].email, "e0123456789@live.uleam.edu.ec");
+});
+test("una persona puede matricularse en dos materias sin duplicar cuenta", () => {
+  const s = initialState();
+  commitImport(
+    s,
+    normalizeRows(
+      [
+        { cedula: "1234567890", nombre: "Ana", materia: "gig-502" },
+        { cedula: "1234567890", nombre: "Ana", materia: "gig-406" },
+      ],
+      [],
+    ),
+  );
+  assert.equal(s.students.length, 1);
+  assert.deepEqual(s.students[0].courses, ["gig-502", "gig-406"]);
+});
+test("duplicados, cédulas inválidas, cursos desconocidos y nombre conflictivo", () => {
+  const rows = normalizeRows(
+    [
+      { cedula: "1234567890", nombre: "A" },
+      { cedula: "1234567890", nombre: "B" },
+      { cedula: "123", nombre: "C" },
+      { cedula: "0123456789", nombre: "D", materia: "otra" },
+    ],
+    [],
+  );
+  assert.equal(rows.filter((r) => r.error).length, 3);
+  assert.ok(
+    normalizeRows(
+      [{ cedula: "1234567890", nombre: "Otra", materia: "gig-406" }],
+      [{ id: "1234567890", name: "Ana", courses: ["gig-502"] }],
+    )[0].error,
+  );
+});
+test("cierre manual prevalece y límite temporal usa instante Ecuador", () => {
+  const s = {
+    locked: false,
+    open: "2026-10-01T10:00:00-05:00",
+    close: "2026-10-02T10:00:00-05:00",
+  };
+  assert.equal(availability(s, Date.parse("2026-10-01T16:00:00Z")).open, true);
+  assert.equal(
+    availability({ ...s, locked: true }, Date.parse("2026-10-01T16:00:00Z"))
+      .open,
+    false,
+  );
+  assert.equal(availability(s, Date.parse("2026-10-02T15:00:00Z")).open, false);
+});
+test("ajuste docente baja una nota y conserva historial", () => {
+  const attempts = [
+    { courseId: "gig-502", studentId: "a", week: 1, score: 10 },
+    {
+      courseId: "gig-502",
+      studentId: "a",
+      week: 1,
+      score: 7,
+      teacherAdjustment: true,
+    },
+  ];
+  assert.equal(bestGrade(attempts, "a", 1), 7);
+  assert.equal(attempts.length, 2);
+});
+test("respuestas incompletas: emparejamiento y número vacío no se entregan", () => {
+  assert.equal(
+    answerComplete({ type: "matching", pairs: [{ left: "a", right: "b" }] }, [
+      null,
+    ]),
+    false,
+  );
+  assert.equal(answerComplete({ type: "numeric" }, ""), false);
+});
