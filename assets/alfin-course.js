@@ -1,1181 +1,1596 @@
 import { syllabus } from "./syllabus.js";
 
-// Todos los expedientes son simulaciones creadas para aprender. Ninguna cifra describe una empresa real.
-const choice = (prompt, options, correct, explanation) => ({
-  type: "choice",
-  prompt,
-  options,
-  correct,
-  explanation,
-});
-const matching = (prompt, pairs, explanation) => ({
-  type: "matching",
-  prompt,
-  pairs: pairs.map(([left, right]) => ({ left, right })),
-  explanation,
-});
-const ordering = (prompt, items, explanation) => ({
-  type: "ordering",
-  prompt,
-  items,
-  explanation,
-});
-const numeric = (prompt, correct, unit, explanation, tolerance = 0.01) => ({
-  type: "numeric",
-  prompt,
-  correct,
-  unit,
-  tolerance,
-  explanation,
-});
-const crossword = (prompt, entries, explanation) => ({
-  type: "crossword",
-  prompt,
-  entries: entries.map(([word, clue]) => ({ word, clue })),
-  explanation,
-});
-
+// Prácticas didácticas originales: conceptos y casos ficticios alineados al sílabo.
 const activities = [
   {
-    week: 1,
-    name: "Sala de decisiones: ¿qué información permite reponer?",
-    objective:
-      "Convertir registros dispersos en una decisión trazable, distinguiendo datos, información y conocimiento.",
-    context: `EXPEDIENTE 01 · Tienda ficticia Costa Viva. Eres analista de información y debes entregar una recomendación de reposición del arroz de 1 kg antes de las 11:00. El proveedor entrega mañana; cada caja contiene 12 paquetes. No se permite afirmar que estas son prácticas de una cadena real.
-
-Documento A, cierre de inventario del lunes a las 18:00: existen 72 paquetes; 12 están dañados y no pueden venderse. Documento B, reservas confirmadas para el martes: 24 paquetes, que se retirarán antes del cierre. Documento C, estimación de ventas adicionales: 24 paquetes el martes y 60 el miércoles, total 84, calculada a partir de cuatro semanas comparables. Las reservas no están incluidas en esa estimación. El protocolo interno exige mantener 24 paquetes de seguridad después de cubrir toda la demanda. Para este ejercicio no hay devoluciones ni entregas pendientes, y la reposición llega antes de la demanda del miércoles.
-
-Documento D, chat comercial: «el arroz se está agotando; compremos el doble». No contiene período, referencia del producto ni autor del cálculo. Los archivos de ventas incluyen código, fecha, unidades y sucursal; estos registros son datos. Comparar la demanda con el inventario utilizable produce información. Aplicar el protocolo de reservas y seguridad, explicando sus límites, convierte esa información en conocimiento útil para decidir.
-
-El equipo dispone de un tablero compartido, pero todavía no distingue stock físico de stock vendible. El supervisor pide conservar los documentos A, B y C junto con el cálculo y registrar quién autorizó la compra. La estimación puede fallar si aparece una promoción extraordinaria: por eso el informe debe incluir esa incertidumbre y una hora de revisión. Una decisión rápida sin comprobar las unidades podría confundir cajas con paquetes; una decisión lenta podría dejar sin producto a clientes con reserva.`,
-    questions: [
-      choice(
-        "¿Qué base de cálculo respeta el expediente y evita contar dos veces las reservas?",
-        [
-          "Stock utilizable de 60 paquetes; demanda total de 108; seguridad de 24.",
-          "Stock de 72 paquetes; demanda de 84; reservas ya incluidas.",
-          "Stock utilizable de 60 paquetes; demanda de 132; seguridad de 24.",
-        ],
-        0,
-        "72 − 12 = 60 disponibles. La demanda es 24 + 84 = 108 porque la previsión excluye reservas. La seguridad es adicional.",
-      ),
-      numeric(
-        "¿Cuántas cajas completas deben comprarse para cubrir la demanda y mantener la seguridad?",
-        6,
-        "cajas",
-        "(108 + 24 − 60) / 12 = 6 cajas. No se requieren redondeos en este caso.",
-      ),
-      matching(
-        "Relaciona cada elemento con su papel informacional.",
-        [
-          ["Fila de ventas con fecha y cantidad", "Dato registrado"],
-          [
-            "Comparación de demanda e inventario vendible",
-            "Información contextualizada",
-          ],
-          [
-            "Regla de reposición con seguridad y límites",
-            "Conocimiento aplicado",
-          ],
-          [
-            "Mensaje «compremos el doble» sin cálculo",
-            "Afirmación sin respaldo suficiente",
-          ],
-        ],
-        "La misma cifra puede aportar información al contextualizarse; la decisión necesita reglas y evidencia.",
-      ),
-      ordering(
-        "Ordena el proceso de una recomendación que otra persona pueda revisar.",
-        [
-          "Delimitar producto, período y decisión",
-          "Verificar inventario y separar unidades dañadas",
-          "Integrar reservas, previsión y stock de seguridad",
-          "Calcular cajas y señalar incertidumbre",
-          "Registrar evidencia, responsable y hora de revisión",
-        ],
-        "La decisión se define antes de reunir evidencia; se conserva la trazabilidad después de justificar el cálculo.",
-      ),
-      crossword(
-        "Completa los conceptos del expediente.",
-        [
-          ["DATO", "Registro individual que todavía necesita contexto."],
-          [
-            "STOCK",
-            "Existencias del producto; deben distinguirse las físicas de las utilizables.",
-          ],
-          [
-            "RESERVA",
-            "Pedido confirmado que la previsión del caso no incluye.",
-          ],
-        ],
-        "Estos conceptos evitan interpretar como equivalentes un registro, la disponibilidad y un compromiso de venta.",
-      ),
-    ],
-  },
-  {
-    week: 2,
-    name: "Auditoría de desperdicio: tres usuarios, tres necesidades",
-    objective:
-      "Priorizar requerimientos informacionales con alcance, usuarios, decisiones y evidencia mínima.",
-    context: `EXPEDIENTE 02 · Planta ficticia AgroCosta. La gerencia tiene dos horas para decidir si debe revisar la cadena de frío o modificar la planificación de lotes. No se trata de una descripción de una empresa agroindustrial real. Producción solicita «todos los datos», calidad pregunta por temperaturas y finanzas necesita estimar pérdidas; tu tarea es convertir esas solicitudes en requerimientos verificables.
-
-Documento A, registro de cuatro semanas: lote L1, 1.000 kg producidos y 60 kg descartados; L2, 1.000 y 110; L3, 1.000 y 50; L4, 1.000 y 100. El costo contable por kilogramo descartado es USD 2,50 para todos los lotes. La regla de alerta interna se activa si el descarte supera 8 % de la producción del lote. Esta regla es un umbral operativo, no una norma sanitaria.
-
-Documento B, sensores: L2 y L4 presentan lecturas superiores a 8 °C; sin embargo, el sensor del turno nocturno tenía una calibración vencida. Documento C, entrevistas: dos operadores mencionan retrasos en despacho; la entrevista recoge percepciones, no mide cuántos minutos perdió cada lote. Documento D, correo comercial: el próximo pedido sale mañana. Calidad puede exportar lecturas, mantenimiento puede comprobar calibración y finanzas puede confirmar costos; ninguna fuente por sí sola demuestra la causa del desperdicio.
-
-El comité exige primero identificar los lotes sobre el umbral y cuantificar su costo, luego contrastar las lecturas con sensores válidos y horas de despacho. El informe debe distinguir «coincide con» de «fue causado por». Para resolver el caso, un requerimiento completo indica usuario, decisión, variable, período, unidad y fuente. Recopilar hojas de vida de empleados no responde a esta decisión y añadiría datos personales innecesarios. La prioridad se asigna por urgencia y utilidad, no por el volumen del archivo disponible.`,
-    questions: [
-      choice(
-        "¿Qué requerimiento está mejor delimitado para la decisión de las próximas dos horas?",
-        [
-          "Reunir todo el historial de la planta y las hojas de vida.",
-          "Identificar lotes de las últimas cuatro semanas con descarte superior al 8 %, costo y lecturas de temperatura verificables.",
-          "Comparar opiniones sobre calidad sin identificar lote ni período.",
-        ],
-        1,
-        "Define variable, período, unidad de análisis y evidencia; responde a la decisión sin pedir datos irrelevantes.",
-      ),
-      numeric(
-        "¿Cuál es el costo de descarte conjunto de los lotes que superan el umbral de 8 %?",
-        525,
-        "USD",
-        "L2 alcanza 11 % y L4 10 %. (110 + 100) × 2,50 = USD 525. L1 y L3 están por debajo del umbral.",
-      ),
-      matching(
-        "Asigna a cada usuario el requerimiento que le corresponde.",
-        [
-          ["Finanzas", "Costo de descarte por lote y período"],
-          ["Calidad", "Temperaturas por turno con estado de calibración"],
-          ["Producción", "Tiempos de elaboración y despacho por lote"],
-          ["Gerencia", "Opciones de intervención y límites de la evidencia"],
-        ],
-        "Los requerimientos responden a decisiones diferentes y deben integrarse, no confundirse.",
-      ),
-      choice(
-        "¿Qué conclusión es responsable con la evidencia disponible?",
-        [
-          "La temperatura causó todas las pérdidas, porque dos lotes coinciden.",
-          "El turno nocturno debe ser sancionado con base en las entrevistas.",
-          "L2 y L4 requieren revisión; aún hay que validar sensores y contrastar despacho antes de atribuir una causa.",
-        ],
-        2,
-        "Una correlación y testimonios no establecen causalidad; la calibración vencida reduce la fiabilidad de las lecturas.",
-      ),
-      ordering(
-        "Ordena una entrevista de requerimientos antes de descargar archivos.",
-        [
-          "Identificar usuario y decisión urgente",
-          "Definir variable, período y unidad de análisis",
-          "Localizar fuentes y responsables",
-          "Verificar calidad y restricciones de los datos",
-          "Entregar evidencia mínima y registrar pendientes",
-        ],
-        "Las fuentes se eligen después de precisar la necesidad; los pendientes deben acompañar la respuesta.",
-      ),
-    ],
-  },
-  {
-    week: 3,
-    name: "Comité de evidencia: elegir y aplicar un modelo ALFIN",
-    objective:
-      "Aplicar Big6 y distinguirlo de SCONUL, ACRL y AMI en un problema de información.",
-    context: `EXPEDIENTE 03 · Cooperativa ficticia Bahía Digital. Un comité estudia si debe pilotar una aplicación de pagos en dos barrios. Tiene 48 horas para elaborar una recomendación; usar un modelo ayuda a ordenar el trabajo, pero no sustituye el análisis de las fuentes. No se atribuyen procedimientos a ningún banco o plataforma real.
-
-Ficha de modelos: Big6 organiza seis etapas: definición de la tarea, estrategias de búsqueda, localización y acceso, uso de información, síntesis y evaluación. SCONUL describe siete pilares de capacidad: identificar, delimitar, planificar, recopilar, evaluar, gestionar y presentar. ACRL aporta marcos conceptuales, incluido «la autoridad se construye y es contextual». AMI integra alfabetización mediática e informacional: examina cómo se produce, representa y comunica un mensaje, con atención a participación y derechos.
-
-Documento A, encuesta interna: respondieron 80 de 200 comerciantes invitados; 52 de los 80 declaran interés. La invitación se difundió exclusivamente por una aplicación móvil, por lo que podrían faltar comerciantes con menor conectividad. Documento B, proveedor: promete «adopción garantizada» y presenta testimonios seleccionados, sin método de selección. Documento C, ensayo académico: estudia barreras de adopción en otro país; aporta conceptos, pero no estima la aceptación de estos barrios. Documento D, comité de usuarios: pide conocer comisiones, protección de datos y opciones para quienes no tienen teléfono.
-
-El comité debe diferenciar el 65 % de interés entre quienes respondieron del porcentaje de toda la población invitada. Evaluará utilidad, sesgo de selección y condiciones del piloto. Una fuente académica puede ser valiosa para el marco conceptual y poco adecuada para una tarifa vigente; el proveedor conoce su tarifa, pero tiene interés comercial. El producto final será una ficha de decisión con fuentes, limitaciones y una prueba pequeña antes de ampliar el servicio.`,
-    questions: [
-      ordering(
-        "Aplica Big6: ordena las seis etapas del trabajo.",
-        [
-          "Definir la decisión y los datos necesarios",
-          "Seleccionar estrategias y fuentes",
-          "Localizar y acceder a los documentos",
-          "Extraer y valorar la información útil",
-          "Sintetizar la recomendación del piloto",
-          "Evaluar resultado y proceso",
-        ],
-        "Big6 termina evaluando tanto la solución como el modo de obtenerla.",
-      ),
-      matching(
-        "Relaciona cada necesidad con el marco más directo de la ficha.",
-        [
-          ["Ordenar seis etapas de resolución", "Big6"],
-          [
-            "Diagnosticar capacidades de identificar, gestionar y presentar",
-            "SCONUL",
-          ],
-          ["Preguntar qué autoridad sirve para esta decisión", "ACRL"],
-          ["Analizar representación, medios y derechos", "AMI"],
-        ],
-        "Los modelos son complementarios; el emparejamiento distingue su aporte principal según la ficha.",
-      ),
-      numeric(
-        "¿Qué porcentaje de los 80 participantes expresó interés? No uses como denominador a los 200 invitados.",
-        65,
-        "% de participantes",
-        "52 / 80 × 100 = 65 %. El sesgo de selección impide convertirlo automáticamente en demanda de los 200 comerciantes.",
-      ),
-      choice(
-        "¿Qué uso de las fuentes aplica «autoridad contextual»?",
-        [
-          "Usar el ensayo extranjero para afirmar que 65 % de todos los comerciantes adoptará el servicio.",
-          "Usar el proveedor para comprobar tarifas y contrastar sus promesas de adopción con evidencia independiente.",
-          "Descartar cualquier fuente comercial incluso para consultar su propia tarifa.",
-        ],
-        1,
-        "La idoneidad depende de la pregunta: tarifas y predicciones requieren evaluaciones distintas.",
-      ),
-      crossword(
-        "Resuelve tres conceptos de la ficha.",
-        [
-          [
-            "AUTORIDAD",
-            "Idoneidad contextual de quien produce la información.",
-          ],
-          [
-            "SINTESIS",
-            "Integración argumentada de hallazgos en un producto útil.",
-          ],
-          ["EVALUAR", "Acción final de Big6 sobre proceso y resultado."],
-        ],
-        "Nombrar los conceptos ayuda a explicar por qué un procedimiento no garantiza por sí solo una fuente pertinente.",
-      ),
-    ],
-  },
-  {
-    week: 4,
-    name: "Trazabilidad sin exclusión en una cooperativa costera",
-    objective:
-      "Diseñar un registro accesible y evaluar brechas de acceso, habilidades y participación.",
-    context: `EXPEDIENTE 04 · Cooperativa ficticia Mar Abierto. Veinte proveedores deben registrar origen, lote y fecha de entrega. El formulario vigente exige computadora, conexión estable y un video de 200 MB antes de las 18:00. La trazabilidad es obligatoria en este ejercicio, pero ese requisito no obliga a utilizar video. Los datos no describen prácticas de una empresa camaronera o atunera real.
-
-Documento A, diagnóstico: ocho proveedores tienen computadora y conexión estable; doce solo teléfono con conexión intermitente. Documento B, prueba de registro: completaron el trámite ocho de los ocho del primer grupo y tres de los doce del segundo. No hay evidencias de fraude: los nueve registros faltantes no deben interpretarse como desinterés. Documento C, entrevista accesible: algunos usuarios leen con dificultad textos extensos; dos necesitan instrucciones en audio y texto, y el uso de solo colores para indicar errores genera confusión.
-
-La propuesta B sustituye el video obligatorio por un formulario liviano con los tres campos, revisión antes de enviar y guardado local pendiente de sincronización. Se ofrecerá registro asistido en un punto de recepción. Antes de implementar el modo pendiente, el equipo debe definir cómo proteger el dispositivo y resolver duplicados; almacenar datos sin control también genera riesgo. La asistencia nunca debe eliminar la identificación del lote.
-
-El presupuesto disponible es USD 600. Adaptar el formulario cuesta USD 300; preparar instrucciones en texto y audio cuesta USD 100; habilitar un turno de asistencia cuesta USD 200. Comprar cinco computadoras cuesta USD 2.000 y no resuelve por sí solo habilidades o conectividad. El comité evaluará la mejora separando resultados por grupo, tiempo empleado y errores, con consentimiento en las entrevistas. Promediar el éxito general ocultaría la desigualdad. La brecha digital comprende acceso, habilidades y beneficios obtenidos, no solamente posesión de equipos.`,
-    questions: [
-      numeric(
-        "¿Cuál fue la tasa de finalización del grupo de teléfono y conexión intermitente?",
-        25,
-        "%",
-        "3 / 12 × 100 = 25 %. El grupo con computadora llegó a 100 %; la diferencia no prueba falta de interés.",
-      ),
-      choice(
-        "¿Qué propuesta cumple el presupuesto y conserva la trazabilidad?",
-        [
-          "Formulario liviano, instrucciones accesibles y turno de asistencia por USD 600.",
-          "Eliminar origen y lote para que todos envíen una respuesta.",
-          "Comprar cinco computadoras y conservar el video obligatorio.",
-        ],
-        0,
-        "300 + 100 + 200 = 600. Se reduce la barrera técnica conservando los tres campos necesarios.",
-      ),
-      matching(
-        "Relaciona barrera y respuesta adecuada.",
-        [
-          [
-            "Conexión intermitente",
-            "Guardado pendiente con sincronización y control de duplicados",
-          ],
-          [
-            "Textos extensos difíciles de comprender",
-            "Instrucciones breves en texto y audio",
-          ],
-          [
-            "Errores señalados solo con color",
-            "Etiquetas textuales junto a cada error",
-          ],
-          ["Ausencia de dispositivo propio", "Punto de registro asistido"],
-        ],
-        "La inclusión requiere adaptar el proceso a barreras diferentes sin sacrificar los datos esenciales.",
-      ),
-      ordering(
-        "Ordena el diseño y la comprobación de una alternativa inclusiva.",
-        [
-          "Consultar barreras a los grupos afectados",
-          "Definir los campos mínimos de trazabilidad",
-          "Diseñar alternativas y proteger el modo pendiente",
-          "Probar con usuarios de ambos grupos",
-          "Comparar finalización, tiempo y errores por grupo",
-        ],
-        "Se consulta antes de diseñar; se mide por grupo para no ocultar exclusión con un promedio.",
-      ),
-      choice(
-        "¿Qué indicador revela mejor si disminuyó la brecha?",
-        [
-          "Cantidad total de videos recibidos.",
-          "Éxito, tiempo y errores separados por acceso y tipo de dispositivo.",
-          "Cantidad de computadoras compradas sin probar el registro.",
-        ],
-        1,
-        "La inclusión se observa en la posibilidad de completar el proceso y obtener beneficios, no solo en equipamiento.",
-      ),
-    ],
-  },
-  {
-    week: 5,
-    name: "Laboratorio de consultas: reducir desperdicio con una pregunta útil",
-    objective:
-      "Delimitar preguntas estratégicas y construir vocabularios que equilibren precisión y cobertura.",
-    context: `EXPEDIENTE 05 · Distribuidora ficticia NutriCosta. La gerente pide «ideas de internet para evitar pérdidas». En realidad debe seleccionar una intervención para alimentos refrigerados vendidos en supermercados ecuatorianos, con evidencia publicada entre 2021 y 2025. La decisión compara redistribución, mejora de inventario y descuentos próximos al vencimiento. No se necesita demostrar que una empresa real aplica estas medidas.
-
-Documento A, alcance acordado: sector minorista, Ecuador, alimentos refrigerados, desperdicio alimentario y resultados medidos. Se admitirán estudios latinoamericanos como antecedentes, pero se identificarán como cobertura externa. Documento B, vocabulario: «desperdicio alimentario», «pérdida de alimentos», food waste; «supermercado», retail, grocery; «redistribución», donación, donation; «inventario», forecast, forecasting. Los términos no son totalmente equivalentes en todos los documentos: hay que revisar cómo cada autor define pérdida y desperdicio.
-
-Documento C, prueba 1: la consulta desperdicio AND supermercado recuperó 24 documentos, de los cuales 18 respondían al sector y fenómeno. Documento D, prueba 2: al añadir sinónimos con OR se recuperaron 40, de los cuales 22 resultaron pertinentes. La segunda consulta encuentra cuatro pertinentes adicionales, pero exige más revisión. Para este ejercicio, precisión = pertinentes recuperados / total recuperado; no conocemos todos los documentos pertinentes existentes, así que no podemos calcular exhaustividad.
-
-El buscador permite AND, OR, paréntesis y comillas; los filtros de año y territorio se aplican por separado. Las comillas exigen una frase y pueden omitir variantes. El registro de búsqueda debe conservar consulta exacta, plataforma, filtros, fecha y criterio de inclusión. El equipo dispone de 45 minutos para un primer dossier: no basta tomar los primeros resultados patrocinados. Un resultado no se descarta solo por ser extranjero; se distingue evidencia directamente aplicable de antecedentes que necesitan adaptación.`,
-    questions: [
-      choice(
-        "¿Qué pregunta transforma la solicitud inicial en una búsqueda evaluable?",
-        [
-          "¿Qué intervenciones reducen el desperdicio de alimentos refrigerados en supermercados de Ecuador según estudios 2021–2025?",
-          "¿Qué marca alimentaria tiene más presencia en redes?",
-          "¿Qué dicen todos los países sobre cualquier pérdida empresarial?",
-        ],
-        0,
-        "Delimita intervención, resultado, sector, territorio y período sin confundir popularidad con evidencia.",
-      ),
-      choice(
-        "¿Qué consulta reúne alternativas de vocabulario y combina los dos conceptos principales?",
-        [
-          '("desperdicio alimentario" OR "pérdida de alimentos" OR "food waste") AND (supermercado OR retail OR grocery)',
-          '"desperdicio alimentario" AND "pérdida de alimentos" AND "food waste"',
-          "(desperdicio OR supermercado OR Ecuador)",
-        ],
-        0,
-        "OR reúne expresiones alternativas dentro de cada grupo; AND exige relación entre fenómeno y sector. Año y territorio se filtran aparte.",
-      ),
-      numeric(
-        "Calcula la precisión de la prueba 2, expresada en porcentaje.",
-        55,
-        "%",
-        "22 / 40 × 100 = 55 %. La consulta amplió cobertura pero redujo precisión respecto al 75 % de la prueba 1.",
-      ),
-      matching(
-        "Asocia cada decisión de búsqueda con su propósito.",
-        [
-          ["OR entre sinónimos", "Ampliar alternativas de expresión"],
-          [
-            "AND entre fenómeno y sector",
-            "Exigir presencia de ambos conceptos",
-          ],
-          ["Comillas en una frase", "Buscar esa secuencia de palabras"],
-          ["Filtro de año", "Delimitar período de publicación"],
-        ],
-        "Los operadores actúan sobre conceptos y los filtros sobre campos; conviene registrar ambos.",
-      ),
-      ordering(
-        "Ordena una estrategia reproducible.",
-        [
-          "Definir pregunta y criterios de inclusión",
-          "Identificar conceptos y variantes de vocabulario",
-          "Construir y ejecutar una consulta inicial",
-          "Revisar pertinencia y ajustar términos",
-          "Guardar consulta, filtros, fecha y resultados",
-        ],
-        "Una búsqueda es un proceso de prueba documentado; el primer resultado no determina la calidad.",
-      ),
-    ],
-  },
-  {
-    week: 6,
-    name: "Mesa documental: comparar cifras sin mezclar coberturas",
-    objective:
-      "Seleccionar fuentes pertinentes y examinar período, población, unidad y método antes de comparar datos.",
-    context: `EXPEDIENTE 06 · Observatorio ficticio Puerto y Territorio. Un equipo prepara una nota para estudiar demanda logística en Manabí. Requiere contexto poblacional, actividad económica y trámites de importación. El dossier usa cifras inventadas; los organismos mencionados se incluyen solo para orientar la búsqueda de documentos oficiales reales.
-
-Ficha de fuentes: INEC publica estadísticas poblacionales y de hogares; Banco Central del Ecuador ofrece estadísticas macroeconómicas; SENAE publica información aduanera y procedimientos; artículos científicos pueden aportar métodos y análisis, pero deben revisarse su fecha, cobertura y acceso al texto completo. Los datos abiertos no son automáticamente correctos ni comparables: una licencia permite ciertos usos, mientras metadatos y metodología explican qué miden.
-
-Documento A, tabla de población: cantón Costa, 2022, 100.000 habitantes; la unidad es personas residentes. Documento B, población estimada del mismo cantón en 2025: 108.000, con método de proyección. Documento C, movimientos portuarios en 2025: 12.000 operaciones, incluyendo entradas y salidas; no representa 12.000 clientes distintos. Documento D, nota de prensa comercial: «el mercado creció 20 %», sin definir variable ni base. Documento E, procedimiento aduanero: versión actualizada en 2026 con enlace al documento original y fecha de vigencia; una copia de 2021 permanece en un blog.
-
-Para el ejercicio se permite calcular el cambio entre A y B, indicando que B es una estimación y no un nuevo censo. No es válido dividir operaciones portuarias entre habitantes para afirmar cuántas personas importan. El equipo debe conservar organismo productor, tabla, fecha, cobertura, unidad y metodología junto al archivo descargado. Las decisiones jurídicas requieren comprobar la vigencia de la norma original, no solo la fecha de una noticia. El informe final separará datos observados, estimaciones y afirmaciones todavía no verificadas, y señalará cualquier serie que no pueda compararse.`,
-    questions: [
-      matching(
-        "Selecciona el punto de partida institucional indicado en la ficha.",
-        [
-          ["Población y hogares", "INEC"],
-          ["Estadísticas macroeconómicas", "Banco Central del Ecuador"],
-          ["Procedimientos aduaneros vigentes", "SENAE"],
-          [
-            "Método para evaluar una relación económica",
-            "Artículo científico con metodología revisada",
-          ],
-        ],
-        "La fuente se elige por el dato que debe resolver, y después se verifica el documento específico.",
-      ),
-      numeric(
-        "¿Cuál es el cambio porcentual entre la población 2022 y la estimación 2025?",
-        8,
-        "%",
-        "(108.000 − 100.000) / 100.000 × 100 = 8 %. Debe declararse que se comparan un conteo y una proyección.",
-      ),
-      choice(
-        "¿Qué afirmación respeta las unidades y límites del dossier?",
-        [
-          "Las 12.000 operaciones equivalen a 12.000 habitantes importadores.",
-          "La población estimada aumenta 8 %; ese dato no prueba por sí solo crecimiento de la demanda logística.",
-          "El mercado creció 20 % porque lo dijo una nota comercial.",
-        ],
-        1,
-        "El cálculo poblacional es válido dentro del alcance descrito, pero no establece la demanda de un servicio distinto.",
-      ),
-      ordering(
-        "Ordena la verificación de un requisito aduanero.",
-        [
-          "Identificar el trámite y jurisdicción aplicables",
-          "Localizar documento original del organismo competente",
-          "Comprobar versión, vigencia y modificaciones",
-          "Registrar enlace y fecha de consulta",
-          "Comunicar el requisito con su alcance y fuente",
-        ],
-        "La copia antigua puede orientar la búsqueda, pero no sustituye el documento vigente.",
-      ),
-      choice(
-        "¿Qué conjunto de metadatos permite revisar una comparación?",
-        [
-          "Título del archivo y número de descargas.",
-          "Organismo, período, cobertura, unidad y metodología.",
-          "Color del gráfico y nombre de quien lo compartió.",
-        ],
-        1,
-        "Dos números con unidades o coberturas distintas pueden aparentar una diferencia que no existe.",
-      ),
-    ],
-    references: [
+    "week": 1,
+    "name": "ALFIN y AMI: de recibir mensajes a construir conocimiento",
+    "objective": "Distinguir datos, información y conocimiento, y reconocer competencias ALFIN/AMI.",
+    "label": "Simulación educativa · práctica",
+    "context": "Conceptos clave\nLa alfabetización informacional (ALFIN) permite reconocer una necesidad, buscar información, evaluarla y usarla de forma ética. La alfabetización mediática e informacional (AMI) añade el análisis de cómo los medios producen y representan mensajes, sus intereses y la participación responsable. Un dato es un registro; la información integra registros con contexto; el conocimiento surge al interpretar y aplicar información con criterio. La sociedad del conocimiento exige estas capacidades, no solamente acceso a tecnología.\n\nCaso breve\nUn equipo universitario analiza una campaña ficticia de una tienda. Recibe comentarios de consumidores, una noticia y un anuncio que presenta una opinión como si fuera una comprobación. Debe explicar qué sabe, qué falta por verificar y cómo se construyó el mensaje. Tener capturas no basta: necesitan origen, contexto y criterios. La tienda es una simulación y no representa prácticas de una empresa real.\n\nQué debes hacer\nDistingue los niveles de significado, identifica la necesidad y examina propósito, evidencia y circulación. El producto será una explicación propia que cite sus fuentes y conserve incertidumbres; copiar el anuncio no demuestra aprendizaje.",
+    "questions": [
       {
-        name: "INEC · estadísticas oficiales",
-        url: "https://www.ecuadorencifras.gob.ec/",
-      },
-      { name: "Banco Central del Ecuador", url: "https://www.bce.fin.ec/" },
-      {
-        name: "SENAE · información oficial",
-        url: "https://www.aduana.gob.ec/",
-      },
-    ],
-  },
-  {
-    week: 7,
-    name: "Búsqueda avanzada: auditar un repositorio farmacéutico",
-    objective:
-      "Aplicar lógica booleana y documentar falsos positivos y exclusiones indebidas.",
-    context: `EXPEDIENTE 07 · Unidad ficticia Salud y Evidencia. Un equipo investiga cadena de frío de medicamentos en Ecuador y necesita documentos metodológicos, no publicidad. El repositorio de práctica aplica coincidencia de términos a etiquetas; acepta AND, OR, NOT y paréntesis. Las etiquetas simplifican un buscador real y permiten comprobar cada resultado.
-
-Catálogo documental: D1 contiene «medicamento», «cadena fría», «Ecuador», «estudio»; D2 contiene «vacuna», «cadena fría», «Ecuador», «estudio»; D3 contiene «medicamento», «cadena fría», «Perú», «estudio»; D4 contiene «medicamento», «Ecuador», «publicidad»; D5 contiene «vacuna», «cadena fría», «Ecuador», «estudio», «publicidad». D5 es un estudio que analiza publicidad engañosa: la etiqueta no significa que el documento sea un anuncio. En el catálogo, D1, D2 y D5 son pertinentes para la pregunta acordada.
-
-La consulta inicial medicamento AND "cadena fría" AND Ecuador devuelve D1. La ampliación (medicamento OR vacuna) AND "cadena fría" AND Ecuador devuelve D1, D2 y D5. Un compañero añade NOT publicidad para «limpiar» resultados y elimina D5. El equipo conoce tres documentos pertinentes en este catálogo, por lo que aquí sí puede calcular exhaustividad: pertinentes recuperados / pertinentes existentes. Este cálculo no se generaliza a toda la web, donde el conjunto completo suele ser desconocido.
-
-La minería documental posterior debe extraer fecha, territorio, definición de cadena de frío y método de cada documento. Un gráfico bonito no convierte una pieza comercial en estudio. Tampoco basta una etiqueta «estudio»: habrá que leer su metodología antes de usarlo en una recomendación. El informe conservará la consulta inicial, cada cambio, documentos ganados o perdidos y una razón para aceptar o rechazarlos. La búsqueda es reproducible solo si se registran plataforma, campos consultados y fecha.`,
-    questions: [
-      choice(
-        "¿Qué consulta recupera los tres documentos pertinentes definidos en el catálogo?",
-        [
-          "medicamento AND vacuna AND Ecuador",
-          '(medicamento OR vacuna) AND "cadena fría" AND Ecuador',
-          '(medicamento OR vacuna) AND "cadena fría" AND Ecuador NOT publicidad',
+        "type": "choice",
+        "prompt": "El equipo necesita decidir qué conoce de la campaña. ¿Qué acción aplica ALFIN?",
+        "options": [
+          "Identificar el medio de cada mensaje y considerar comprobada toda información con autor.",
+          "Delimitar la necesidad y evaluar origen, contexto y evidencia antes de interpretar.",
+          "Reunir materiales relacionados y definir la necesidad al concluir la redacción."
         ],
-        1,
-        "La segunda recupera D1, D2 y D5. NOT publicidad excluye un estudio pertinente que analiza ese tema.",
-      ),
-      numeric(
-        "¿Cuál es la exhaustividad tras añadir NOT publicidad? Redondea a dos decimales.",
-        66.67,
-        "%",
-        "Se conservan D1 y D2, pero se pierde D5: 2 / 3 × 100 = 66,67 %.",
-        0.02,
-      ),
-      matching(
-        "Relaciona documento y resultado de la consulta ampliada sin NOT.",
-        [
-          ["D1", "Incluido: medicamento, cadena fría y Ecuador"],
-          ["D2", "Incluido: vacuna, cadena fría y Ecuador"],
-          ["D3", "Excluido: territorio Perú"],
-          ["D4", "Excluido: no contiene cadena fría"],
-          ["D5", "Incluido: la publicidad no se excluye automáticamente"],
-        ],
-        "Las condiciones se comprueban documento por documento, respetando el agrupamiento OR.",
-      ),
-      ordering(
-        "Ordena una mejora de búsqueda fundamentada.",
-        [
-          "Registrar consulta y resultados iniciales",
-          "Identificar variantes del concepto principal",
-          "Añadir OR dentro de un grupo entre paréntesis",
-          "Examinar documentos ganados y exclusiones propuestas",
-          "Guardar la versión elegida y su justificación",
-        ],
-        "Cambiar operadores sin inspeccionar resultados puede perder evidencia útil.",
-      ),
-      crossword(
-        "Completa el vocabulario de la auditoría.",
-        [
-          ["CONSULTA", "Expresión exacta que se ejecuta en el buscador."],
-          ["FILTRO", "Restricción aplicada a un campo, como año o territorio."],
-          [
-            "SESGO",
-            "Distorsión que puede aparecer al excluir evidencia de forma injustificada.",
-          ],
-        ],
-        "Documentar consultas y filtros permite detectar sesgos de selección informacional.",
-      ),
-    ],
-  },
-  {
-    week: 8,
-    name: "Dossier de consultoría: deduplicar, citar y recuperar",
-    objective:
-      "Organizar un expediente con metadatos verificables y diferenciar copia de corroboración independiente.",
-    context: `EXPEDIENTE 08 · Consultora ficticia Faro Gerencial. Tu equipo prepara un dossier para decidir si conviene abrir un centro de distribución. Ha descargado archivos de correos, buscadores y una carpeta compartida. El cliente exige poder recuperar cada evidencia utilizada; no se describen prácticas de consultoras reales.
-
-Inventario documental: R1, Ana Torres, «Rutas y costos costeros», informe técnico 2025, identificador DOC-101, enlace al original y fecha de consulta; R2, archivo «informe_final_v3.pdf», mismo autor, título e identificador DOC-101; R3, tabla capturada en imagen sin autor, período ni enlace; R4, Luis Vera, «Acceso vial estacional», artículo 2024, DOI de ejemplo 10.0000/ficticio.4, método y limitaciones; R5, copia parcial de R4 que omite anexos; R6, boletín municipal 2026 con cobertura local, emisor y fecha. Todos los títulos, personas e identificadores son inventados y no deben buscarse como publicaciones reales.
-
-Para el ejercicio, R1/R2 representan una fuente y R4/R5 otra. R6 es una tercera fuente independiente. R3 no se cuenta como evidencia utilizable hasta localizar su procedencia. La regla de deduplicación compara identificador y contenido, no únicamente el nombre del archivo. Las notas deben separar citas textuales, paráfrasis y conclusiones propias. El gestor bibliográfico facilita organizar y exportar, pero los metadatos importados pueden contener errores.
-
-El dossier tendrá carpeta de originales, índice de referencias y matriz: afirmación, fuente, localizador, método, limitación y uso en la decisión. Los documentos de costos y acceso vial no miden lo mismo; se conservan sus unidades antes de integrarlos. La propuesta de nombre «todo_final.pdf» impediría distinguir versiones. Se adoptará año_tema_autor_version y se registrará la fecha de consulta. Las copias se consolidan sin borrar información única y el equipo no presenta tres archivos repetidos como tres corroboraciones.`,
-    questions: [
-      numeric(
-        "Tras consolidar duplicados y excluir R3 hasta verificarlo, ¿cuántas fuentes independientes utilizables hay?",
-        3,
-        "fuentes",
-        "R1/R2 forman una, R4/R5 otra y R6 una tercera. R3 carece de procedencia verificada.",
-      ),
-      choice(
-        "¿Qué decisión conserva mejor la trazabilidad?",
-        [
-          "Conservar cada archivo como una fuente independiente porque su nombre es distinto.",
-          "Consolidar por identificador y contenido, conservar el original completo y registrar duplicados.",
-          "Borrar todo documento con más de una copia sin comprobar su contenido.",
-        ],
-        1,
-        "La deduplicación identifica fuentes equivalentes sin perder anexos ni información única.",
-      ),
-      matching(
-        "Relaciona campo y función dentro de la matriz.",
-        [
-          ["Localizador", "Indica página, sección o tabla de la evidencia"],
-          ["Método", "Explica cómo se obtuvo el resultado"],
-          ["Limitación", "Delimita lo que el documento no permite concluir"],
-          [
-            "Uso en la decisión",
-            "Vincula el hallazgo con una opción del proyecto",
-          ],
-        ],
-        "Una referencia completa identifica la fuente; la matriz explica qué aporta y con qué límites.",
-      ),
-      ordering(
-        "Ordena la preparación de una referencia importada.",
-        [
-          "Recuperar documento original completo",
-          "Comprobar autor, título, año e identificador",
-          "Consolidar copias y distinguir versiones",
-          "Registrar localizador y nota de lectura",
-          "Exportar referencia y revisar formato",
-        ],
-        "La exportación automática necesita metadatos correctos y revisión humana.",
-      ),
-      crossword(
-        "Resuelve los conceptos de organización.",
-        [
-          ["METADATO", "Dato que describe un documento, como autor o fecha."],
-          [
-            "DOSSIER",
-            "Expediente organizado que reúne evidencia para una decisión.",
-          ],
-          ["CITA", "Referencia que identifica el uso de una fuente ajena."],
-        ],
-        "Estos elementos permiten recuperar el documento y distinguir la evidencia de la interpretación propia.",
-      ),
-    ],
-  },
-  {
-    week: 9,
-    name: "Comité de inversión: puntuar una fuente sin convertirla en certeza",
-    objective:
-      "Evaluar actualidad, relevancia, autoridad, exactitud y propósito con una rúbrica explícita.",
-    context: `EXPEDIENTE 09 · Comité ficticio Horizonte Industrial. Debes evaluar fuentes sobre demanda para una inversión local en 2026. No decidirás la inversión únicamente con una puntuación: la rúbrica ayuda a explicar fortalezas y vacíos, pero no garantiza resultados.
-
-Ficha CRAAP: Currency corresponde a actualidad; Relevance a relevancia; Authority a autoridad; Accuracy a exactitud; Purpose a propósito. La rúbrica del caso asigna de 0 a 2 puntos en cada criterio: 0 = información ausente o inadecuada, 1 = respaldo parcial, 2 = respaldo suficiente para este uso. Un total de 8 a 10 permite incluir la fuente con sus límites; de 5 a 7 exige corroboración adicional; menos de 5 no permite fundamentar la recomendación. Es una regla didáctica local, no una certificación universal.
-
-Documento A, estudio 2025: autores identificados, muestra de 120 empresas de Manabí, cuestionario y limitaciones disponibles. Puntajes acordados: actualidad 2, relevancia 2, autoridad 2, exactitud 1 porque no conocemos validación externa, propósito 2. Documento B, anuncio 2018: sin autor ni método, promete retorno garantizado y vende asesoría. Puntajes: 0, 1, 0, 0, 0. Documento C, informe nacional 2026: organismo identificado y método publicado, pero sin desglose local; su actualidad es buena y su relevancia para esta pregunta es parcial.
-
-La muestra de A incluye únicamente empresas que aceptaron responder y no representa automáticamente todos los negocios. C puede contextualizar, pero no reemplaza una estimación local. B puede documentar una promesa comercial, no demostrar que se cumplirá. El comité debe registrar el propósito de cada uso: una fuente poco adecuada para pronosticar demanda puede ser útil para analizar publicidad. Antes de comparar cifras se revisarán cobertura, unidades y metodología. Una recomendación responsable señalará evidencia pendiente y condiciones bajo las cuales cambiaría su conclusión.`,
-    questions: [
-      numeric(
-        "¿Cuál es la puntuación total del documento A?",
-        9,
-        "puntos sobre 10",
-        "2 + 2 + 2 + 1 + 2 = 9. Permite incluirlo con límites según la rúbrica; no garantiza una inversión rentable.",
-      ),
-      matching(
-        "Relaciona hallazgo y criterio CRAAP principal.",
-        [
-          ["Documento publicado en 2018 para una decisión 2026", "Actualidad"],
-          ["Informe nacional sin desglose local", "Relevancia"],
-          ["Autores identificados y experiencia documentada", "Autoridad"],
-          ["Método, muestra y límites visibles", "Exactitud"],
-          ["Promesa que acompaña venta de asesoría", "Propósito"],
-        ],
-        "Un hallazgo puede afectar varios criterios; aquí se identifica su relación más directa.",
-      ),
-      choice(
-        "¿Qué conclusión sobre A es defendible?",
-        [
-          "Su 9/10 garantiza un retorno económico positivo.",
-          "Puede sustentar parte del análisis, declarando autoselección y ausencia de validación externa.",
-          "Su muestra de 120 prueba que todas las empresas de Manabí tienen igual demanda.",
-        ],
-        1,
-        "La puntuación organiza una evaluación contextual, pero no elimina problemas de representatividad.",
-      ),
-      choice(
-        "¿Cómo tratar el documento C?",
-        [
-          "Descartarlo solo porque no es local.",
-          "Usarlo como contexto nacional y buscar datos locales antes de extrapolar.",
-          "Aplicar sus cifras nacionales a cada cantón sin ajustes.",
-        ],
-        1,
-        "Su actualidad no compensa automáticamente la diferencia de cobertura.",
-      ),
-      ordering(
-        "Ordena una evaluación documentada.",
-        [
-          "Definir la pregunta y uso previsto de la fuente",
-          "Examinar fecha, cobertura y autoría",
-          "Revisar método, evidencia y propósito",
-          "Registrar puntajes y limitaciones concretas",
-          "Contrastar fuentes y justificar el uso final",
-        ],
-        "Los criterios se aplican a una necesidad concreta y terminan en una decisión de uso argumentada.",
-      ),
-    ],
-    references: [
-      {
-        name: "Biblioteca Meriam · criterios CRAAP",
-        url: "https://library.csuchico.edu/help/source-or-information-good",
-      },
-    ],
-  },
-  {
-    week: 10,
-    name: "Gabinete de crisis: una captura no equivale a seis confirmaciones",
-    objective:
-      "Verificar afirmaciones, reconocer dependencia entre fuentes y comunicar incertidumbre.",
-    context: `EXPEDIENTE 10 · Marca ficticia Bebidas del Faro. A las 09:00 circula una captura que afirma: «la planta cerrará mañana por contaminación». La publicación reúne 6.000 visualizaciones y seis cuentas la repiten. Debes preparar un mensaje interno a las 12:00, preservando lo que se conoce y lo que falta por confirmar. No se atribuye una crisis a ninguna empresa real.
-
-Cronología: 08:20, una cuenta sin identificación publica una imagen recortada; 08:40–09:10, seis cuentas la copian, sin enlazar documento original; 09:30, la jefatura solicita confirmar; 10:15, el organismo ficticio de control emite el comunicado C-17: «se realiza una inspección; no se ha emitido resolución de cierre». El comunicado muestra fecha, emisor y número. A las 10:45, un periodista consulta al mismo organismo y reproduce C-17. Una segunda noticia toma como fuente la primera. Por tanto, las noticias no agregan una segunda evidencia independiente sobre la resolución.
-
-Documento A, captura: falta fecha, página completa y origen. Documento B, comunicado C-17: confirma inspección y ausencia de resolución a las 10:15, pero no garantiza resultados posteriores. Documento C, vocería empresarial: manifiesta cumplimiento, aunque tiene interés directo y no reemplaza la autoridad de control. La regla del gabinete prohíbe publicar «todo es falso» si solo se ha refutado el cierre inmediato.
-
-La matriz debe separar afirmación, respaldo, origen y estado: confirmado, contradicho o pendiente. Para este caso, «hay inspección» está confirmado; «existe resolución de cierre a las 10:15» está contradicho; «qué concluirá la inspección» sigue pendiente. La recomendación es enlazar el comunicado, mencionar su hora y comprometer una actualización. La popularidad mide circulación, no veracidad. El sesgo de confirmación aparecería si el equipo solo buscara fuentes que apoyen su posición inicial.`,
-    questions: [
-      choice(
-        "¿Qué mensaje corresponde a la evidencia de las 10:15?",
-        [
-          "No hay ningún problema y nunca habrá cierre.",
-          "Hay una inspección; según C-17 no se ha emitido resolución de cierre a las 10:15. La situación puede actualizarse.",
-          "La planta cerrará porque seis cuentas lo publicaron.",
-        ],
-        1,
-        "El mensaje separa hecho, momento de verificación y límite temporal.",
-      ),
-      matching(
-        "Clasifica las afirmaciones según el expediente.",
-        [
-          ["Hay inspección a las 10:15", "Confirmado por C-17"],
-          ["Existe resolución de cierre a las 10:15", "Contradicho por C-17"],
-          ["Qué concluirá la inspección", "Pendiente de evidencia"],
-          [
-            "Seis copias son seis verificaciones independientes",
-            "Inferencia inválida por dependencia de origen",
-          ],
-        ],
-        "Verificar exige examinar el origen, no simplemente contar publicaciones.",
-      ),
-      numeric(
-        "De las seis cuentas que copian la captura, ¿cuántas aportan un nuevo documento original verificable?",
-        0,
-        "documentos nuevos",
-        "Todas repiten la misma captura sin original. El número de publicaciones no crea independencia.",
-      ),
-      ordering(
-        "Ordena la respuesta del gabinete.",
-        [
-          "Descomponer el mensaje viral en afirmaciones verificables",
-          "Buscar origen completo y fecha de la captura",
-          "Consultar documento del organismo competente",
-          "Registrar estados, límites y hora de verificación",
-          "Publicar un mensaje proporcionado y programar actualización",
-        ],
-        "La comunicación llega después de contrastar y conserva las dudas que permanecen abiertas.",
-      ),
-      choice(
-        "¿Qué conducta muestra sesgo de confirmación?",
-        [
-          "Buscar evidencia que podría refutar la posición del equipo.",
-          "Descartar C-17 solo porque contradice el mensaje que el equipo quería publicar.",
-          "Consultar el documento original y señalar su hora.",
-        ],
-        1,
-        "El sesgo consiste en privilegiar evidencia favorable y desatender la contradictoria sin razones metodológicas.",
-      ),
-    ],
-  },
-  {
-    week: 11,
-    name: "Mesa editorial: publicar con permisos y atribución",
-    objective:
-      "Distinguir cita, autorización de reutilización y límites de las licencias.",
-    context: `EXPEDIENTE 11 · Agencia ficticia Archivo Comercial. Debes preparar una guía digital gratuita para estudiantes. El equipo ha seleccionado una fotografía, una gráfica y un párrafo. La distribución gratuita no elimina automáticamente derechos de autor ni condiciones de licencia. Las piezas de este expediente son ficticias y las reglas se presentan con fines de aprendizaje, no como asesoría jurídica para un caso real.
-
-Inventario: P1, fotografía «Puerto al amanecer», autora ficticia Elena Mera, licencia CC BY 4.0; permite compartir y adaptar si se atribuye, enlaza la licencia y señala cambios. P2, gráfica «Costos por ruta», autor ficticio Marco Paz, licencia CC BY-ND 4.0; permite compartirla sin adaptar bajo sus condiciones. El equipo quiere cambiar colores, etiquetas y cifras: esa propuesta debe tratarse como adaptación y no se publicará bajo el permiso existente. P3, párrafo de 38 palabras de un informe protegido; se copiará literalmente como evidencia y debe distinguirse como cita, con referencia y página 7. La atribución no equivale a permiso para cualquier uso de una obra completa.
-
-Ficha de publicación: una referencia identifica autor, fecha, título y fuente. La cita textual identifica las palabras ajenas y su localizador; una paráfrasis genuina también necesita citar. Cambiar dos palabras no convierte un párrafo copiado en una redacción propia. El expediente recomienda solicitar autorización cuando el uso propuesto no encaja en el permiso o buscar un recurso con licencia compatible.
-
-Presupuesto: el equipo recibe autorización específica para una cuarta ilustración por USD 40 y compra otra por USD 25; atribuir esas piezas no anula el costo pactado. La revisión editorial registrará licencia, versión, autor, enlace, modificaciones y autorización adicional. No se presupone que una imagen encontrada en un buscador es libre: el resultado debe conducir a la fuente y a sus condiciones de uso.`,
-    questions: [
-      matching(
-        "Asocia pieza y actuación conforme a la ficha.",
-        [
-          [
-            "P1 · CC BY 4.0 adaptada",
-            "Atribuir, enlazar licencia e indicar cambios",
-          ],
-          [
-            "P2 · CC BY-ND con cambios propuestos",
-            "Buscar permiso adicional o usar alternativa compatible",
-          ],
-          ["P3 · párrafo literal", "Distinguir cita, referencia y página 7"],
-          [
-            "Paráfrasis de una idea ajena",
-            "Redactar con elaboración propia y citar la fuente",
-          ],
-        ],
-        "Citar y obtener autorización resuelven cuestiones diferentes; las condiciones dependen del uso y la licencia.",
-      ),
-      choice(
-        "¿Qué decisión respeta el permiso existente para P2?",
-        [
-          "Modificar cifras porque la guía será gratuita.",
-          "Publicar la gráfica sin adaptación cumpliendo las condiciones, o conseguir autorización para modificarla.",
-          "Cambiar el nombre del archivo para que deje de ser la misma obra.",
-        ],
-        1,
-        "La ausencia de fines comerciales no sustituye una autorización para adaptar una pieza BY-ND.",
-      ),
-      ordering(
-        "Ordena una revisión antes de publicar una imagen.",
-        [
-          "Localizar fuente y autoría de la pieza",
-          "Comprobar licencia, versión y uso propuesto",
-          "Obtener permiso adicional si hace falta",
-          "Preparar atribución, enlace e indicación de cambios",
-          "Guardar evidencia del permiso y revisar publicación",
-        ],
-        "Se verifica la compatibilidad antes de reutilizar; el registro conserva respaldo para futuras revisiones.",
-      ),
-      numeric(
-        "¿Cuánto debe presupuestar el equipo por las dos autorizaciones pagadas indicadas?",
-        65,
-        "USD",
-        "USD 40 + USD 25 = USD 65. La atribución no elimina los pagos acordados.",
-      ),
-      crossword(
-        "Completa los términos editoriales.",
-        [
-          [
-            "LICENCIA",
-            "Condiciones que autorizan determinados usos de una obra.",
-          ],
-          ["AUTOR", "Persona identificada como creadora de la pieza."],
-          ["CITA", "Señalamiento del uso de palabras o ideas de una fuente."],
-        ],
-        "Permiso, autoría y cita deben revisarse juntos; ninguno sustituye a los demás.",
-      ),
-    ],
-    references: [
-      {
-        name: "CC BY 4.0 · resumen de condiciones",
-        url: "https://creativecommons.org/licenses/by/4.0/deed.es",
+        "correct": 1,
+        "explanation": "ALFIN integra necesidad, búsqueda, evaluación y uso ético; disponer de archivos no completa el proceso."
       },
       {
-        name: "CC BY-ND 4.0 · resumen de condiciones",
-        url: "https://creativecommons.org/licenses/by-nd/4.0/deed.es",
+        "type": "choice",
+        "prompt": "La campaña mezcla opinión y comprobación. ¿Qué revisión aporta AMI además de localizar fuentes?",
+        "options": [
+          "Comprobar referencias sin examinar cómo se construye y recibe la representación.",
+          "Elegir el canal más difundido como indicador de que la representación es completa.",
+          "Examinar quién produce el mensaje, sus intereses y la representación de consumidores."
+        ],
+        "correct": 2,
+        "explanation": "AMI examina producción, representación y propósito, además de la información que transmite el mensaje."
       },
-      { name: "SENADI", url: "https://www.derechosintelectuales.gob.ec/" },
-    ],
-  },
-  {
-    week: 12,
-    name: "Auditoría de IA: un informe convincente con errores verificables",
-    objective:
-      "Validar cálculos, referencias y representatividad de una respuesta generativa sin exponer datos personales.",
-    context: `EXPEDIENTE 12 · Equipo ficticio Costa Conectada. Una herramienta generativa entrega un borrador para ampliar cobertura de internet. La dirección exige auditarlo antes de citarlo. El tono profesional de una respuesta no prueba sus afirmaciones; la responsabilidad de la entrega permanece en el equipo que la utiliza.
-
-Borrador de IA: «La Ley 999 de 2025 obliga a ofrecer el servicio; 20 puntos con costo de USD 15 producen un total de USD 350; 70 % de usuarios desea contratar; por tanto, la adopción está garantizada». La supuesta ley no incluye enlace ni organismo y no se ha localizado. El cálculo se puede verificar directamente. La palabra «garantizada» excede el alcance de una encuesta.
-
-Documento A, cuestionario: 100 respuestas captadas exclusivamente en redes sociales; 70 indicaron interés. No se preguntó precio ni disponibilidad real para contratar. Documento B, costos del piloto: 20 puntos × USD 15; costo de instalación adicional de USD 100. Documento C, reglas del equipo: no introducir cédulas, correos ni teléfonos reales en herramientas no autorizadas. Se permite usar registros sintéticos. Documento D, bitácora: guardar fecha, herramienta, instrucción utilizada, partes incorporadas y validaciones humanas. Los usuarios sin redes sociales podrían estar subrepresentados, por lo que la encuesta no describe a toda la población.
-
-El informe corregido debe identificar el uso de IA conforme a la política docente, sustituir afirmaciones no verificadas por pendientes y comprobar cálculos y referencias en fuentes pertinentes. «No localizada» no significa necesariamente «inexistente»: esa conclusión requeriría una comprobación más amplia. Para el piloto se puede recomendar una validación adicional con otros canales y preguntas de disposición a pagar. No es necesario compartir datos personales para explicar este método. La revisión debe preservar tanto los hallazgos útiles como sus límites, evitando aceptar o rechazar todo el texto por su origen.`,
-    questions: [
-      numeric(
-        "¿Cuál es el costo total del piloto incluyendo instalación?",
-        400,
-        "USD",
-        "20 × 15 = 300; sumando USD 100 de instalación, el total es USD 400. La IA calculó mal y omitió el gasto adicional.",
-      ),
-      choice(
-        "¿Cómo corregir el fundamento legal del borrador?",
-        [
-          "Publicar la Ley 999 porque parece un título formal.",
-          "Marcar la referencia como no verificada y comprobarla en una fuente oficial antes de usarla como fundamento.",
-          "Afirmar inmediatamente que ninguna ley relacionada existe.",
-        ],
-        1,
-        "Una referencia plausible necesita verificación; una búsqueda sin resultado tampoco demuestra por sí sola inexistencia.",
-      ),
-      matching(
-        "Relaciona problema y acción de validación.",
-        [
-          [
-            "Multiplicación 20 × 15 = 350",
-            "Recalcular con los datos originales",
-          ],
-          ["Ley sin fuente", "Buscar texto oficial y vigencia"],
-          [
-            "Encuesta solo en redes",
-            "Revisar sesgo de selección y ampliar canales",
-          ],
-          [
-            "Solicitud de cédulas reales",
-            "Usar datos sintéticos y herramientas autorizadas",
-          ],
-        ],
-        "Cada error requiere un método distinto; el mismo detector no valida cálculos, leyes y representatividad.",
-      ),
-      ordering(
-        "Ordena una auditoría antes de entregar el informe.",
-        [
-          "Identificar afirmaciones, cálculos y datos usados",
-          "Recalcular cifras y recuperar fuentes originales",
-          "Examinar sesgos y restricciones de privacidad",
-          "Corregir errores y marcar lo no verificado",
-          "Registrar uso de IA y validación humana",
-        ],
-        "El equipo documenta cómo transformó un borrador en un producto revisado.",
-      ),
-      crossword(
-        "Completa términos de la auditoría.",
-        [
-          [
-            "SESGO",
-            "Distorsión asociada aquí a captar respuestas solo en redes.",
-          ],
-          ["FUENTE", "Origen verificable que debe respaldar una afirmación."],
-          [
-            "REVISION",
-            "Control humano necesario antes de incorporar el borrador.",
-          ],
-        ],
-        "La validación combina comprobación de origen, exactitud y límites de la evidencia.",
-      ),
-    ],
-  },
-  {
-    week: 13,
-    name: "Informe ambiental: intensidad menor, emisiones totales mayores",
-    objective:
-      "Sintetizar resultados con indicadores coherentes y distinguir cambio relativo de causalidad.",
-    context: `EXPEDIENTE 13 · Planta ficticia Materiales del Pacífico. La dirección quiere un resumen ejecutivo de desempeño ambiental. Un borrador dice «redujimos nuestras emisiones y comprobamos el éxito de la nueva tecnología». Debes comprobar ambas afirmaciones usando los registros del caso; no se trata de un reporte de una cementera real.
-
-Documento A, producción y emisiones directas: enero, 100 toneladas producidas y 50 toneladas de CO₂e; febrero, 120 toneladas producidas y 54 toneladas de CO₂e; marzo, 150 toneladas producidas y 60 toneladas de CO₂e. Todas las cifras tienen la misma cobertura y método. La intensidad se define como emisiones / producción, en toneladas de CO₂e por tonelada de producto. La variación relativa de intensidad entre enero y marzo es (intensidad de marzo − intensidad de enero) / intensidad de enero × 100.
-
-Documento B, nota de operaciones: en febrero comenzó una prueba tecnológica y también cambió el volumen de producción. No hay grupo comparable sin intervención ni análisis que separe ambos factores. Documento C, alcance de medición: no se incluyen transporte de proveedores ni uso final del producto. Documento D, solicitud de audiencia: el director quiere un párrafo breve con hallazgo, riesgo y acción; el equipo técnico necesita cálculos y cobertura para revisar el resultado.
-
-Un resumen adecuado distingue cantidades absolutas e indicadores relativos: puede mejorar la intensidad mientras suben las emisiones totales. Los tres meses permiten describir el período, pero no probar una tendencia duradera ni atribuirla solo a la tecnología. El dossier debe conservar tabla original, fórmulas y límites; la gráfica debe indicar unidades y comenzar en una escala que no exagere las diferencias. La propuesta de acción será medir más períodos y analizar factores operativos, no prometer reducciones futuras. La síntesis integra evidencia y explica incertidumbre sin ocultar datos que contradigan el mensaje inicial.`,
-    questions: [
-      numeric(
-        "¿Cuál es la intensidad de emisiones de marzo?",
-        0.4,
-        "t CO₂e por t de producto",
-        "60 / 150 = 0,40. Las unidades deben acompañar el indicador.",
-      ),
-      numeric(
-        "¿En qué porcentaje disminuyó la intensidad entre enero y marzo? Introduce la magnitud positiva de la reducción.",
-        20,
-        "% de reducción",
-        "Enero: 50/100 = 0,50. Marzo: 0,40. (0,50 − 0,40) / 0,50 × 100 = 20 %. Las emisiones totales aumentaron de 50 a 60.",
-      ),
-      choice(
-        "¿Qué resumen ejecutivo respeta todos los documentos?",
-        [
-          "La intensidad bajó 20 % y las emisiones totales subieron; falta análisis para atribuir el cambio a la tecnología.",
-          "Las emisiones totales bajaron 20 % y la tecnología ya demostró ser la causa.",
-          "La planta no emite carbono porque mejoró su intensidad.",
-        ],
-        0,
-        "El indicador relativo mejoró, pero el total subió y no hay diseño que permita atribución causal.",
-      ),
-      matching(
-        "Relaciona elemento con su función en el informe.",
-        [
-          ["Tabla enero–marzo", "Evidencia del período observado"],
-          ["Emisiones / producción", "Fórmula del indicador de intensidad"],
-          ["Transporte de proveedores excluido", "Límite de cobertura"],
-          ["Medir más períodos y factores", "Próximo paso verificable"],
-        ],
-        "Una síntesis útil conserva evidencia, indicador, alcance y acción; no solo la conclusión favorable.",
-      ),
-      ordering(
-        "Ordena una síntesis ejecutiva revisable.",
-        [
-          "Precisar audiencia y pregunta del informe",
-          "Comprobar unidades y cobertura de los datos",
-          "Calcular indicadores y contrastar totales",
-          "Redactar hallazgo con límites y acción",
-          "Verificar que texto y gráfica coinciden",
-        ],
-        "La redacción debe seguir al análisis y comprobarse contra la evidencia original.",
-      ),
-    ],
-  },
-  {
-    week: 14,
-    name: "Centro de comunicación: avisar sin perder precisión",
-    objective:
-      "Adaptar mensajes a audiencias y canales manteniendo hechos, vigencia y coherencia.",
-    context: `EXPEDIENTE 14 · Servicio ficticio Agua Clara. Una intervención de mantenimiento requiere avisar a residentes, personal técnico y comercios. Debes coordinar mensajes que permitan actuar sin generar una alarma más amplia que la evidencia. No se describe una interrupción real de un servicio público.
-
-Documento A, aviso autorizado a las 08:00 del lunes: el martes se suspenderá el suministro de 09:00 a 12:00 en el sector Norte, calles A, B y C, por mantenimiento programado. Punto de información: mesa de atención. La recomendación es almacenar agua de forma segura antes del horario y evitar rumores sobre otros sectores. Documento B, orden técnica: la cuadrilla llega a las 08:30, verifica permisos y protección, aísla el tramo a las 09:00, realiza mantenimiento y comprueba el servicio antes de la reapertura. Los residentes no necesitan todos los códigos internos de equipos para prepararse.
-
-Documento C, actualización autorizada a las 10:30 del martes: se prevé restauración a las 13:00, una hora después del plan original. El sector y las calles no cambian. Documento D, análisis de canales: 70 % de hogares consulta mensajería móvil; un grupo depende de avisos impresos y llamadas. El porcentaje restante no debe asumirse como totalmente desconectado, pues el documento no describe sus hábitos completos.
-
-La estrategia usará mensaje móvil breve, aviso impreso accesible y actualización para atención telefónica. Todas las versiones mantendrán sector, calles, horario actualizado y contacto; cada una mostrará la hora de revisión. Una imagen sin texto alternativo puede impedir acceso; un mensaje con solo «urgente» no permite prepararse. Debe retirarse o marcarse como desactualizado el aviso de las 12:00 para evitar contradicciones. La eficacia se medirá por comprensión del horario y sector, no solo por número de publicaciones o reacciones.`,
-    questions: [
-      choice(
-        "A las 10:30 del martes, ¿qué mensaje debe difundirse a residentes?",
-        [
-          "Mantenimiento en sector Norte, calles A, B y C; restauración prevista a las 13:00, actualización 10:30; consulte la mesa de atención.",
-          "Se suspende el servicio en toda la ciudad hasta nuevo aviso.",
-          "Mantenimiento hasta las 12:00, sin mencionar la actualización.",
-        ],
-        0,
-        "Respeta el alcance y modifica el horario, conservando hora de actualización y contacto.",
-      ),
-      matching(
-        "Relaciona audiencia y contenido prioritario.",
-        [
-          ["Residentes", "Sector, horario, preparación segura y contacto"],
-          [
-            "Cuadrilla técnica",
-            "Secuencia de aislamiento, protección y comprobación",
-          ],
-          [
-            "Mesa de atención",
-            "Versión vigente y respuestas coherentes a consultas",
-          ],
-          [
-            "Hogares que no usan mensajería",
-            "Aviso impreso o llamada con los mismos hechos",
-          ],
-        ],
-        "La forma y detalle cambian con la audiencia; los hechos autorizados permanecen iguales.",
-      ),
-      numeric(
-        "¿Cuántas horas dura ahora la suspensión prevista entre 09:00 y 13:00?",
-        4,
-        "horas",
-        "13 − 9 = 4 horas; el aviso original contemplaba 3. La extensión es de una hora.",
-      ),
-      ordering(
-        "Ordena la gestión de una actualización.",
-        [
-          "Confirmar nuevo horario con responsable autorizado",
-          "Preparar mensaje con alcance y hora de revisión",
-          "Actualizar canales y guion de atención",
-          "Retirar o marcar versiones anteriores",
-          "Comprobar comprensión y registrar nuevas consultas",
-        ],
-        "La actualización debe sincronizar canales y versiones para evitar contradicciones.",
-      ),
-      choice(
-        "¿Qué medición evalúa mejor el objetivo comunicativo?",
-        [
-          "Número de colores del aviso.",
-          "Porcentaje de residentes consultados que identifica correctamente sector y nuevo horario.",
-          "Cantidad de veces que se copia el mensaje sin leerlo.",
-        ],
-        1,
-        "La finalidad es que las personas comprendan y puedan actuar, no solo que circule una publicación.",
-      ),
-    ],
-  },
-  {
-    week: 15,
-    name: "Auditoría del portafolio: evidencia de calidad y acceso",
-    objective:
-      "Aplicar una rúbrica de competencias y priorizar correcciones de accesibilidad comprobables.",
-    context: `EXPEDIENTE 15 · Comité ficticio de Calidad del Aprendizaje. Recibes un portafolio digital de ocho evidencias de práctica. Tu misión es revisar cómo demuestra competencias informacionales y si otras personas pueden acceder al contenido. Los resultados no son una evaluación real de ULEAM.
-
-Rúbrica del caso: trazabilidad vale 4 puntos; justificación de decisiones, 3; accesibilidad, 3. Se asigna la mitad del peso cuando el criterio está parcialmente cumplido y cero cuando no hay evidencia. Trazabilidad está completa: las ocho piezas tienen autor, fecha, enlace y localizador. Justificación es parcial: se citan las fuentes, pero solo se explica por qué se eligieron cuatro de ellas. Accesibilidad está ausente en esta revisión: la navegación requiere mouse, los gráficos distinguen grupos únicamente por rojo y verde, y un video de tres minutos no tiene subtítulos ni transcripción.
-
-Documento A, prueba de teclado: no se llega al botón «enviar» porque es un elemento sin control accesible. Documento B, revisión del gráfico: categorías A y B no tienen etiquetas ni patrones. Documento C, revisión audiovisual: la explicación sobre búsqueda aparece únicamente en el audio. Documento D, ficha de mejora: usar controles semánticos con foco visible, ofrecer etiquetas junto al color y subtítulos revisados con alternativa textual. Un resultado automatizado sin errores no reemplaza la revisión manual ni la prueba con usuarios.
-
-El comité dispone de una jornada de corrección y prioriza las barreras que impiden realizar la tarea: acceso por teclado al envío, comprensión del gráfico y contenido audiovisual. Luego ampliará las justificaciones con pregunta, criterios, alternativas descartadas y límites. No se evalúa la competencia por el número de archivos ni por el diseño de portada. Cada corrección se acompañará de evidencia antes/después y nueva prueba; un portafolio de calidad muestra el razonamiento y su evolución, además del producto final.`,
-    questions: [
-      numeric(
-        "¿Qué puntuación obtiene el portafolio con la rúbrica indicada?",
-        5.5,
-        "puntos sobre 10",
-        "Trazabilidad completa: 4. Justificación parcial: 3/2 = 1,5. Accesibilidad ausente: 0. Total 5,5.",
-      ),
-      matching(
-        "Relaciona barrera y corrección verificable.",
-        [
-          [
-            "Envío inaccesible por teclado",
-            "Control semántico, foco visible y prueba sin mouse",
-          ],
-          [
-            "Gráfico dependiente solo del color",
-            "Etiquetas y patrones además del color",
-          ],
-          [
-            "Información únicamente en audio",
-            "Subtítulos revisados y alternativa textual",
-          ],
-          [
-            "Fuentes sin justificación de selección",
-            "Registrar criterios, alternativas y límites",
-          ],
-        ],
-        "Las mejoras se prueban en la tarea concreta, no solo con una inspección visual.",
-      ),
-      choice(
-        "¿Qué evidencia demuestra mejor la competencia informacional?",
-        [
-          "Una portada vistosa y ocho archivos sin explicación.",
-          "Una decisión respaldada por fuentes recuperables, criterios de selección y límites.",
-          "Una captura de una respuesta de IA aceptada sin comprobación.",
-        ],
-        1,
-        "La competencia integra trazabilidad y razonamiento; acumular documentos no basta.",
-      ),
-      ordering(
-        "Ordena el ciclo de corrección del portafolio.",
-        [
-          "Aplicar rúbrica y registrar barreras observadas",
-          "Priorizar impedimentos de acceso a tareas esenciales",
-          "Corregir controles, gráficos y alternativas textuales",
-          "Ampliar justificaciones de fuentes",
-          "Repetir pruebas y guardar evidencia antes y después",
-        ],
-        "Una corrección debe terminar en validación; el antes/después documenta el aprendizaje.",
-      ),
-      choice(
-        "¿Qué implica un resultado automatizado sin errores?",
-        [
-          "La accesibilidad está garantizada para todas las personas.",
-          "Puede complementar la revisión, pero faltan pruebas manuales y de uso.",
-          "Ya no hace falta comprobar teclado ni comprender el gráfico.",
-        ],
-        1,
-        "Las herramientas automáticas detectan solo parte de los problemas y no sustituyen todas las comprobaciones.",
-      ),
-    ],
-    references: [
       {
-        name: "W3C · pautas y recursos de accesibilidad",
-        url: "https://www.w3.org/WAI/standards-guidelines/wcag/",
+        "type": "matching",
+        "prompt": "Relaciona concepto y significado.",
+        "pairs": [
+          {
+            "left": "Dato",
+            "right": "Registro que necesita contexto"
+          },
+          {
+            "left": "Información",
+            "right": "Registros interpretables con contexto"
+          },
+          {
+            "left": "Conocimiento",
+            "right": "Interpretación aplicada con criterio"
+          },
+          {
+            "left": "AMI",
+            "right": "Análisis de medios y participación responsable"
+          }
+        ],
+        "explanation": "Los niveles no equivalen a cantidad de archivos; dependen del contexto y de la interpretación."
       },
+      {
+        "type": "ordering",
+        "prompt": "Ordena una indagación informacional responsable.",
+        "items": [
+          "Reconocer la necesidad de información",
+          "Buscar fuentes pertinentes",
+          "Evaluar evidencia y propósito",
+          "Elaborar una interpretación propia y citar",
+          "Comunicar límites y revisar lo aprendido"
+        ],
+        "explanation": "La necesidad orienta la búsqueda; la evaluación precede a la interpretación comunicada."
+      },
+      {
+        "type": "crossword",
+        "prompt": "Completa conceptos del aprendizaje informacional.",
+        "entries": [
+          {
+            "word": "DATO",
+            "clue": "Registro que todavía requiere contexto."
+          },
+          {
+            "word": "CONTEXTO",
+            "clue": "Circunstancias que permiten interpretar un mensaje."
+          },
+          {
+            "word": "CRITERIO",
+            "clue": "Base explícita para evaluar y justificar una elección."
+          }
+        ],
+        "explanation": "ALFIN exige pasar de registros aislados a interpretaciones justificadas."
+      }
     ],
+    "references": [
+      {
+        "name": "Framework for Information Literacy for Higher Education",
+        "title": "Framework for Information Literacy for Higher Education",
+        "author": "Association of College and Research Libraries (ACRL)",
+        "url": "https://www.ala.org/acrl/standards/ilframework",
+        "section": "Introducción; Research as Inquiry",
+        "purpose": "Reconocer ALFIN como indagación, uso reflexivo y participación en la creación de conocimiento."
+      },
+      {
+        "name": "Media and information literacy curriculum for teachers",
+        "title": "Media and information literacy curriculum for teachers",
+        "author": "UNESCO",
+        "url": "https://unesdoc.unesco.org/ark:/48223/pf0000192971",
+        "section": "Módulo sobre currículo y marco de competencias AMI",
+        "purpose": "Relacionar acceso, evaluación, producción de mensajes y participación responsable."
+      }
+    ]
   },
   {
-    week: 16,
-    name: "Desafío integral: recomendar un piloto con evidencia y límites",
-    objective:
-      "Integrar necesidad, búsqueda, evaluación, cálculo, uso ético y comunicación en una decisión gerencial.",
-    context: `EXPEDIENTE 16 · Comité ficticio Bahía Productiva. Considera abrir un punto de distribución y necesita una recomendación al final del día. El presupuesto máximo es USD 6.000. Se permite un piloto de tres meses, pero no una apertura definitiva sin comprobar demanda y costos. Todos los registros son ficticios y el caso no describe una decisión de una institución real.
-
-Documento A, estudio local 2025: autores identificados, cuestionario y muestra de 100 comercios; 60 declaran interés. Los participantes se eligieron por conveniencia y la pregunta no incluía precio. Documento B, encuesta complementaria de intención pagada: 30 comercios aceptarían el precio del piloto, aunque no han firmado contratos. Documento C, anuncio comercial: «duplicará sus ventas», sin método ni fuente. Documento D, propuesta del piloto: costo inicial USD 1.200; costo fijo USD 800 por mes; costo variable de USD 4 por entrega y precio de USD 10. Se proyectan 150 entregas mensuales durante tres meses. Para el cálculo no hay impuestos ni otros costos. Documento E, reglas éticas: usar datos agregados, conservar referencias y no publicar contactos de participantes.
-
-El ingreso previsto es precio por entregas; el costo total incluye inversión inicial, fijos de tres meses y variables de las 450 entregas. Un margen negativo no prueba que ningún diseño futuro sea viable, pero impide presentar el piloto como rentable bajo estas condiciones. El interés declarado tampoco equivale a compra garantizada. Se puede recomendar rediseñar el piloto y contrastar demanda antes de comprometer recursos.
-
-La entrega será una ficha ejecutiva con decisión, cálculo, calidad de las fuentes, riesgos y próximo paso. La matriz de evidencia deberá registrar el localizador de cada cifra y las limitaciones de las encuestas. El comité exige que se separen hechos del expediente, estimaciones y supuestos, y que cualquier uso de IA se declare y valide.`,
-    questions: [
-      numeric(
-        "¿Cuál es el costo total del piloto de tres meses, con 450 entregas?",
-        5400,
-        "USD",
-        "Inicial: 1.200. Fijos: 800 × 3 = 2.400. Variables: 4 × 450 = 1.800. Total USD 5.400, dentro del presupuesto de USD 6.000.",
-      ),
-      numeric(
-        "¿Cuál es el resultado previsto del piloto: ingreso menos costo total? Introduce un número negativo si hay pérdida.",
-        -900,
-        "USD",
-        "Ingresos: 10 × 450 = 4.500. Resultado: 4.500 − 5.400 = −900. Estar dentro del presupuesto no equivale a ser rentable.",
-      ),
-      matching(
-        "Relaciona evidencia y límite que debe comunicarse.",
-        [
-          [
-            "60 de 100 declaran interés",
-            "Muestra por conveniencia y pregunta sin precio",
-          ],
-          ["30 aceptarían el precio", "Intención todavía sin contratos"],
-          [
-            "Anuncio promete duplicar ventas",
-            "Afirmación sin método ni respaldo",
-          ],
-          [
-            "Proyección de 150 entregas mensuales",
-            "Supuesto que debe contrastarse antes de comprometer recursos",
-          ],
+    "week": 2,
+    "name": "Una solicitud vaga se convierte en necesidad informacional",
+    "objective": "Diferenciar necesidad, demanda y comportamiento informacional.",
+    "label": "Simulación educativa · práctica",
+    "context": "Conceptos clave\nLa necesidad informacional es una brecha entre lo que se sabe y lo que hace falta comprender para actuar. La demanda es la solicitud expresada, que puede ser vaga. El comportamiento informacional reúne acciones de búsqueda, selección, consulta y uso, influidas por propósito, experiencia y contexto. Entrevistar al usuario ayuda a precisar audiencia, decisión, alcance y producto esperado. La indagación es iterativa: una pregunta puede cambiar al descubrir nuevos conceptos.\n\nCaso breve\nLa coordinadora de una biblioteca universitaria ficticia pide «información sobre estudiantes». El equipo no sabe si quiere mejorar orientación, evaluar acceso a fuentes o preparar un taller. Un estudiante propone descargar todo lo disponible; otra propone preguntar qué decisión debe apoyar el informe. No se necesitan datos personales para entender el problema.\n\nQué debes hacer\nTransforma la solicitud en un requerimiento verificable. Distingue expresar una petición de identificar su necesidad real. Selecciona fuentes por su pertinencia al propósito, registra vacíos y reformula cuando el conocimiento disponible no responda a la pregunta. Justifica cada paso en vez de recopilar archivos por costumbre.",
+    "questions": [
+      {
+        "type": "choice",
+        "prompt": "La coordinadora solicita «información sobre estudiantes». ¿Qué aclaración organiza el requerimiento?",
+        "options": [
+          "La fuente disponible más completa, fijando el propósito según sus campos.",
+          "El producto que el equipo suele entregar, manteniendo el alcance de trabajos anteriores.",
+          "La decisión que debe apoyar y la audiencia que utilizará el informe."
         ],
-        "La recomendación integra respaldo y límites de cada dato, sin convertir intención en certeza.",
-      ),
-      choice(
-        "¿Qué recomendación es más sólida para el comité?",
-        [
-          "Abrir definitivamente porque 60 % manifestó interés.",
-          "Rediseñar o justificar explícitamente el costo de aprendizaje del piloto, validar demanda pagada y no prometer rentabilidad con el escenario actual.",
-          "Publicar contactos de los encuestados para conseguir clientes cuanto antes.",
+        "correct": 2,
+        "explanation": "La decisión y audiencia permiten interpretar la demanda y delimitar la necesidad."
+      },
+      {
+        "type": "choice",
+        "prompt": "Un concepto nuevo cambia la comprensión del problema. ¿Cómo responde una indagación iterativa?",
+        "options": [
+          "Reformular y documentar la razón del cambio para conservar el propósito.",
+          "Conservar la primera pregunta para que la estrategia nunca varíe.",
+          "Cambiar al tema del documento más reciente aunque no responda al usuario."
         ],
-        1,
-        "El escenario prevé pérdida; un piloto podría ser una inversión de aprendizaje si se autoriza con límites, pero no debe presentarse como rentable.",
-      ),
-      ordering(
-        "Ordena el procedimiento integral del comité.",
-        [
-          "Definir decisión, presupuesto y evidencia necesaria",
-          "Localizar documentos y comprobar sus métodos",
-          "Calcular escenario y distinguir supuestos de hechos",
-          "Comparar opciones con riesgos y reglas éticas",
-          "Comunicar recomendación y siguiente verificación",
+        "correct": 0,
+        "explanation": "Research as Inquiry reconoce preguntas que evolucionan; el cambio debe tener una razón documentada."
+      },
+      {
+        "type": "matching",
+        "prompt": "Relaciona término y descripción.",
+        "pairs": [
+          {
+            "left": "Necesidad",
+            "right": "Brecha de conocimiento relevante para actuar"
+          },
+          {
+            "left": "Demanda",
+            "right": "Solicitud expresada por el usuario"
+          },
+          {
+            "left": "Comportamiento informacional",
+            "right": "Acciones y hábitos de búsqueda y uso"
+          },
+          {
+            "left": "Requerimiento",
+            "right": "Descripción delimitada de lo que debe obtenerse"
+          }
         ],
-        "La decisión final integra competencias de las unidades: necesidad, búsqueda, evaluación, síntesis y comunicación.",
-      ),
+        "explanation": "Una demanda no describe automáticamente la necesidad; hay que investigar el contexto."
+      },
+      {
+        "type": "ordering",
+        "prompt": "Ordena la aclaración de una necesidad.",
+        "items": [
+          "Escuchar la solicitud inicial",
+          "Identificar propósito y audiencia",
+          "Delimitar tema, alcance y producto",
+          "Seleccionar fuentes pertinentes",
+          "Revisar vacíos y ajustar el requerimiento"
+        ],
+        "explanation": "La búsqueda se orienta por el propósito y se reajusta al evaluar lo encontrado."
+      },
+      {
+        "type": "crossword",
+        "prompt": "Completa términos de una entrevista informacional.",
+        "entries": [
+          {
+            "word": "NECESIDAD",
+            "clue": "Brecha de conocimiento que origina la indagación."
+          },
+          {
+            "word": "DEMANDA",
+            "clue": "Petición que el usuario expresa."
+          },
+          {
+            "word": "ALCANCE",
+            "clue": "Límites del tema y del uso previsto."
+          }
+        ],
+        "explanation": "La entrevista distingue necesidad de demanda y acuerda límites útiles."
+      }
     ],
+    "references": [
+      {
+        "name": "Framework for Information Literacy for Higher Education",
+        "title": "Framework for Information Literacy for Higher Education",
+        "author": "ACRL",
+        "url": "https://www.ala.org/acrl/standards/ilframework",
+        "section": "Research as Inquiry: Knowledge Practices",
+        "purpose": "Practicar preguntas que evolucionan, delimitar alcance e identificar lagunas de conocimiento."
+      }
+    ]
   },
-].map((activity) => ({
-  label: "Simulación educativa · Datos ficticios",
-  references: [],
-  ...activity,
-  questions: activity.questions.map((question, index) => ({
-    id: `gig-502-w${activity.week}-q${index + 1}`,
-    ...question,
-  })),
-}));
+  {
+    "week": 3,
+    "name": "Modelos ALFIN: elegir el aporte de cada marco",
+    "objective": "Distinguir Big6, SCONUL, ACRL y UNESCO-AMI sin tratarlos como equivalentes.",
+    "label": "Simulación educativa · práctica",
+    "context": "Conceptos clave\nBig6, desarrollado por Michael B. Eisenberg y Robert E. Berkowitz, propone definir la tarea, plantear estrategias, localizar y acceder, usar información, sintetizar y evaluar. SCONUL describe siete pilares: identificar, delimitar, planificar, recopilar, evaluar, gestionar y presentar; desarrollan capacidades que pueden revisitarse. ACRL ofrece marcos conceptuales, como autoridad contextual y búsqueda como exploración estratégica, no una receta lineal. UNESCO-AMI conecta acceso, evaluación, producción y participación con lectura crítica de medios y derechos.\n\nCaso breve\nUn equipo universitario ficticio prepara una guía para verificar noticias. Necesita organizar su trabajo, diagnosticar habilidades del grupo y examinar cómo juzga fuentes. Un integrante quiere llamar «Big6» a cualquier lista de capacidades; otro supone que una fuente oficial sirve para toda pregunta. El equipo debe reconocer aportes complementarios sin confundirlos.\n\nQué debes hacer\nUsa Big6 para ordenar el problema, SCONUL para revisar capacidades y ACRL para justificar criterios contextualizados. Añade AMI cuando analices producción y representación de mensajes. La autoridad depende de la pregunta y del uso; seguir etapas no garantiza una fuente adecuada. Explica qué marco aporta cada decisión y revisa tanto producto como proceso.",
+    "questions": [
+      {
+        "type": "choice",
+        "prompt": "El equipo quiere ordenar la resolución y evaluar el producto. ¿Qué elección aplica un modelo según su función?",
+        "options": [
+          "Usar Big6 para la secuencia y complementar con juicio crítico de fuentes.",
+          "Usar los marcos ACRL como etapas lineales equivalentes a las seis de Big6.",
+          "Usar los pilares SCONUL como garantía de que seguir un orden valida el producto."
+        ],
+        "correct": 0,
+        "explanation": "Big6 estructura seis etapas de resolución y permite evaluar producto y proceso; el juicio de fuentes sigue siendo necesario."
+      },
+      {
+        "type": "choice",
+        "prompt": "La guía necesita valorar una fuente oficial para una pregunta concreta. ¿Qué decisión responde a ACRL?",
+        "options": [
+          "Trasladar autoridad institucional a cualquier tema para mantener un criterio estable.",
+          "Examinar experiencia y contexto de la fuente respecto al uso previsto.",
+          "Equiparar autoridad a presencia de referencias sin revisar pertinencia del contenido."
+        ],
+        "correct": 1,
+        "explanation": "Authority Is Constructed and Contextual exige examinar experiencia, contexto y necesidad concreta."
+      },
+      {
+        "type": "matching",
+        "prompt": "Relaciona modelo y aporte.",
+        "pairs": [
+          {
+            "left": "Big6",
+            "right": "Proceso de resolución en seis etapas"
+          },
+          {
+            "left": "SCONUL",
+            "right": "Siete pilares de capacidad informacional"
+          },
+          {
+            "left": "ACRL",
+            "right": "Marcos conceptuales para juicio reflexivo"
+          },
+          {
+            "left": "UNESCO-AMI",
+            "right": "Lectura crítica de medios y participación con derechos"
+          }
+        ],
+        "explanation": "Son aportes complementarios; no deben reducirse a la misma lista."
+      },
+      {
+        "type": "ordering",
+        "prompt": "Ordena Big6 para la guía de noticias.",
+        "items": [
+          "Definir la tarea de verificación",
+          "Diseñar estrategias de información",
+          "Localizar y acceder a fuentes",
+          "Usar información pertinente",
+          "Sintetizar la guía",
+          "Evaluar producto y proceso"
+        ],
+        "explanation": "La evaluación del producto y proceso cierra la secuencia Big6."
+      },
+      {
+        "type": "crossword",
+        "prompt": "Completa conceptos de los marcos.",
+        "entries": [
+          {
+            "word": "PILAR",
+            "clue": "Capacidad del modelo SCONUL."
+          },
+          {
+            "word": "MARCO",
+            "clue": "Estructura conceptual reflexiva de ACRL."
+          },
+          {
+            "word": "ETAPA",
+            "clue": "Momento de resolución dentro de Big6."
+          }
+        ],
+        "explanation": "Pilar, marco y etapa nombran funciones diferentes en los modelos."
+      }
+    ],
+    "references": [
+      {
+        "name": "Framework for Information Literacy for Higher Education",
+        "title": "Framework for Information Literacy for Higher Education",
+        "author": "ACRL",
+        "url": "https://www.ala.org/acrl/standards/ilframework",
+        "section": "Authority Is Constructed and Contextual; Searching as Strategic Exploration",
+        "purpose": "Distinguir un marco conceptual de una secuencia de trabajo."
+      },
+      {
+        "name": "The SCONUL Seven Pillars of Information Literacy: Core Model",
+        "title": "The SCONUL Seven Pillars of Information Literacy: Core Model",
+        "author": "SCONUL",
+        "url": "https://www.sconul.ac.uk/sites/default/files/documents/coremodel.pdf",
+        "section": "Identify, Scope, Plan, Gather, Evaluate, Manage, Present",
+        "purpose": "Leer los siete pilares como capacidades relacionadas y revisables."
+      },
+      {
+        "name": "Media and information literacy curriculum for teachers",
+        "title": "Media and information literacy curriculum for teachers",
+        "author": "UNESCO",
+        "url": "https://unesdoc.unesco.org/ark:/48223/pf0000192971",
+        "section": "Marco de competencias AMI",
+        "purpose": "Complementar la búsqueda con análisis de medios y participación ética."
+      }
+    ]
+  },
+  {
+    "week": 4,
+    "name": "Inclusión informacional: acceso no significa participación",
+    "objective": "Distinguir barreras de acceso, habilidades y uso significativo.",
+    "label": "Simulación educativa · práctica",
+    "context": "Conceptos clave\nLa brecha digital incluye desigualdades de acceso, habilidades y beneficios obtenidos. La inclusión informacional requiere que las personas puedan localizar, comprender y usar información pertinente. Accesibilidad significa que las personas con distintas capacidades puedan percibir, comprender, navegar e interactuar. El diseño no debe imponer un único dispositivo o canal cuando eso excluye a quienes necesitan participar.\n\nCaso breve\nUna red universitaria ficticia organiza orientación para pequeños productores. Publica una imagen con instrucciones, exige computadora y supone que todos conocen términos técnicos. Algunos participantes usan teléfono; otros requieren texto alternativo o explicación sencilla. Entregar equipos ayudaría al acceso, pero no resolvería por sí solo comprensión ni barreras de interacción. No se describen procedimientos de una cadena productiva real.\n\nQué debes hacer\nIdentifica la barrera antes de proponer una solución. Conserva el contenido esencial en formatos comprensibles, ofrece alternativas y prueba tareas con personas afectadas. Valora si pueden participar y utilizar información, no solo si tienen conexión. Explica por qué consulta a usuarios, accesibilidad e instrucciones claras forman parte de la inclusión.",
+    "questions": [
+      {
+        "type": "choice",
+        "prompt": "La orientación impone computadora y lenguaje técnico. ¿Qué intervención aborda inclusión informacional?",
+        "options": [
+          "Priorizar entrega de dispositivos y asumir resuelta la comprensión al disponer de acceso.",
+          "Relacionar barreras con alternativas de acceso, explicación y prueba de uso.",
+          "Simplificar formato conservando vocabulario técnico porque inclusión atiende solo conectividad."
+        ],
+        "correct": 1,
+        "explanation": "La inclusión aborda acceso, comprensión e interacción; los equipos no resuelven todas las dimensiones."
+      },
+      {
+        "type": "choice",
+        "prompt": "El equipo debe aceptar o revisar el recurso. ¿Qué evidencia demuestra participación real?",
+        "options": [
+          "Que el recurso esté disponible en el canal institucional con acceso público.",
+          "Que una persona con computadora familiarizada con el contenido lo use sin dificultad.",
+          "Que personas con distintas condiciones puedan comprender y completar la tarea."
+        ],
+        "correct": 2,
+        "explanation": "La participación y el uso significativo se comprueban con tareas y personas que afrontan barreras."
+      },
+      {
+        "type": "matching",
+        "prompt": "Relaciona barrera y respuesta.",
+        "pairs": [
+          {
+            "left": "Imagen con contenido indispensable",
+            "right": "Alternativa textual equivalente"
+          },
+          {
+            "left": "Lenguaje técnico desconocido",
+            "right": "Explicación clara de conceptos"
+          },
+          {
+            "left": "Canal que exige un dispositivo",
+            "right": "Alternativa compatible con acceso disponible"
+          },
+          {
+            "left": "Interacción inaccesible",
+            "right": "Prueba con teclado y tecnologías de apoyo"
+          }
+        ],
+        "explanation": "La respuesta se elige por barrera y conserva el significado, no solo la apariencia."
+      },
+      {
+        "type": "ordering",
+        "prompt": "Ordena una intervención inclusiva.",
+        "items": [
+          "Consultar necesidades y barreras",
+          "Precisar contenido esencial",
+          "Diseñar alternativas accesibles",
+          "Probar comprensión e interacción",
+          "Ajustar según experiencia de usuarios"
+        ],
+        "explanation": "Consultar y probar evita suponer que todos usan información del mismo modo."
+      },
+      {
+        "type": "crossword",
+        "prompt": "Completa conceptos de inclusión.",
+        "entries": [
+          {
+            "word": "BRECHA",
+            "clue": "Desigualdad de acceso, habilidades o beneficios."
+          },
+          {
+            "word": "ACCESO",
+            "clue": "Posibilidad inicial de llegar a la información."
+          },
+          {
+            "word": "USO",
+            "clue": "Aplicación significativa que la inclusión debe hacer posible."
+          }
+        ],
+        "explanation": "Acceso es necesario, pero la inclusión también requiere habilidades y beneficios de uso."
+      }
+    ],
+    "references": [
+      {
+        "name": "Introduction to Web Accessibility",
+        "title": "Introduction to Web Accessibility",
+        "author": "W3C Web Accessibility Initiative",
+        "url": "https://www.w3.org/WAI/fundamentals/accessibility-intro/",
+        "section": "What is Web Accessibility; Accessibility is Important for Individuals, Businesses, Society",
+        "purpose": "Relacionar acceso digital, barreras y participación sin reducir inclusión a dispositivos."
+      }
+    ]
+  },
+  {
+    "week": 5,
+    "name": "De un tema amplio a una pregunta de investigación",
+    "objective": "Formular una pregunta estratégica y distinguir conceptos de términos de búsqueda.",
+    "label": "Simulación educativa · práctica",
+    "context": "Conceptos clave\nUn tema nombra un campo amplio; una pregunta de investigación expresa qué se quiere comprender dentro de un alcance. Debe ser clara, investigable y relacionada con el propósito. Los conceptos son ideas centrales; los términos son palabras usadas para buscarlas. Un vocabulario reúne sinónimos, variantes y expresiones relacionadas, sin asumir que todos significan exactamente lo mismo. Investigar implica ajustar preguntas cuando se reconoce un vacío o aparece una perspectiva relevante.\n\nCaso breve\nUn equipo universitario ficticio propone investigar «información en empresas». La docente pide una pregunta sobre cómo estudiantes evalúan fuentes al preparar una recomendación. El equipo debe delimitar población, práctica y contexto, y preparar términos como evaluación de fuentes, credibilidad y alfabetización informacional. No necesita descargar datos empresariales ni inventar procedimientos de una organización real.\n\nQué debes hacer\nDistingue una pregunta investigable de una opinión o un tema general. Separa conceptos y expresiones de búsqueda, revisa equivalencias y documenta ajustes. La pregunta guía selección y lectura; los resultados no sustituyen la explicación del propósito. Elige un alcance que permita reunir y valorar evidencia pertinente.",
+    "questions": [
+      {
+        "type": "choice",
+        "prompt": "¿Qué pregunta delimita la práctica informacional sin anticipar su resultado?",
+        "options": [
+          "¿Qué fuentes populares sobre información en empresas deben usar estudiantes?",
+          "¿Por qué la falta de credibilidad explica toda selección de materiales universitarios?",
+          "¿Cómo justifican estudiantes universitarios la credibilidad de fuentes en una recomendación académica?"
+        ],
+        "correct": 2,
+        "explanation": "La pregunta identifica práctica, población y contexto sin presuponer un juicio que debería investigarse."
+      },
+      {
+        "type": "choice",
+        "prompt": "El equipo prepara vocabulario para buscar. ¿Cómo tratar credibilidad y evaluación de fuentes?",
+        "options": [
+          "Como expresiones relacionadas cuyo significado debe examinarse antes de combinarlas.",
+          "Como sinónimos exactos que pueden sustituirse en todos los textos.",
+          "Como enfoques incompatibles que obligan a excluir uno desde la consulta inicial."
+        ],
+        "correct": 0,
+        "explanation": "Un vocabulario útil reconoce variantes y diferencias de significado; no inventa equivalencia absoluta."
+      },
+      {
+        "type": "matching",
+        "prompt": "Relaciona componente y función.",
+        "pairs": [
+          {
+            "left": "Tema",
+            "right": "Campo general de interés"
+          },
+          {
+            "left": "Pregunta",
+            "right": "Problema concreto que orienta indagación"
+          },
+          {
+            "left": "Concepto",
+            "right": "Idea central que se desea explorar"
+          },
+          {
+            "left": "Término",
+            "right": "Expresión usada para recuperar documentos"
+          }
+        ],
+        "explanation": "Formular la pregunta permite extraer conceptos y después buscar sus expresiones."
+      },
+      {
+        "type": "ordering",
+        "prompt": "Ordena la formulación estratégica.",
+        "items": [
+          "Reconocer el tema y propósito",
+          "Delimitar población, práctica y contexto",
+          "Redactar una pregunta investigable",
+          "Identificar conceptos y variantes",
+          "Revisar resultados y justificar ajustes"
+        ],
+        "explanation": "Los términos nacen de conceptos delimitados y se revisan tras explorar evidencia."
+      },
+      {
+        "type": "crossword",
+        "prompt": "Completa conceptos de formulación.",
+        "entries": [
+          {
+            "word": "PREGUNTA",
+            "clue": "Problema explícito que guía la investigación."
+          },
+          {
+            "word": "TEMA",
+            "clue": "Campo amplio del que se parte."
+          },
+          {
+            "word": "TERMINO",
+            "clue": "Palabra o expresión concreta para buscar."
+          }
+        ],
+        "explanation": "Una pregunta no equivale al tema ni a una lista de términos."
+      }
+    ],
+    "references": [
+      {
+        "name": "Framework for Information Literacy for Higher Education",
+        "title": "Framework for Information Literacy for Higher Education",
+        "author": "ACRL",
+        "url": "https://www.ala.org/acrl/standards/ilframework",
+        "section": "Research as Inquiry; Searching as Strategic Exploration",
+        "purpose": "Delimitar preguntas y convertir conceptos en vocabulario revisable de búsqueda."
+      }
+    ]
+  },
+  {
+    "week": 6,
+    "name": "Escoger fuentes según lo que necesitamos comprender",
+    "objective": "Distinguir fuentes institucionales, científicas y datos abiertos por función y límites.",
+    "label": "Simulación educativa · práctica",
+    "context": "Conceptos clave\nLas fuentes institucionales comunican documentos producidos por organismos y sus decisiones; las científicas presentan investigaciones con métodos y argumentos; los datos abiertos son recursos reutilizables bajo condiciones que deben revisarse. Ninguna categoría garantiza automáticamente pertinencia o exactitud. La fuente primaria aporta material original al problema; una secundaria interpreta otros materiales. La autoridad es contextual: depende de pregunta, experiencia, proceso y uso.\n\nCaso breve\nUn equipo universitario ficticio estudia orientación académica. Encuentra un reglamento vigente, un artículo sobre comprensión de instrucciones y un conjunto de datos con diccionario y licencia. El reglamento permite conocer requisitos institucionales; el artículo aporta método y discusión; el conjunto exige entender qué significan sus campos. Un blog que resume todo puede orientar la búsqueda, pero no reemplaza los originales.\n\nQué debes hacer\nAsocia necesidad y fuente, examina autoría, versión, cobertura y proceso de creación. Antes de reutilizar datos, lee significado de campos y condiciones. Justifica por qué una fuente sirve para una pregunta y no necesariamente para otra. Conserva enlaces al original y declara límites de uso.",
+    "questions": [
+      {
+        "type": "choice",
+        "prompt": "El equipo necesita confirmar una exigencia académica vigente. ¿Qué selección es pertinente?",
+        "options": [
+          "Consultar el reglamento original y comprobar versión y ámbito aplicables.",
+          "Usar un artículo científico sobre aprendizaje para inferir el requisito institucional.",
+          "Usar un resumen reciente como sustituto del original porque es más accesible."
+        ],
+        "correct": 0,
+        "explanation": "La decisión institucional se verifica en el documento original, comprobando vigencia y alcance."
+      },
+      {
+        "type": "choice",
+        "prompt": "El conjunto de datos permite descarga y ofrece licencia. ¿Qué puede concluir el equipo?",
+        "options": [
+          "Que la apertura garantiza exactitud y hace innecesaria la revisión metodológica.",
+          "Que puede reutilizarlo bajo condiciones, revisando además metadatos y calidad.",
+          "Que basta el diccionario para autorizar cualquier reutilización sin consultar licencia."
+        ],
+        "correct": 1,
+        "explanation": "Apertura y calidad son propiedades distintas; deben revisarse licencia, metadatos y método."
+      },
+      {
+        "type": "matching",
+        "prompt": "Relaciona recurso y aporte principal.",
+        "pairs": [
+          {
+            "left": "Reglamento original",
+            "right": "Requisito institucional y alcance"
+          },
+          {
+            "left": "Artículo de investigación",
+            "right": "Método, argumentos y limitaciones"
+          },
+          {
+            "left": "Diccionario de datos",
+            "right": "Significado de campos y categorías"
+          },
+          {
+            "left": "Licencia de datos",
+            "right": "Condiciones de reutilización"
+          }
+        ],
+        "explanation": "Se elige la pieza por la pregunta que puede resolver y se revisan límites."
+      },
+      {
+        "type": "ordering",
+        "prompt": "Ordena la selección de una fuente.",
+        "items": [
+          "Definir la información requerida",
+          "Identificar el tipo de recurso pertinente",
+          "Localizar el documento original",
+          "Comprobar autoría, proceso y versión",
+          "Registrar uso previsto y limitaciones"
+        ],
+        "explanation": "El uso previsto guía la selección; el origen y proceso respaldan la evaluación."
+      },
+      {
+        "type": "crossword",
+        "prompt": "Completa términos de fuentes.",
+        "entries": [
+          {
+            "word": "ORIGINAL",
+            "clue": "Documento de procedencia que conviene recuperar."
+          },
+          {
+            "word": "METADATO",
+            "clue": "Descripción que ayuda a interpretar un recurso."
+          },
+          {
+            "word": "LICENCIA",
+            "clue": "Condiciones de uso y reutilización de un material."
+          }
+        ],
+        "explanation": "La fuente se interpreta con procedencia, descripción y condiciones."
+      }
+    ],
+    "references": [
+      {
+        "name": "Framework for Information Literacy for Higher Education",
+        "title": "Framework for Information Literacy for Higher Education",
+        "author": "ACRL",
+        "url": "https://www.ala.org/acrl/standards/ilframework",
+        "section": "Authority Is Constructed and Contextual; Information Creation as a Process",
+        "purpose": "Escoger fuentes según pregunta, proceso de producción y uso previsto."
+      }
+    ]
+  },
+  {
+    "week": 7,
+    "name": "Laboratorio booleano: combinar conceptos sin perder significado",
+    "objective": "Interpretar AND, OR, NOT y paréntesis en una estrategia documental.",
+    "label": "Simulación educativa · práctica",
+    "context": "Conceptos clave\nLos operadores booleanos combinan condiciones de búsqueda. AND exige ambos conceptos; OR admite cualquiera de las alternativas; NOT excluye documentos que contienen un término. Los paréntesis agrupan alternativas antes de combinarlas con otra condición. Una exclusión puede eliminar documentos pertinentes que mencionen el término; por eso debe revisarse. La minería documental extrae campos o conceptos con reglas explícitas y necesita lectura contextual.\n\nCaso breve\nUn equipo universitario ficticio busca documentos sobre alfabetización informacional o mediática en educación superior. Desea admitir ambos enfoques y mantener el contexto universitario. Alguien propone exigir ambos nombres simultáneamente; otra persona propone excluir «publicidad» aunque puede haber investigaciones útiles que la analicen críticamente. El buscador del ejercicio interpreta literalmente los operadores y grupos indicados.\n\nQué debes hacer\nRepresenta alternativas con OR y une el grupo al contexto con AND. Explica por qué NOT no garantiza calidad. Después de recuperar, examina qué estudia el documento antes de extraer conceptos. La actividad trata lógica de búsqueda y significado, no conteos de resultados ni cálculos.",
+    "questions": [
+      {
+        "type": "choice",
+        "prompt": "La pregunta admite ALFIN o AMI y exige contexto universitario. ¿Qué consulta conserva esa lógica?",
+        "options": [
+          "(ALFIN AND AMI) OR universidad",
+          "(ALFIN OR AMI) AND universidad",
+          "ALFIN OR (AMI AND universidad)"
+        ],
+        "correct": 1,
+        "explanation": "OR admite cualquiera de los enfoques y AND exige contexto; los paréntesis conservan el grupo."
+      },
+      {
+        "type": "choice",
+        "prompt": "El equipo propone NOT publicidad. ¿Qué objeción conceptual debe examinar?",
+        "options": [
+          "Siempre mejora calidad porque elimina todo documento con interés comercial.",
+          "Solo afecta publicidad comercial y conserva cualquier análisis académico sin revisión.",
+          "Puede excluir investigaciones pertinentes que analizan críticamente publicidad."
+        ],
+        "correct": 2,
+        "explanation": "La exclusión opera sobre términos, no sobre calidad o finalidad del documento."
+      },
+      {
+        "type": "matching",
+        "prompt": "Relaciona operador y efecto.",
+        "pairs": [
+          {
+            "left": "AND",
+            "right": "Exige ambas condiciones"
+          },
+          {
+            "left": "OR",
+            "right": "Admite alternativas"
+          },
+          {
+            "left": "NOT",
+            "right": "Excluye la condición indicada"
+          },
+          {
+            "left": "Paréntesis",
+            "right": "Agrupan una parte de la consulta"
+          }
+        ],
+        "explanation": "Los operadores expresan lógica y deben relacionarse con los conceptos de la pregunta."
+      },
+      {
+        "type": "ordering",
+        "prompt": "Ordena una consulta revisable.",
+        "items": [
+          "Identificar conceptos y contexto",
+          "Agrupar términos alternativos",
+          "Combinar grupos con condiciones necesarias",
+          "Inspeccionar pertinencia y exclusiones",
+          "Guardar consulta y justificar ajustes"
+        ],
+        "explanation": "La inspección contextual precede a usar resultados como evidencia."
+      },
+      {
+        "type": "crossword",
+        "prompt": "Completa vocabulario de búsqueda avanzada.",
+        "entries": [
+          {
+            "word": "OPERADOR",
+            "clue": "Elemento que combina condiciones booleanas."
+          },
+          {
+            "word": "CONSULTA",
+            "clue": "Expresión que se ejecuta para buscar."
+          },
+          {
+            "word": "GRUPO",
+            "clue": "Conjunto de alternativas delimitado con paréntesis."
+          }
+        ],
+        "explanation": "Agrupar y combinar condiciones permite representar mejor la necesidad."
+      }
+    ],
+    "references": [
+      {
+        "name": "PubMed User Guide",
+        "title": "PubMed User Guide",
+        "author": "National Library of Medicine / NCBI",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/help/#combining-search-terms-with-boolean-operators",
+        "section": "Combining search terms with Boolean operators",
+        "purpose": "Leer AND, OR, NOT y agrupación como lógica de combinación de conceptos."
+      }
+    ]
+  },
+  {
+    "week": 8,
+    "name": "Un dossier digital que permite recuperar el razonamiento",
+    "objective": "Organizar referencias, metadatos, notas y versiones con trazabilidad.",
+    "label": "Simulación educativa · práctica",
+    "context": "Conceptos clave\nUn dossier digital reúne fuentes y notas relacionadas con una decisión o investigación. Los metadatos describen el recurso: autor, título, fecha, tipo e identificador. Un gestor bibliográfico facilita organizar y citar, pero los datos importados necesitan revisión. Las colecciones agrupan recursos por proyecto; las etiquetas señalan temas o estados. Un duplicado no es una fuente independiente y las versiones deben distinguirse.\n\nCaso breve\nUn equipo universitario ficticio prepara una revisión sobre búsqueda informacional. Tiene un artículo completo, otra copia del mismo y notas que mezclan texto literal con ideas propias. Quiere crear una carpeta llamada «todo» y generar citas automáticamente. La docente pide poder identificar qué documento respalda cada afirmación y dónde se encuentra el pasaje utilizado.\n\nQué debes hacer\nRevisa metadatos, consolida duplicados y separa citas, paráfrasis e interpretación. Registra localizadores y notas de uso, organizando por propósito y estado. No borres una versión sin examinar diferencias. El dossier debe permitir recuperar evidencia y comprender por qué fue seleccionada, no solo guardar archivos.",
+    "questions": [
+      {
+        "type": "choice",
+        "prompt": "El equipo necesita que cada afirmación pueda revisarse. ¿Qué organización lo permite?",
+        "options": [
+          "Colecciones por tema sin localizador, considerando suficiente la cercanía temática.",
+          "Referencias exportadas automáticamente, usando formato correcto como prueba de exactitud.",
+          "Metadatos comprobados, notas de uso y localizador del pasaje original."
+        ],
+        "correct": 2,
+        "explanation": "Metadatos y localizadores permiten recuperar el original y revisar el uso de evidencia."
+      },
+      {
+        "type": "choice",
+        "prompt": "Hay dos copias del mismo artículo. ¿Qué tratamiento conserva evidencia sin inflar corroboración?",
+        "options": [
+          "Comparar versiones, consolidar equivalentes y conservar información única.",
+          "Contarlas por separado porque sus nombres de archivo indican dos entradas.",
+          "Conservar la copia más reciente y descartar la otra sin comparar contenido."
+        ],
+        "correct": 0,
+        "explanation": "La copia no crea independencia; la consolidación debe preservar versiones e información pertinente."
+      },
+      {
+        "type": "matching",
+        "prompt": "Relaciona recurso organizativo y finalidad.",
+        "pairs": [
+          {
+            "left": "Metadatos",
+            "right": "Identificar el documento"
+          },
+          {
+            "left": "Colección",
+            "right": "Agrupar recursos de un proyecto"
+          },
+          {
+            "left": "Etiqueta",
+            "right": "Señalar tema o estado de revisión"
+          },
+          {
+            "left": "Localizador",
+            "right": "Encontrar el pasaje utilizado"
+          }
+        ],
+        "explanation": "La organización une identificación, recuperación y razonamiento sobre el uso."
+      },
+      {
+        "type": "ordering",
+        "prompt": "Ordena la incorporación al dossier.",
+        "items": [
+          "Recuperar documento completo",
+          "Comprobar metadatos y versión",
+          "Revisar duplicados y organizar",
+          "Registrar notas con atribución y localizador",
+          "Verificar cita y vínculo con la afirmación"
+        ],
+        "explanation": "El gestor facilita trabajo, pero no reemplaza revisión intelectual."
+      },
+      {
+        "type": "crossword",
+        "prompt": "Completa conceptos del dossier.",
+        "entries": [
+          {
+            "word": "DOSSIER",
+            "clue": "Expediente organizado para una investigación."
+          },
+          {
+            "word": "ETIQUETA",
+            "clue": "Marcador temático o de estado de un recurso."
+          },
+          {
+            "word": "NOTA",
+            "clue": "Registro de lectura que distingue evidencia e interpretación."
+          }
+        ],
+        "explanation": "Un dossier recuperable documenta recursos y pensamiento del equipo."
+      }
+    ],
+    "references": [
+      {
+        "name": "Collections and Tags",
+        "title": "Collections and Tags",
+        "author": "Zotero Documentation",
+        "url": "https://www.zotero.org/support/collections_and_tags",
+        "section": "Collections; Tags; Duplicate Items",
+        "purpose": "Organizar referencias con colecciones y etiquetas, y distinguir copias de evidencia independiente."
+      },
+      {
+        "name": "Adding Items to Zotero",
+        "title": "Adding Items to Zotero",
+        "author": "Zotero Documentation",
+        "url": "https://www.zotero.org/support/adding_items_to_zotero",
+        "section": "Adding Items; Editing Items",
+        "purpose": "Revisar metadatos antes de reutilizar una referencia importada."
+      }
+    ]
+  },
+  {
+    "week": 9,
+    "name": "CRAAP: evaluar según el uso previsto",
+    "objective": "Aplicar criterios de actualidad, relevancia, autoridad, exactitud y propósito.",
+    "label": "Simulación educativa · práctica",
+    "context": "Conceptos clave\nCRAAP reúne preguntas sobre actualidad (vigencia), relevancia (relación con la necesidad), autoridad (autoría y competencia), exactitud (respaldo verificable) y propósito (intención e intereses). Son dimensiones de juicio, no una puntuación que garantice verdad. Una fuente reciente puede ser poco pertinente; una fuente antigua puede servir para un análisis histórico. La autoridad debe examinarse respecto al uso.\n\nCaso breve\nUn equipo universitario ficticio compara materiales para explicar verificación de noticias. Una guía identifica autores y referencias; un texto promocional promete resultados infalibles sin método. La guía puede merecer mayor atención, pero todavía hay que revisar alcance y argumentos. El patrocinio de una fuente es un dato para valorar propósito, no una prueba automática de falsedad.\n\nQué debes hacer\nAplica preguntas concretas al material y justifica qué puede apoyar. Distingue fecha de vigencia, prestigio de evidencia y promoción de respaldo. Si falta método o referencia, registra la limitación y busca corroboración. Evalúa para una necesidad definida y comunica razones; no elijas por apariencia, ni garantices resultados por cumplir una lista.",
+    "questions": [
+      {
+        "type": "choice",
+        "prompt": "La guía tiene autores y referencias. ¿Qué decisión aplica CRAAP al uso previsto?",
+        "options": [
+          "Examinar relación con la necesidad, respaldo y límites antes de seleccionarla.",
+          "Priorizar autoridad del equipo y asumir que sus referencias verifican cada afirmación.",
+          "Priorizar fecha de edición y considerar secundaria la pertinencia al problema."
+        ],
+        "correct": 0,
+        "explanation": "Identificación ayuda, pero la evaluación requiere comprobar contenido y uso."
+      },
+      {
+        "type": "choice",
+        "prompt": "La fuente declara patrocinio. ¿Cómo usar ese dato sin confundir propósito y exactitud?",
+        "options": [
+          "Descartarla en todo uso porque el patrocinio invalida incluso evidencia comprobable.",
+          "Examinar incentivos y contrastar afirmaciones antes de decidir qué puede apoyar.",
+          "Aceptar su contenido por transparente, considerando innecesario contrastar lo declarado."
+        ],
+        "correct": 1,
+        "explanation": "Propósito alerta sobre incentivos; no sustituye revisión de exactitud y pertinencia."
+      },
+      {
+        "type": "matching",
+        "prompt": "Relaciona pregunta y criterio CRAAP.",
+        "pairs": [
+          {
+            "left": "¿Sigue vigente para este uso?",
+            "right": "Actualidad"
+          },
+          {
+            "left": "¿Responde al problema?",
+            "right": "Relevancia"
+          },
+          {
+            "left": "¿Quién está en condiciones de sostenerlo?",
+            "right": "Autoridad"
+          },
+          {
+            "left": "¿Qué evidencia permite comprobarlo?",
+            "right": "Exactitud"
+          },
+          {
+            "left": "¿Qué intenta conseguir?",
+            "right": "Propósito"
+          }
+        ],
+        "explanation": "Cada criterio aborda una dimensión diferente de la valoración contextual."
+      },
+      {
+        "type": "ordering",
+        "prompt": "Ordena una evaluación argumentada.",
+        "items": [
+          "Definir necesidad y uso de la fuente",
+          "Examinar fecha, autoría y alcance",
+          "Revisar respaldo e intención del mensaje",
+          "Contrastar afirmaciones y registrar límites",
+          "Justificar el uso o descarte ante la necesidad"
+        ],
+        "explanation": "No se ordenan criterios equivalentes de forma arbitraria; se organiza el proceso de valoración."
+      },
+      {
+        "type": "crossword",
+        "prompt": "Completa criterios de juicio.",
+        "entries": [
+          {
+            "word": "AUTORIDAD",
+            "clue": "Idoneidad contextual de quien produce una fuente."
+          },
+          {
+            "word": "PROPOSITO",
+            "clue": "Intención e intereses del mensaje."
+          },
+          {
+            "word": "VIGENCIA",
+            "clue": "Actualidad relevante para el uso previsto."
+          }
+        ],
+        "explanation": "La evaluación combina criterios y explica su pertinencia, sin garantías automáticas."
+      }
+    ],
+    "references": [
+      {
+        "name": "Evaluating Information: Applying the CRAAP Test",
+        "title": "Evaluating Information: Applying the CRAAP Test",
+        "author": "Meriam Library, California State University, Chico",
+        "url": "https://library.csuchico.edu/sites/default/files/craap-test.pdf",
+        "section": "Currency, Relevance, Authority, Accuracy, Purpose",
+        "purpose": "Aplicar preguntas sobre vigencia, pertinencia, autoría, respaldo e intención sin convertirlas en garantía."
+      }
+    ]
+  },
+  {
+    "week": 10,
+    "name": "Desinformación: distinguir circulación de verificación",
+    "objective": "Reconocer origen, dependencia de fuentes, sesgos y límites de afirmaciones.",
+    "label": "Simulación educativa · práctica",
+    "context": "Conceptos clave\nUna afirmación requiere evidencia pertinente; repetición y popularidad no la verifican. La verificación cruzada compara documentos y fuentes de procedencia reconocible, examinando si dependen del mismo origen. El sesgo de confirmación consiste en favorecer lo que coincide con una creencia y desatender evidencia contraria. Una captura sin contexto puede distorsionar significado; verificar exige recuperar original y distinguir confirmado de pendiente.\n\nCaso breve\nUn grupo universitario ficticio recibe una captura que atribuye a una organización una prohibición. Varios mensajes la repiten, pero todos usan la misma imagen. El documento completo describe una recomendación en un contexto limitado, no la prohibición general. El grupo necesita explicar la diferencia sin acusar intenciones que no puede demostrar.\n\nQué debes hacer\nDescompón el mensaje en afirmaciones, localiza su procedencia y contrasta alcance. No cuentes copias como corroboraciones independientes. Examina también evidencia que podría cambiar tu posición y comunica lo verificado junto a las dudas. Si no conoces intención del emisor, no la inventes para sostener la corrección.",
+    "questions": [
+      {
+        "type": "choice",
+        "prompt": "Las copias de la captura afirman una prohibición general. ¿Qué acción permite revisar esa lectura?",
+        "options": [
+          "Reunir copias de distintos canales y tratarlas como confirmaciones del contenido.",
+          "Recuperar el original y comparar su contexto y alcance con el mensaje.",
+          "Priorizar el texto más reciente sin rastrear si depende de la misma captura."
+        ],
+        "correct": 1,
+        "explanation": "El documento completo permite examinar contexto y distinguir recomendación de prohibición."
+      },
+      {
+        "type": "choice",
+        "prompt": "El grupo cree que la captura es falsa. ¿Qué acción reduce su sesgo de confirmación?",
+        "options": [
+          "Buscar únicamente documentos contrarios a la captura para fortalecer la corrección.",
+          "Descartar fuentes favorables al mensaje por no coincidir con el juicio inicial.",
+          "Examinar también evidencia que podría sostener o refutar su interpretación inicial."
+        ],
+        "correct": 2,
+        "explanation": "Una revisión crítica considera evidencia contraria y puede modificar su conclusión."
+      },
+      {
+        "type": "matching",
+        "prompt": "Relaciona situación y concepto.",
+        "pairs": [
+          {
+            "left": "Mensajes copian una captura",
+            "right": "Dependencia de origen"
+          },
+          {
+            "left": "Imagen sin pasaje completo",
+            "right": "Pérdida de contexto"
+          },
+          {
+            "left": "Descartar evidencia contraria sin razones",
+            "right": "Sesgo de confirmación"
+          },
+          {
+            "left": "Comparar documento y afirmación",
+            "right": "Verificación cruzada"
+          }
+        ],
+        "explanation": "La evaluación atiende procedencia, contexto y sesgos del propio analista."
+      },
+      {
+        "type": "ordering",
+        "prompt": "Ordena la verificación del mensaje.",
+        "items": [
+          "Identificar afirmación concreta",
+          "Localizar documento original",
+          "Comparar significado y alcance",
+          "Contrastar evidencia y dudas",
+          "Comunicar corrección con fuente y límites"
+        ],
+        "explanation": "La corrección llega después de examinar origen y alcance, preservando lo pendiente."
+      },
+      {
+        "type": "crossword",
+        "prompt": "Completa términos de lectura crítica.",
+        "entries": [
+          {
+            "word": "ORIGEN",
+            "clue": "Procedencia que debe localizarse al verificar."
+          },
+          {
+            "word": "SESGO",
+            "clue": "Distorsión de juicio que puede favorecer creencias previas."
+          },
+          {
+            "word": "CONTRASTE",
+            "clue": "Comparación de evidencia pertinente para una afirmación."
+          }
+        ],
+        "explanation": "Origen y contraste ayudan a detectar distorsiones y revisar creencias."
+      }
+    ],
+    "references": [
+      {
+        "name": "Media and information literacy curriculum for teachers",
+        "title": "Media and information literacy curriculum for teachers",
+        "author": "UNESCO",
+        "url": "https://unesdoc.unesco.org/ark:/48223/pf0000192971",
+        "section": "Módulo sobre noticias, medios e información ética",
+        "purpose": "Analizar origen, representaciones e intereses de mensajes que circulan."
+      },
+      {
+        "name": "Framework for Information Literacy for Higher Education",
+        "title": "Framework for Information Literacy for Higher Education",
+        "author": "ACRL",
+        "url": "https://www.ala.org/acrl/standards/ilframework",
+        "section": "Authority Is Constructed and Contextual: Knowledge Practices",
+        "purpose": "Contrastar procedencia y respaldo sin confundir popularidad con autoridad."
+      }
+    ]
+  },
+  {
+    "week": 11,
+    "name": "Autoría y licencias: citar no concede cualquier permiso",
+    "objective": "Distinguir citación, paráfrasis y condiciones de reutilización.",
+    "label": "Simulación educativa · práctica",
+    "context": "Conceptos clave\nCitar identifica el uso de palabras o ideas ajenas; no concede por sí solo autorización ilimitada para reutilizar una obra. Una paráfrasis expresa comprensión propia y también atribuye la idea. Copiar con cambios superficiales no demuestra elaboración. Las licencias indican usos permitidos y condiciones. CC BY permite compartir y adaptar con atribución, enlace a la licencia e indicación de cambios; ausencia de licencia visible no equivale a libertad de uso.\n\nCaso breve\nUn equipo universitario ficticio prepara una guía. Quiere incluir una ilustración CC BY y un párrafo ajeno. Alguien propone recortar la imagen sin registrar cambios y reemplazar algunas palabras del párrafo para llamarlo propio. La tarea exige explicar qué pertenece a fuentes y qué elaboró el equipo, recuperando condiciones del recurso original.\n\nQué debes hacer\nDistingue atribución de permiso, cita literal de paráfrasis y adaptación de uso sin cambios. Verifica condiciones antes de publicar y conserva evidencia de autoría y licencia. No inventes permiso cuando falta información. Redacta de modo que el lector pueda distinguir voces y localizar las fuentes.",
+    "questions": [
+      {
+        "type": "choice",
+        "prompt": "El equipo recorta una ilustración CC BY. ¿Qué acción satisface las condiciones enseñadas?",
+        "options": [
+          "Conservar atribución y omitir el cambio porque la adaptación mantiene el tema.",
+          "Indicar el cambio y considerar innecesario identificar al autor tras modificarla.",
+          "Conservar atribución, enlazar licencia e indicar que se recortó."
+        ],
+        "correct": 2,
+        "explanation": "CC BY permite adaptar bajo condiciones explícitas, entre ellas señalar cambios."
+      },
+      {
+        "type": "choice",
+        "prompt": "El grupo desea incorporar la explicación ajena con su propia voz. ¿Qué constituye paráfrasis responsable?",
+        "options": [
+          "Expresar comprensión propia y atribuir la idea, sin simular autoría original.",
+          "Reorganizar frases manteniendo redacción ajena y considerarlas propias por nuevo orden.",
+          "Cambiar términos por sinónimos y considerar que eso elimina necesidad de referencia."
+        ],
+        "correct": 0,
+        "explanation": "La paráfrasis exige elaboración y atribución; cambiar unas palabras no elimina autoría ajena."
+      },
+      {
+        "type": "matching",
+        "prompt": "Relaciona práctica y función.",
+        "pairs": [
+          {
+            "left": "Citación",
+            "right": "Identificar uso de una fuente"
+          },
+          {
+            "left": "Licencia",
+            "right": "Definir usos y condiciones autorizados"
+          },
+          {
+            "left": "Paráfrasis",
+            "right": "Expresar una idea comprendida con voz propia y atribución"
+          },
+          {
+            "left": "Cita literal",
+            "right": "Distinguir palabras ajenas y localizarlas"
+          }
+        ],
+        "explanation": "Permiso y atribución responden a preguntas diferentes y deben revisarse."
+      },
+      {
+        "type": "ordering",
+        "prompt": "Ordena la reutilización responsable.",
+        "items": [
+          "Localizar recurso y autoría",
+          "Comprobar licencia y uso propuesto",
+          "Obtener permiso adicional si resulta necesario",
+          "Preparar atribución y declarar modificaciones",
+          "Revisar publicación y guardar respaldo"
+        ],
+        "explanation": "Las condiciones se comprueban antes de usar; el respaldo permite revisar autorización y atribución."
+      },
+      {
+        "type": "crossword",
+        "prompt": "Completa términos de uso ético.",
+        "entries": [
+          {
+            "word": "AUTOR",
+            "clue": "Persona identificada como creadora del recurso."
+          },
+          {
+            "word": "LICENCIA",
+            "clue": "Condiciones que autorizan determinados usos."
+          },
+          {
+            "word": "CITA",
+            "clue": "Identificación del uso de palabras o ideas ajenas."
+          }
+        ],
+        "explanation": "Reconocer autoría no sustituye verificar permisos de reutilización."
+      }
+    ],
+    "references": [
+      {
+        "name": "Creative Commons Attribution 4.0 International · resumen",
+        "title": "Creative Commons Attribution 4.0 International · resumen",
+        "author": "Creative Commons",
+        "url": "https://creativecommons.org/licenses/by/4.0/deed.es",
+        "section": "Eres libre de; Bajo las condiciones siguientes",
+        "purpose": "Distinguir permiso de compartir/adaptar y obligaciones de atribución."
+      },
+      {
+        "name": "Framework for Information Literacy for Higher Education",
+        "title": "Framework for Information Literacy for Higher Education",
+        "author": "ACRL",
+        "url": "https://www.ala.org/acrl/standards/ilframework",
+        "section": "Information Has Value",
+        "purpose": "Relacionar propiedad intelectual, atribución y responsabilidad en el uso de ideas."
+      }
+    ]
+  },
+  {
+    "week": 12,
+    "name": "IA generativa: texto convincente no es evidencia",
+    "objective": "Validar respuestas generativas con fuentes, límites y responsabilidad humana.",
+    "label": "Simulación educativa · práctica",
+    "context": "Conceptos clave\nLa IA generativa produce respuestas a partir de patrones y puede generar afirmaciones plausibles sin respaldo. Fluidez no demuestra exactitud. Validar exige comprobar fuentes originales y distinguir hallazgos confirmados de pendientes. Los sesgos pueden reproducir representaciones limitadas; privacidad exige no introducir datos personales en herramientas no autorizadas. Integridad académica implica declarar uso según política y mantener responsabilidad por la entrega.\n\nCaso breve\nUn equipo universitario ficticio pide a una herramienta una explicación de ALFIN. Recibe una referencia que no logra recuperar y una descripción que trata ACRL como receta lineal. La herramienta también invita a cargar datos de compañeros para personalizar. El equipo dispone de los marcos originales y debe revisar el borrador antes de incorporarlo.\n\nQué debes hacer\nIdentifica afirmaciones, recupera fuentes y corrige conceptos con respaldo. No fabriques una referencia ni atribuyas certeza a lo no verificado. Usa ejemplos ficticios cuando no se requieran datos reales y registra cómo empleaste y revisaste la herramienta. La IA puede apoyar exploración, pero no sustituye juicio ni autoría responsable.",
+    "questions": [
+      {
+        "type": "choice",
+        "prompt": "La IA cita una referencia no recuperada. ¿Qué tratamiento mantiene rigor sin inferir de más?",
+        "options": [
+          "Marcarla no verificada y comprobarla antes de usarla como fundamento.",
+          "Aceptarla provisionalmente como evidencia porque coincide con otros textos del borrador.",
+          "Declararla inexistente solo porque una búsqueda inicial no la recuperó."
+        ],
+        "correct": 0,
+        "explanation": "Una referencia plausible requiere recuperación y contraste; la ausencia de comprobación debe conservarse."
+      },
+      {
+        "type": "choice",
+        "prompt": "La herramienta pide datos de compañeros para personalizar un ejemplo conceptual. ¿Qué respuesta es proporcional?",
+        "options": [
+          "Compartir correos porque personalizar el texto convierte todo dato en necesario.",
+          "Usar ejemplos ficticios y respetar finalidad y políticas de privacidad.",
+          "Eliminar nombres pero compartir los demás identificadores sin revisar la autorización."
+        ],
+        "correct": 1,
+        "explanation": "Personalización no justifica exponer datos; la tarea conceptual puede usar simulaciones."
+      },
+      {
+        "type": "matching",
+        "prompt": "Relaciona riesgo y respuesta crítica.",
+        "pairs": [
+          {
+            "left": "Fluidez sin evidencia",
+            "right": "Contrastar afirmaciones con fuentes"
+          },
+          {
+            "left": "Referencia no recuperable",
+            "right": "No usar como fundamento verificado"
+          },
+          {
+            "left": "Representación limitada",
+            "right": "Examinar sesgos y perspectivas ausentes"
+          },
+          {
+            "left": "Entrega asistida por IA",
+            "right": "Declarar uso y revisión según política"
+          }
+        ],
+        "explanation": "La validación distingue riesgos y exige responsabilidad humana sobre el producto."
+      },
+      {
+        "type": "ordering",
+        "prompt": "Ordena la revisión del borrador.",
+        "items": [
+          "Identificar afirmaciones y recursos citados",
+          "Recuperar fuentes originales",
+          "Contrastar conceptos y examinar sesgos",
+          "Corregir y señalar lo no verificado",
+          "Registrar uso de IA y revisión humana"
+        ],
+        "explanation": "Primero se identifica y contrasta; luego se corrige y documenta el proceso."
+      },
+      {
+        "type": "crossword",
+        "prompt": "Completa conceptos de validación.",
+        "entries": [
+          {
+            "word": "SESGO",
+            "clue": "Representación o juicio limitado que debe examinarse."
+          },
+          {
+            "word": "FUENTE",
+            "clue": "Origen verificable que respalda una afirmación."
+          },
+          {
+            "word": "INTEGRIDAD",
+            "clue": "Responsabilidad y transparencia en el trabajo académico."
+          }
+        ],
+        "explanation": "El uso reflexivo exige evidencia, revisión de sesgos e integridad."
+      }
+    ],
+    "references": [
+      {
+        "name": "Guidance for generative AI in education and research",
+        "title": "Guidance for generative AI in education and research",
+        "author": "UNESCO · Fengchun Miao y Wayne Holmes",
+        "url": "https://unesdoc.unesco.org/ark:/48223/pf0000386693",
+        "section": "Controversies around generative AI; Regulating the use; Facilitating creative use",
+        "purpose": "Revisar límites, privacidad, sesgos y responsabilidad humana en educación e investigación."
+      }
+    ]
+  },
+  {
+    "week": 13,
+    "name": "Síntesis: relacionar ideas, no pegar fragmentos",
+    "objective": "Transformar evidencia en una explicación propia que conserva voces y límites.",
+    "label": "Simulación educativa · práctica",
+    "context": "Conceptos clave\nResumir identifica lo esencial de un texto; sintetizar relaciona ideas de distintas fuentes para responder una pregunta. La síntesis distingue acuerdo, diferencia y límites, sin presentar perspectivas como equivalentes cuando no lo son. La paráfrasis expresa comprensión y atribuye ideas. ACRL concibe el conocimiento académico como conversación en la que los argumentos se relacionan y revisan; interpretar no equivale a copiar.\n\nCaso breve\nUn equipo universitario ficticio prepara una explicación de alfabetización informacional. Un texto enfatiza búsqueda; otro considera evaluación y uso ético; un tercero analiza participación. El equipo propone pegar extractos en secuencia, pero necesita explicar cómo se complementan y qué diferencias de propósito tienen. Ningún fragmento aislado representa por sí solo toda la discusión.\n\nQué debes hacer\nReconoce ideas centrales y agrúpalas por la pregunta, no por el orden de descarga. Compara relaciones, conserva atribución y redacta un argumento propio con alcance explícito. No inventes consenso ni omitas evidencia incómoda. El producto debe mostrar cómo se transforma información leída en conocimiento comunicable y revisable.",
+    "questions": [
+      {
+        "type": "choice",
+        "prompt": "¿Qué producto integra fuentes en una síntesis y no solo en resúmenes consecutivos?",
+        "options": [
+          "Resumir cada texto por separado y asumir que la secuencia explica sus relaciones.",
+          "Relacionar búsqueda, evaluación y participación según la pregunta, con atribución y límites.",
+          "Elegir el concepto más frecuente y tratar las otras perspectivas como equivalentes."
+        ],
+        "correct": 1,
+        "explanation": "Sintetizar relaciona perspectivas según una pregunta y conserva procedencia de las ideas."
+      },
+      {
+        "type": "choice",
+        "prompt": "Los textos tienen propósitos distintos. ¿Cómo integrarlos sin falsear su significado?",
+        "options": [
+          "Usar una misma definición para todos para evitar discrepancias en la redacción.",
+          "Excluir diferencias porque la síntesis debe presentar una sola voz sin matices.",
+          "Explicar contexto y diferencias antes de justificar cómo se relacionan."
+        ],
+        "correct": 2,
+        "explanation": "La síntesis reconoce diferencias y límites; no fuerza equivalencias ni consenso."
+      },
+      {
+        "type": "matching",
+        "prompt": "Relaciona operación y función.",
+        "pairs": [
+          {
+            "left": "Resumen",
+            "right": "Recuperar lo esencial de un texto"
+          },
+          {
+            "left": "Síntesis",
+            "right": "Relacionar ideas para responder una pregunta"
+          },
+          {
+            "left": "Paráfrasis",
+            "right": "Expresar comprensión con atribución"
+          },
+          {
+            "left": "Límite",
+            "right": "Indicar lo que la evidencia no permite afirmar"
+          }
+        ],
+        "explanation": "Las operaciones aportan al conocimiento comunicable y mantienen transparencia de las voces."
+      },
+      {
+        "type": "ordering",
+        "prompt": "Ordena una síntesis académica.",
+        "items": [
+          "Definir la pregunta que debe responderse",
+          "Reconocer ideas centrales en fuentes",
+          "Comparar acuerdos, diferencias y contexto",
+          "Redactar una relación argumentada con atribución",
+          "Revisar respaldo y límites del producto"
+        ],
+        "explanation": "Se lee y compara antes de redactar; luego se comprueba qué respalda cada afirmación."
+      },
+      {
+        "type": "crossword",
+        "prompt": "Completa conceptos de transformación informacional.",
+        "entries": [
+          {
+            "word": "SINTESIS",
+            "clue": "Integración de ideas en una explicación argumentada."
+          },
+          {
+            "word": "RESUMEN",
+            "clue": "Recuperación de lo esencial de un texto."
+          },
+          {
+            "word": "ARGUMENTO",
+            "clue": "Razonamiento que conecta evidencia y conclusión."
+          }
+        ],
+        "explanation": "Una síntesis articula ideas y muestra el razonamiento, no solo fragmentos."
+      }
+    ],
+    "references": [
+      {
+        "name": "Framework for Information Literacy for Higher Education",
+        "title": "Framework for Information Literacy for Higher Education",
+        "author": "ACRL",
+        "url": "https://www.ala.org/acrl/standards/ilframework",
+        "section": "Scholarship as Conversation; Research as Inquiry",
+        "purpose": "Relacionar perspectivas, distinguir atribución y elaborar síntesis sin ocultar límites."
+      }
+    ]
+  },
+  {
+    "week": 14,
+    "name": "Comunicación estratégica: el mismo conocimiento para distintas audiencias",
+    "objective": "Adaptar propósito, lenguaje, formato y canal sin alterar los hechos.",
+    "label": "Simulación educativa · práctica",
+    "context": "Conceptos clave\nLa comunicación estratégica parte de propósito y audiencia. Un mensaje académico argumenta; una orientación explica acciones; una síntesis ejecutiva prioriza decisión y límites. El canal y formato condicionan cómo se percibe el contenido, pero no autorizan a cambiar evidencia. ACRL invita a examinar creación de información como proceso: elecciones de producción y presentación influyen en uso y comprensión.\n\nCaso breve\nUn equipo universitario ficticio explica cómo evaluar fuentes. La docente necesita criterios y fundamentación; estudiantes nuevos requieren instrucciones claras; una difusión breve debe invitar a consultar la guía. Copiar el mismo texto extenso en todos los espacios puede impedir comprensión. Simplificar no significa convertir una recomendación limitada en certeza.\n\nQué debes hacer\nDefine qué debe comprender o hacer cada audiencia. Selecciona lenguaje, orden y canal adecuados, manteniendo conceptos y alcance. Prevé acceso al material completo cuando uses formatos breves. Comprueba comprensión con tareas o preguntas, no solo si el mensaje se publicó. Explica por qué tus elecciones responden a propósito y destinatario. La ruta acordada parte del propósito, identifica luego audiencia, selecciona contenido y canal, prepara la versión y termina comprobando comprensión.",
+    "questions": [
+      {
+        "type": "choice",
+        "prompt": "Los estudiantes nuevos deben aplicar criterios. ¿Qué adaptación facilita comprensión sin alterar contenido?",
+        "options": [
+          "La fundamentación extensa del comité sin cambiar vocabulario ni jerarquía.",
+          "Una versión breve sin límites porque la simplificación exige suprimir matices.",
+          "Instrucciones claras con conceptos necesarios y ruta a la explicación completa."
+        ],
+        "correct": 2,
+        "explanation": "La adaptación facilita comprensión conservando contenido y límites, sin promesas injustificadas."
+      },
+      {
+        "type": "choice",
+        "prompt": "Al pasar la guía a un canal breve, ¿qué debe mantener coherencia entre versiones?",
+        "options": [
+          "Hechos, conceptos y límites respaldados, aunque cambie extensión y detalle.",
+          "La misma cantidad de información, aunque impida lectura en ese canal.",
+          "El objetivo de persuadir, aunque eso permita reforzar conclusiones no sostenidas."
+        ],
+        "correct": 0,
+        "explanation": "El formato cambia según propósito y audiencia; la evidencia y el alcance permanecen coherentes."
+      },
+      {
+        "type": "matching",
+        "prompt": "Relaciona audiencia y prioridad.",
+        "pairs": [
+          {
+            "left": "Docente revisora",
+            "right": "Fundamentación y criterios"
+          },
+          {
+            "left": "Estudiante que comienza",
+            "right": "Pasos comprensibles y vocabulario explicado"
+          },
+          {
+            "left": "Lectura breve de difusión",
+            "right": "Idea central y acceso al recurso completo"
+          },
+          {
+            "left": "Usuario con otra forma de acceso",
+            "right": "Formato equivalente accesible"
+          }
+        ],
+        "explanation": "La comunicación adapta presentación a necesidades sin distorsionar significado."
+      },
+      {
+        "type": "ordering",
+        "prompt": "Aplica la ruta acordada para diseñar el mensaje, desde el propósito hasta la comprobación.",
+        "items": [
+          "Definir propósito comunicativo",
+          "Identificar audiencia y necesidades",
+          "Elegir contenido, lenguaje y canal",
+          "Preparar versión coherente y accesible",
+          "Comprobar comprensión y ajustar"
+        ],
+        "explanation": "La evaluación de comprensión permite revisar elecciones de producción."
+      },
+      {
+        "type": "crossword",
+        "prompt": "Completa conceptos de comunicación estratégica.",
+        "entries": [
+          {
+            "word": "AUDIENCIA",
+            "clue": "Destinatario cuyas necesidades orientan el mensaje."
+          },
+          {
+            "word": "CANAL",
+            "clue": "Medio elegido para comunicar."
+          },
+          {
+            "word": "PROPOSITO",
+            "clue": "Resultado de comprensión o acción que se busca."
+          }
+        ],
+        "explanation": "Propósito, audiencia y canal explican por qué se crea un mensaje de cierta forma."
+      }
+    ],
+    "references": [
+      {
+        "name": "Framework for Information Literacy for Higher Education",
+        "title": "Framework for Information Literacy for Higher Education",
+        "author": "ACRL",
+        "url": "https://www.ala.org/acrl/standards/ilframework",
+        "section": "Information Creation as a Process: Knowledge Practices",
+        "purpose": "Comprender elección de formato, propósito y audiencia al crear un producto informacional."
+      }
+    ]
+  },
+  {
+    "week": 15,
+    "name": "Portafolio accesible: demostrar competencia y explicar decisiones",
+    "objective": "Vincular evidencia, reflexión y accesibilidad en un producto de aprendizaje.",
+    "label": "Simulación educativa · práctica",
+    "context": "Conceptos clave\nUn portafolio de competencias conserva productos, criterios, reflexión y mejoras; no es solamente una carpeta. La trazabilidad permite recuperar evidencia. La justificación explica por qué se eligieron fuentes y qué límites tienen. Accesibilidad requiere contenido perceptible e interacción posible: una imagen significativa necesita alternativa equivalente y el foco de teclado debe ser visible. Calidad se comprueba mediante criterios y tareas, no solo apariencia.\n\nCaso breve\nUn estudiante universitario ficticio presenta un portafolio con fuentes completas, pero no explica su selección. Un gráfico comunica categorías solo con color, y la navegación pierde el foco visible. La portada es atractiva, aunque eso no elimina barreras ni demuestra el proceso de juicio. Necesita revisar contenido y modo de acceso.\n\nQué debes hacer\nIdentifica qué evidencia demuestra competencia y qué corrección permite participar. Conserva información esencial con alternativas y prueba la tarea sin depender del ratón. Añade razones y reflexión sobre cambios. Un comprobador automático puede ayudar, pero no sustituye todas las revisiones de uso y comprensión. El comité registra cambios al implementarlos y después los valida en tareas; la comprobación final fundamenta la reflexión.",
+    "questions": [
+      {
+        "type": "choice",
+        "prompt": "El portafolio contiene fuentes completas. ¿Qué añadido demuestra el juicio informacional?",
+        "options": [
+          "Razones de selección, límites y reflexión sobre el uso de evidencia.",
+          "Una clasificación temática, considerándola equivalente a justificar elecciones.",
+          "Un formato de referencia uniforme como prueba suficiente de reflexión."
+        ],
+        "correct": 0,
+        "explanation": "La competencia se demuestra mediante razonamiento y uso, no acumulación de productos."
+      },
+      {
+        "type": "choice",
+        "prompt": "El gráfico comunica categorías solo por color. ¿Qué mejora conserva su propósito para distintos accesos?",
+        "options": [
+          "Una paleta con tonos más diferenciados, sin otra representación de categorías.",
+          "Etiquetas y alternativa equivalente que transmitan significado y relaciones.",
+          "Una descripción de colores que omita lo que significan las categorías."
+        ],
+        "correct": 1,
+        "explanation": "La información debe ser perceptible por distintos medios; la alternativa conserva propósito y significado."
+      },
+      {
+        "type": "matching",
+        "prompt": "Relaciona criterio y evidencia.",
+        "pairs": [
+          {
+            "left": "Trazabilidad",
+            "right": "Fuente y localizador recuperables"
+          },
+          {
+            "left": "Justificación",
+            "right": "Razones de elección y límites"
+          },
+          {
+            "left": "Accesibilidad",
+            "right": "Contenido equivalente e interacción posible"
+          },
+          {
+            "left": "Reflexión",
+            "right": "Explicación de aprendizaje y mejoras"
+          }
+        ],
+        "explanation": "Un portafolio articula producto, razonamiento, acceso y revisión."
+      },
+      {
+        "type": "ordering",
+        "prompt": "Sigue la ruta de revisión del comité, que implementa y registra cambios antes de validarlos.",
+        "items": [
+          "Definir criterios de competencia y acceso",
+          "Examinar productos y tareas",
+          "Identificar barreras y razones ausentes",
+          "Corregir y documentar cambios",
+          "Repetir pruebas y reflexionar sobre mejora"
+        ],
+        "explanation": "La corrección se comprueba y su razonamiento se incorpora como evidencia del aprendizaje."
+      },
+      {
+        "type": "crossword",
+        "prompt": "Completa términos de calidad y acceso.",
+        "entries": [
+          {
+            "word": "EVIDENCIA",
+            "clue": "Respaldo verificable de una competencia."
+          },
+          {
+            "word": "FOCO",
+            "clue": "Indicador visible de dónde actúa el teclado."
+          },
+          {
+            "word": "REFLEXION",
+            "clue": "Explicación del aprendizaje y decisiones del autor."
+          }
+        ],
+        "explanation": "La calidad exige evidencia y reflexión, junto a interacción accesible."
+      }
+    ],
+    "references": [
+      {
+        "name": "Understanding SC 1.1.1: Non-text Content",
+        "title": "Understanding SC 1.1.1: Non-text Content",
+        "author": "W3C Web Accessibility Initiative",
+        "url": "https://www.w3.org/WAI/WCAG22/Understanding/non-text-content.html",
+        "section": "Intent; Benefits; Examples",
+        "purpose": "Preparar alternativas que conservan el propósito del contenido no textual."
+      },
+      {
+        "name": "Understanding SC 2.4.7: Focus Visible",
+        "title": "Understanding SC 2.4.7: Focus Visible",
+        "author": "W3C Web Accessibility Initiative",
+        "url": "https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html",
+        "section": "Intent; Benefits",
+        "purpose": "Examinar interacción por teclado y visibilidad del foco en un portafolio."
+      }
+    ]
+  },
+  {
+    "week": 16,
+    "name": "Desafío integral: una guía de verificación defendible",
+    "objective": "Integrar modelos y competencias de las unidades en un producto académico responsable.",
+    "label": "Simulación educativa · práctica",
+    "context": "Conceptos clave\nUna tarea integral comienza con necesidad informacional y pregunta delimitada. La búsqueda estratégica combina conceptos y registra ajustes; la evaluación examina autoridad contextual, pertinencia y respaldo. El uso ético distingue voces, citas y permisos. La síntesis relaciona perspectivas y límites; comunicación y accesibilidad permiten comprender y revisar el producto. Big6 organiza la resolución, SCONUL orienta capacidades y ACRL/AMI aportan juicio conceptual y mediático.\n\nCaso breve\nUn equipo universitario ficticio debe crear una guía para verificar mensajes que circulan en su comunidad académica. Tiene una captura, documentos originales y un borrador generado con ayuda de IA. Necesita justificar fuentes, corregir atribuciones y ofrecer formatos accesibles. No dispone de evidencia para declarar que cualquier herramienta garantiza verdad.\n\nQué debes hacer\nIntegra las competencias en un procedimiento defendible. Selecciona conceptos y fuentes por propósito, contrasta afirmaciones y conserva incertidumbres. Redacta una explicación propia con atribución, declara apoyo de IA según política y comprueba acceso. La evaluación final revisa si producto y proceso responden a la necesidad y qué debería mejorarse.",
+    "questions": [
+      {
+        "type": "choice",
+        "prompt": "La guía utiliza originales y un borrador IA. ¿Qué decisión integra evaluación e integridad?",
+        "options": [
+          "Contrastar solo el borrador y considerar innecesario recuperar los documentos citados.",
+          "Contrastar originales, distinguir voces y documentar uso y revisión de IA.",
+          "Atribuir todo al equipo porque sintetizó materiales y revisó el estilo."
+        ],
+        "correct": 1,
+        "explanation": "La tarea integral conecta evidencia, atribución y responsabilidad humana sobre lo entregado."
+      },
+      {
+        "type": "choice",
+        "prompt": "Antes de defender la guía, ¿qué revisión muestra la competencia integral?",
+        "options": [
+          "Confirmar que las etapas aparezcan nombradas, tomando la secuencia como garantía.",
+          "Revisar solo presentación final porque el proceso ya terminó al recuperar fuentes.",
+          "Comprobar propósito, respaldo, acceso y límites, y revisar aprendizajes del proceso."
+        ],
+        "correct": 2,
+        "explanation": "La evaluación revisa utilidad, acceso y aprendizaje, sin garantizar lo que la evidencia no sostiene."
+      },
+      {
+        "type": "matching",
+        "prompt": "Relaciona competencia y aporte al producto final.",
+        "pairs": [
+          {
+            "left": "Necesidad informacional",
+            "right": "Orientar la pregunta y el propósito"
+          },
+          {
+            "left": "Evaluación crítica",
+            "right": "Justificar evidencia y autoridad contextual"
+          },
+          {
+            "left": "Uso ético",
+            "right": "Reconocer ideas y condiciones de uso"
+          },
+          {
+            "left": "Síntesis accesible",
+            "right": "Integrar conocimiento comprensible y revisable"
+          }
+        ],
+        "explanation": "Las competencias se relacionan y ninguna etapa aislada completa el trabajo."
+      },
+      {
+        "type": "ordering",
+        "prompt": "Ordena el desafío integral.",
+        "items": [
+          "Delimitar necesidad y pregunta",
+          "Diseñar búsqueda y recuperar originales",
+          "Evaluar afirmaciones y perspectivas",
+          "Sintetizar con atribución y acceso equivalente",
+          "Revisar producto, proceso y pendientes"
+        ],
+        "explanation": "La integración mantiene la secuencia de resolución y el juicio crítico de las unidades."
+      },
+      {
+        "type": "crossword",
+        "prompt": "Completa términos del recorrido integral.",
+        "entries": [
+          {
+            "word": "INDAGACION",
+            "clue": "Proceso guiado por preguntas y evidencia."
+          },
+          {
+            "word": "INTEGRIDAD",
+            "clue": "Responsabilidad sobre autoría, apoyo y uso de información."
+          },
+          {
+            "word": "SINTESIS",
+            "clue": "Conexión argumentada de fuentes en conocimiento comunicable."
+          }
+        ],
+        "explanation": "La integración culmina en un producto fundamentado y responsable."
+      }
+    ],
+    "references": [
+      {
+        "name": "Framework for Information Literacy for Higher Education",
+        "title": "Framework for Information Literacy for Higher Education",
+        "author": "ACRL",
+        "url": "https://www.ala.org/acrl/standards/ilframework",
+        "section": "Research as Inquiry; Searching as Strategic Exploration; Information Has Value; Scholarship as Conversation",
+        "purpose": "Integrar necesidad, búsqueda, evaluación, uso ético y síntesis en una recomendación académica."
+      },
+      {
+        "name": "Media and information literacy curriculum for teachers",
+        "title": "Media and information literacy curriculum for teachers",
+        "author": "UNESCO",
+        "url": "https://unesdoc.unesco.org/ark:/48223/pf0000192971",
+        "section": "Marco curricular de competencias AMI",
+        "purpose": "Integrar lectura crítica de medios y comunicación responsable en el producto final."
+      }
+    ]
+  }
+];
 
-export const alfinCourse = {
-  id: "gig-502",
-  code: "GIG-502",
-  name: "Alfabetización y Competencias Informacionales",
-  teacher: syllabus.institution.teacher,
-  description: syllabus.courses[0].description,
-  weeks: syllabus.weeks.map((week) => ({ ...week })),
-  activities,
-};
+export const alfinCourse = { id: "gig-502", code: "GIG-502", name: "Alfabetización y Competencias Informacionales", teacher: syllabus.institution.teacher, description: syllabus.courses[0].description, weeks: syllabus.weeks.map(week => ({ ...week })), activities };

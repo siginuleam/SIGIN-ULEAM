@@ -44,6 +44,10 @@ const icons = {
   eye: "M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7 M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0",
   clock: "M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0 M12 7v5l3 2",
   back: "M20 12H4 m6-6-6 6 6 6",
+  settings: "M9 3h6l1 3 3 1 2 5-2 5-3 1-1 3H9l-1-3-3-1-2-5 2-5 3-1z M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0",
+  sun: "M12 3v2 M12 19v2 M3 12h2 M19 12h2 M5.6 5.6 1.4 1.4 M17 17l1.4 1.4 M5.6 18.4 1.4-1.4 M17 7l1.4-1.4 M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0",
+  moon: "M20 15A8 8 0 0 1 9 4a9 9 0 1 0 11 11z",
+  monitor: "M3 4h18v13H3z M8 21h8 M12 17v4",
 };
 const icon = (name) =>
   `<svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><path d="${icons[name] || icons.book}"/></svg>`;
@@ -59,10 +63,35 @@ let state,
   route = "home",
   adminTab = "weeks",
   loginRole = "student",
+  activityMode = "practice",
   quiz = null,
   preview = [],
   matchSelected = null,
   toastTimer;
+const themeKey = "sigin-theme-v1";
+const systemAppearance = matchMedia("(prefers-color-scheme: dark)");
+let themePreference = document.documentElement.dataset.themePreference || "system";
+function applyTheme(preference, persist = true) {
+  if (!["light", "dark", "system"].includes(preference)) return;
+  themePreference = preference;
+  const theme = preference === "system"
+    ? (systemAppearance.matches ? "dark" : "light")
+    : preference;
+  document.documentElement.dataset.theme = theme;
+  document.documentElement.dataset.themePreference = preference;
+  document.documentElement.style.colorScheme = theme;
+  document.querySelector('meta[name="theme-color"]').content = theme === "dark" ? "#171b29" : "#f6f5fa";
+  if (persist) {
+    try { localStorage.setItem(themeKey, preference); }
+    catch { toast("El tema se aplicó. Este navegador no permite guardar la preferencia."); }
+  }
+  document.querySelectorAll('[name="theme-choice"]').forEach((input) => {
+    input.checked = input.value === preference;
+  });
+}
+systemAppearance.addEventListener("change", () => {
+  if (themePreference === "system") applyTheme("system", false);
+});
 try {
   state = JSON.parse(localStorage.getItem(stateKey));
 } catch {}
@@ -92,6 +121,8 @@ const publicActions = new Set([
   "recover",
   "preview",
   "logout",
+  "settings",
+  "closeSettings",
 ]);
 const teacherActions = new Set([
   "admin",
@@ -143,7 +174,7 @@ function save() {
 }
 function focus() {
   document.querySelector("main")?.focus({ preventScroll: true });
-  window.scrollTo(0, 0);
+  window.scrollTo({ top: 0, left: 0, behavior: "instant" });
 }
 function visibleCourses() {
   if (!workspaceAllowed()) return [];
@@ -153,10 +184,36 @@ function visibleCourses() {
     enrolled.some((e) => e.course_id === c.id && e.active),
   );
 }
+function guestHeader() {
+  return `<header class="login-top">${logo()}<div class="guest-header-actions"><span class="institution">Aula institucional</span>${button("settings", icon("settings") + '<span class="settings-label">Configuración</span>', 'class="appearance-button" aria-label="Configuración de apariencia"')}</div></header>`;
+}
+function appearanceMarkup() {
+  return `<p class="muted">Elige cómo quieres ver tu aula. Esta preferencia se guarda en este navegador y puedes cambiarla cuando quieras.</p><fieldset class="theme-fieldset"><legend>Apariencia</legend><div class="theme-options">${[
+    ["light", "Claro", "Luz suave y colores tranquilos.", "sun"],
+    ["dark", "Oscuro", "Fondos oscuros para una lectura cómoda.", "moon"],
+    ["system", "Automático", "Sigue la apariencia de tu dispositivo.", "monitor"],
+  ].map(([value, label, description, glyph]) => `<label class="theme-option"><input type="radio" name="theme-choice" value="${value}" ${themePreference === value ? "checked" : ""}><span class="theme-option-icon">${icon(glyph)}</span><span><strong>${label}</strong><small>${description}</small></span></label>`).join("")}</div></fieldset><p class="settings-note">Tu tema cambia la presentación del aula. Tus materias y tu progreso siguen contigo.</p>`;
+}
+function settings() {
+  if (workspaceAllowed() && route !== "quiz") {
+    route = "settings";
+    shell(`${heading("A tu manera", "Configuración", "Un espacio cómodo también ayuda a aprender.")}<section class="card settings-card"><span class="eyebrow">${icon("settings")} Personaliza tu espacio</span><h2>Encuentra tu luz.</h2>${appearanceMarkup()}</section>`, "Configuración");
+    return;
+  }
+  document.querySelector("#appearance-dialog")?.remove();
+  const dialog = document.createElement("dialog");
+  dialog.id = "appearance-dialog";
+  dialog.className = "appearance-dialog";
+  dialog.setAttribute("aria-labelledby", "appearance-title");
+  dialog.innerHTML = `<div class="dialog-heading"><div><span class="eyebrow">A tu manera</span><h2 id="appearance-title">Configuración</h2></div>${button("closeSettings", "Cerrar", 'class="link"')}</div>${appearanceMarkup()}`;
+  dialog.addEventListener("close", () => dialog.remove());
+  app.append(dialog);
+  dialog.showModal();
+}
 function shell(content, title = "Inicio") {
   if (!requireWorkspace()) return;
   const name = identity?.profile.display_name || "Visitante";
-  app.innerHTML = `<div class="app-shell"><aside class="sidebar" id="sidebar">${logo()}<div><p class="sidebar-label">Tu espacio de aprendizaje</p><nav class="side-nav" aria-label="Principal">${button("home", icon("home") + "Inicio", `class="${route === "home" ? "active" : ""}"`)}${button("myCourses", icon("book") + "Mis materias", `class="${route === "course" || route === "lesson" ? "active" : ""}"`)}${button("grades", icon("chart") + "Mis resultados", `class="${route === "grades" ? "active" : ""}"`)}${teacher() ? button("admin", icon("users") + "Espacio docente", `class="${route === "admin" ? "active" : ""}"`) : ""}</nav></div><div><p class="sidebar-label">Tus materias</p><nav class="side-nav" aria-label="Materias">${visibleCourses()
+  app.innerHTML = `<div class="app-shell"><aside class="sidebar" id="sidebar">${logo()}<div><p class="sidebar-label">Tu espacio de aprendizaje</p><nav class="side-nav" aria-label="Principal">${button("home", icon("home") + "Inicio", `class="${route === "home" ? "active" : ""}"`)}${button("myCourses", icon("book") + "Mis materias", `class="${route === "course" || route === "lesson" ? "active" : ""}"`)}${button("activities", icon("spark") + "Práctica y examen", `class="${route === "activities" || route === "quiz" ? "active" : ""}"`)}${button("grades", icon("chart") + "Mis resultados", `class="${route === "grades" ? "active" : ""}"`)}${teacher() ? button("admin", icon("users") + "Espacio docente", `class="${route === "admin" ? "active" : ""}"`) : ""}</nav></div><div><p class="sidebar-label">Tus materias</p><nav class="side-nav" aria-label="Materias">${visibleCourses()
     .map((c) =>
       button(
         "course",
@@ -166,14 +223,14 @@ function shell(content, title = "Inicio") {
     )
     .join(
       "",
-    )}</nav></div><div class="sidebar-bottom"><nav class="side-nav">${button("account", icon("shield") + "Mi cuenta")}${button("logout", icon("logout") + "Salir")}</nav><p>Aprende con evidencia.<br>Practica con propósito.</p></div></aside><div class="workspace">${mode === "preview" ? `<div class="preview-bar"><span>Vista previa · sin cuentas ni correos reales</span>${button("switchRole", teacher() ? "Ver como estudiante" : "Ver como docente")}</div>` : ""}<header class="topbar">${button("menu", icon("menu"), 'class="menu-button" aria-label="Abrir menú"')}<div class="mobile-logo">${logo()}</div><div class="breadcrumb">Aula virtual <span aria-hidden="true">/</span> <strong>${escape(title)}</strong></div><div class="profile"><span class="name">${escape(name)}<br><small>${teacher() ? "Docente" : "Estudiante"}</small></span><span class="avatar">${escape(
+    )}</nav></div><div class="sidebar-bottom"><nav class="side-nav">${button("settings", icon("settings") + "Configuración", `class="${route === "settings" ? "active" : ""}"`)}${button("account", icon("shield") + "Mi cuenta")}${button("logout", icon("logout") + "Salir")}</nav><p>Cada pregunta abre un camino.<br>Cada intento te ayuda a crecer.</p></div></aside><div class="workspace">${mode === "preview" ? `<div class="preview-bar"><span>Vista previa · sin cuentas ni correos reales</span>${button("switchRole", teacher() ? "Ver como estudiante" : "Ver como docente")}</div>` : ""}<header class="topbar">${button("menu", icon("menu"), 'class="menu-button" aria-label="Abrir menú"')}<div class="mobile-logo">${logo()}</div><div class="breadcrumb">Aula virtual <span aria-hidden="true">/</span> <strong>${escape(title)}</strong></div><div class="profile"><span class="name">${escape(name)}<br><small>${teacher() ? "Docente" : "Estudiante"}</small></span><span class="avatar">${escape(
     name
       .split(" ")
       .slice(0, 2)
       .map((s) => s[0])
       .join("")
       .toUpperCase(),
-  )}</span></div></header><main class="main" id="main" tabindex="-1">${content}<div class="footer-note"><span>SIGIN · Aula de aprendizaje práctico</span><span>48 semanas · 3 materias · Una comunidad que aprende</span></div></main></div></div>`;
+  )}</span></div></header><main class="main" id="main" tabindex="-1">${content}<div class="footer-note"><span>SIGIN · Aula de aprendizaje práctico</span><span>La curiosidad es el comienzo. Tu constancia hace el resto.</span></div></main></div></div>`;
   focus();
 }
 function login(error = "") {
@@ -182,7 +239,8 @@ function login(error = "") {
   liveWorkspaceReady = false;
   quiz = null;
   route = "login";
-  app.innerHTML = `<header class="login-top">${logo()}<span class="institution">Gestión de la Información Gerencial</span></header><div class="landing"><section class="landing-story"><span class="eyebrow">${icon("spark")} Más que estudiar. Aprender haciendo.</span><h1>Tu conocimiento,<br><em>en acción.</em></h1><p>Explora casos, conecta ideas y toma decisiones. Un aula pensada para aprender con la práctica, semana a semana.</p><div class="story-list"><div class="story-item">${icon("book")} Tres materias. Un recorrido propio.</div><div class="story-item">${icon("globe")} Expedientes, cifras y problemas del mundo real.</div><div class="story-item">${icon("spark")} Crucigramas, conexiones y retos interactivos.</div></div></section><section class="landing-login"><div class="login-panel"><span class="eyebrow">Bienvenido a SIGIN</span><h2>Entra a tu aula</h2><p class="muted">Tu siguiente aprendizaje empieza aquí.</p><div class="role-switch">${button("loginRole", "Estudiante", `data-role="student" class="${loginRole === "student" ? "active" : ""}"`)}${button("loginRole", "Docente", `data-role="teacher" class="${loginRole === "teacher" ? "active" : ""}"`)}</div><form id="login-form"><label for="username">${loginRole === "teacher" ? "Usuario docente" : "Número de cédula"}</label><input id="username" name="username" autocomplete="username" ${loginRole === "student" ? 'inputmode="numeric" maxlength="10" pattern="[0-9]{10}"' : 'value="DocenteULEAM"'} required placeholder="${loginRole === "student" ? "Tu cédula de diez dígitos" : "Usuario"}"><label for="password">Contraseña</label><div class="password-field"><input id="password" name="password" type="password" autocomplete="current-password" required>${button("showPassword", icon("eye"), 'aria-label="Mostrar contraseña"')}</div><p class="error" id="login-error" role="alert">${escape(error)}</p><button type="submit" class="primary full">Entrar a mi aula ${icon("arrow")}</button></form>${button("recover", "Olvidé mi contraseña", 'class="link full"')}<p class="note">${backendConfigured ? "El acceso requiere una cuenta registrada y una matrícula activa." : "El aula se está preparando. El acceso estará disponible al conectar las cuentas institucionales."}</p>${APP_CONFIG.previewEnabled ? button("preview", "Explorar las tres materias", 'class="full"') : ""}</div></section></div>`;
+  app.innerHTML = `${guestHeader()}<main class="landing" id="main" tabindex="-1"><section class="landing-story" aria-labelledby="landing-title"><div class="landing-copy"><span class="eyebrow">Un espacio para tu curiosidad</span><h1 id="landing-title">Lo que aprendes hoy<br><em>abre caminos mañana.</em></h1><p>No necesitas tener todas las respuestas para empezar. Observa, pregunta y vuelve a intentarlo: cada idea que comprendes cambia la forma en que ves el mundo.</p><div class="landing-values"><span>${icon("book")} Explora con calma</span><span>${icon("spark")} Aprende haciendo</span></div></div><figure class="learning-landscape" aria-label="Un paisaje tranquilo con naturaleza y un espacio de estudio"><img src="assets/images/learning-landscape.webp" alt="Ilustración de un espacio de estudio abierto a un paisaje de montañas, árboles y cielo claro" loading="eager" fetchpriority="high" onerror="this.hidden=true"><figcaption>Haz espacio para una idea nueva.</figcaption></figure></section><section class="landing-login" aria-labelledby="login-title"><div class="login-panel"><span class="eyebrow">Tu espacio de aprendizaje</span><h2 id="login-title">Bienvenido a tu aula.</h2><p class="muted">Continúa tu camino. Estamos para acompañarte.</p><div class="role-switch" aria-label="Tipo de acceso">${button("loginRole", "Estudiante", `data-role="student" aria-pressed="${loginRole === "student"}" class="${loginRole === "student" ? "active" : ""}"`)}${button("loginRole", "Docente", `data-role="teacher" aria-pressed="${loginRole === "teacher"}" class="${loginRole === "teacher" ? "active" : ""}"`)}</div><form id="login-form"><label for="username">${loginRole === "teacher" ? "Usuario docente" : "Número de cédula"}</label><input id="username" name="username" autocomplete="username" ${loginRole === "student" ? 'inputmode="numeric" maxlength="10" pattern="[0-9]{10}"' : 'value="DocenteULEAM"'} required placeholder="${loginRole === "student" ? "Tu cédula de diez dígitos" : "Usuario"}"><label for="password">Contraseña</label><div class="password-field"><input id="password" name="password" type="password" autocomplete="current-password" required>${button("showPassword", icon("eye"), 'aria-label="Mostrar contraseña"')}</div><p class="error" id="login-error" role="alert">${escape(error)}</p><button type="submit" class="primary full">Entrar a mi aula ${icon("arrow")}</button></form>${button("recover", "Olvidé mi contraseña", 'class="link full"')}<p class="login-help">${icon("shield")}${backendConfigured ? "Ingresa con tu cuenta institucional registrada." : "Tu aula estará disponible al conectar las cuentas institucionales."}</p>${APP_CONFIG.previewEnabled ? button("preview", "Explorar las tres materias", 'class="full"') : ""}</div><p class="landing-signoff">Aprender lleva tiempo. Cada paso cuenta.</p></section></main>`;
+
 }
 function enterPreview(role = "student") {
   if (!APP_CONFIG.previewEnabled)
@@ -262,8 +320,33 @@ function home() {
     done = new Set(grades.map((a) => `${a.courseId}:${a.week}`)).size,
     practice = Object.keys(state.practice[userId()] || {}).length;
   shell(
-    `${heading("Tu espacio de aprendizaje", "Cada semana, un paso más.", "Bienvenido. Aquí el conocimiento se convierte en decisiones.")}<section class="welcome-card"><div><span class="eyebrow" style="color:#94e1d8">${icon("spark")} Aprende con propósito</span><h2>La mejor forma de aprender<br>es ponerlo en práctica.</h2><p>Lee el expediente, explora las evidencias y resuelve retos. Equivocarte es parte del camino; entender por qué es lo que te hace avanzar.</p></div><div class="welcome-art">${icon("book")}</div></section><div class="stats"><div class="stat"><div class="stat-icon">${icon("book")}</div><div><strong>${cs.length}</strong><span>Materias en tu aula</span></div></div><div class="stat"><div class="stat-icon">${icon("check")}</div><div><strong>${done} <small>/ ${cs.length * 16}</small></strong><span>Semanas evaluadas</span></div></div><div class="stat"><div class="stat-icon">${icon("spark")}</div><div><strong>${practice}</strong><span>Prácticas completadas</span></div></div></div><div class="section-title"><h2>Tus materias</h2><span class="badge teal">Un recorrido por semana</span></div><div class="course-grid">${cs.map(courseCard).join("")}</div>${!cs.length ? '<div class="card empty">Tu cuenta todavía no tiene materias asignadas. Contacta a la docente.</div>' : ""}`,
+    `${heading("Tu espacio de aprendizaje", "Cada semana, un paso más.", "Aprende a tu ritmo. Dale a cada pregunta el tiempo que necesita.")}<section class="welcome-card"><div><span class="eyebrow">${icon("spark")} Aprende con propósito</span><h2>Las ideas crecen<br>cuando las pones en práctica.</h2><p>Lee, conecta y prueba. Equivocarte también te enseña: comprender una respuesta vale más que acertar por casualidad.</p><div class="welcome-actions">${button("activities", "Practicar a mi ritmo " + icon("arrow"), 'data-mode="practice" class="primary"')}${button("activities", teacher() ? "Revisar exámenes" : "Consultar exámenes", 'data-mode="assessment"')}</div></div><div class="welcome-art">${icon("book")}</div></section><div class="stats"><div class="stat"><div class="stat-icon">${icon("book")}</div><div><strong>${cs.length}</strong><span>Materias en tu aula</span></div></div><div class="stat"><div class="stat-icon">${icon("check")}</div><div><strong>${done} <small>/ ${cs.length * 16}</small></strong><span>Semanas evaluadas</span></div></div><div class="stat"><div class="stat-icon">${icon("spark")}</div><div><strong>${practice}</strong><span>Prácticas completadas</span></div></div></div><div class="section-title"><h2>Tus materias</h2><span class="badge teal">Un recorrido por semana</span></div><div class="course-grid">${cs.map(courseCard).join("")}</div>${!cs.length ? '<div class="card empty">Tu cuenta todavía no tiene materias asignadas. Contacta a la docente.</div>' : ""}`,
   );
+}
+function attemptCount(courseId, week) {
+  return state.attempts.filter((attempt) =>
+    attempt.studentId === userId() && attempt.courseId === courseId &&
+    attempt.week === week && !attempt.teacherAdjustment,
+  ).length;
+}
+function activitiesHub() {
+  if (!requireWorkspace()) return;
+  route = "activities";
+  const cs = visibleCourses();
+  if (!cs.some((c) => c.id === currentCourse)) currentCourse = cs[0]?.id || null;
+  const c = course();
+  const assessment = activityMode === "assessment";
+  shell(`${heading("Elige tu camino", "Práctica y examen", "Primero elige cómo quieres aprender; después, tu materia y la semana.")}<div class="activity-mode-grid" aria-label="Tipo de actividad">${[
+    ["practice", "Practicar", "Explora, equivócate y vuelve a intentar. Recibirás pistas y explicaciones sin afectar tu nota.", "spark", "A tu ritmo"],
+    ["assessment", teacher() ? "Revisar exámenes" : "Rendir un examen", teacher() ? "Consulta los casos y enunciados privados en modo de solo lectura antes de programarlos." : "Aplica lo aprendido a un caso nuevo. Revisa el horario y tus intentos antes de empezar.", "shield", teacher() ? "Solo lectura" : "Con horario docente"],
+  ].map(([value, title, description, glyph, label]) => button("activityMode", `<span class="mode-card-icon">${icon(glyph)}</span><span class="badge">${label}</span><span class="mode-card-title">${title}</span><span class="mode-card-copy">${description}</span><span class="mode-card-link">${value === activityMode ? "Opción seleccionada" : "Elegir este camino"} ${icon("arrow")}</span>`, `data-mode="${value}" aria-pressed="${value === activityMode}" class="mode-card ${value === activityMode ? "selected" : ""}"`)).join("")}</div>${c ? `<section class="card activity-selector"><div class="filter-row"><div><label for="activity-course">Materia</label><select id="activity-course">${cs.map((item) => `<option value="${item.id}" ${item.id === c.id ? "selected" : ""}>${escape(item.name)}</option>`).join("")}</select></div><span class="badge ${assessment ? "pink" : "teal"}">${assessment ? (teacher() ? "Revisión docente" : "Examen semanal") : "Práctica libre"}</span></div><p class="case-reading-note">${icon("book")}<span><strong>El caso viene contigo.</strong> Al empezar encontrarás los conceptos, el caso y las instrucciones. Léelos antes de responder y vuelve a consultarlos cuando lo necesites.</span></p></section><section class="activity-weeks" aria-label="Selecciona una semana">${c.weeks.map((week) => {
+    const a = c.activities.find((item) => item.week === week.weekNumber);
+    const config = setting(c.id, week.weekNumber), status = availability(config);
+    const count = attemptCount(c.id, week.weekNumber), exhausted = count >= config.maxAttempts;
+    const reviewOnly = assessment && teacher() && mode === "live";
+    const blocked = assessment && !reviewOnly && (!status.open || exhausted);
+    return `<details class="week" ${week.weekNumber === 1 ? "open" : ""}><summary><span class="week-number">${String(week.weekNumber).padStart(2, "0")}</span><div class="week-summary-text"><h3>${escape(week.title)}</h3><span class="badge ${assessment ? (exhausted && !reviewOnly ? "closed" : status.kind) : "available"}">${assessment ? (exhausted && !reviewOnly ? "Intentos agotados" : status.label) : "Disponible para practicar"}</span></div><span class="chevron">${icon("chevron")}</span></summary><div class="week-content"><p>${escape(a?.objective || "Explora los conceptos de esta semana.")}</p>${assessment ? `<div class="activity-window"><span>Apertura: ${date(config.open)}</span><span>Cierre: ${date(config.close)}</span>${!teacher() ? `<span>Intentos: ${count} de ${config.maxAttempts}</span>` : ""}</div>` : '<p class="muted">Sin límite de intentos. Las explicaciones te ayudan a comprender cada decisión.</p>'}<div class="week-actions">${button(reviewOnly ? "reviewAssessment" : "beginQuiz", reviewOnly ? "Ver evaluación" : assessment ? "Comenzar examen " + icon("arrow") : "Comenzar práctica " + icon("arrow"), `data-course="${c.id}" data-week="${week.weekNumber}" data-mode="${activityMode}" class="primary" ${blocked ? "disabled" : ""}`)}</div>${blocked ? `<p class="activity-status">${exhausted ? "Ya utilizaste los intentos de esta semana." : "La docente habilitará el examen según el calendario. Mientras tanto, puedes practicar."}</p>` : ""}</div></details>`;
+  }).join("")}</section>` : '<article class="card empty">Tu cuenta todavía no tiene materias asignadas. Contacta a la docente para continuar.</article>'}`, "Práctica y examen");
 }
 function openCourse(id) {
   if (!visibleCourses().some((c) => c.id === id))
@@ -284,18 +367,33 @@ function openCourse(id) {
               const a = c.activities.find((a) => a.week === w.weekNumber),
                 s = availability(setting(id, w.weekNumber)),
                 g = bestGrade(state.attempts, userId(), w.weekNumber, id);
-              return `<details class="week" ${w.weekNumber === (next?.week || 1) ? "open" : ""}><summary><span class="week-number">${String(w.weekNumber).padStart(2, "0")}</span><div class="week-summary-text"><h3>${escape(w.title)}</h3><span class="badge ${s.kind}">${s.label}</span>${g !== null ? ` <span class="badge teal">${g.toFixed(1)}/10</span>` : ""}</div><span class="chevron">${icon("chevron")}</span></summary><div class="week-content"><p>${escape(a?.objective || "Explora el contenido de esta semana.")}</p><div class="week-actions">${button("lesson", "Explorar el caso " + icon("arrow"), `data-week="${w.weekNumber}" class="primary"`)}<span class="muted"><small>${a?.questions.length || 0} retos · práctica libre</small></span></div></div></details>`;
+              return `<details class="week" ${w.weekNumber === (next?.week || 1) ? "open" : ""}><summary><span class="week-number">${String(w.weekNumber).padStart(2, "0")}</span><div class="week-summary-text"><h3>${escape(w.title)}</h3><span class="badge ${s.kind}">${s.label}</span>${g !== null ? ` <span class="badge teal">${g.toFixed(1)}/10</span>` : ""}</div><span class="chevron">${icon("chevron")}</span></summary><div class="week-content"><p>${escape(a?.objective || "Explora el contenido de esta semana.")}</p><div class="week-actions">${button("beginQuiz", "Practicar esta semana " + icon("arrow"), `data-course="${c.id}" data-week="${w.weekNumber}" data-mode="practice" class="primary"`)}${button(teacher() && mode === "live" ? "reviewAssessment" : "beginQuiz", teacher() && mode === "live" ? "Revisar examen" : "Entrar al examen", `data-course="${c.id}" data-week="${w.weekNumber}" data-mode="assessment" ${!(teacher() && mode === "live") && (!s.open || attemptCount(c.id, w.weekNumber) >= setting(c.id, w.weekNumber).maxAttempts) ? "disabled" : ""}`)}${button("lesson", "Explorar el caso " + icon("arrow"), `data-week="${w.weekNumber}" class="link"`)}</div></div></details>`;
             })
             .join("")}`,
       )
       .join(
         "",
-      )}</section><aside><article class="card"><span class="aside-label">Tu materia en un vistazo</span><h3>Practica. Comprende. Avanza.</h3><p class="muted" style="font-size:14px">Cada semana tiene un expediente que te da las evidencias necesarias para resolver sus retos.</p><div class="aside-row"><span>Organización</span><strong>16 semanas</strong></div><div class="aside-row"><span>Práctica</span><strong>Sin límite</strong></div><div class="aside-row"><span>Evaluación</span><strong>Por semana</strong></div><div class="aside-row"><span>Horario</span><strong>Ecuador</strong></div></article><article class="card"><span class="eyebrow">El reto no es memorizar</span><h3>Es justificar tu decisión.</h3><p class="muted" style="font-size:14px">Conecta conceptos, interpreta cifras, ordena procesos y usa la evidencia del caso.</p></article></aside></div>`,
+      )}</section><aside><article class="card"><span class="aside-label">Tu materia en un vistazo</span><h3>Practica. Comprende. Avanza.</h3><p class="muted" style="font-size:14px">Cada semana presenta los conceptos que vas a aprender y un caso breve para aplicarlos.</p><div class="aside-row"><span>Organización</span><strong>16 semanas</strong></div><div class="aside-row"><span>Práctica</span><strong>Sin límite</strong></div><div class="aside-row"><span>Evaluación</span><strong>Por semana</strong></div><div class="aside-row"><span>Horario</span><strong>Ecuador</strong></div></article><article class="card"><span class="eyebrow">El reto no es memorizar</span><h3>Es justificar tu decisión.</h3><p class="muted" style="font-size:14px">Conecta conceptos, aplica criterios, ordena procesos y justifica tus decisiones.</p></article></aside></div>`,
     c.name,
   );
 }
+function contextMarkup(context) {
+  return String(context || "").split(/\n\s*\n/).filter((part) => part.trim()).map((part) => {
+    const [title, ...lines] = part.trim().split("\n");
+    if (/^(Conceptos? claves?|Caso breve|Qué debes hacer|Instrucciones|Tu reto)(?:\s*[·:—–-].*)?$/i.test(title.trim()) && lines.length)
+      return `<section class="context-section"><h3>${escape(title)}</h3><p>${escape(lines.join("\n"))}</p></section>`;
+    return `<p>${escape(part.trim())}</p>`;
+  }).join("");
+}
 function dossier(a) {
-  return `<article class="card context-card"><span class="eyebrow">${icon("book")} Expediente de aprendizaje</span><h2>${escape(a.name)}</h2><span class="badge teal">${escape(a.label || "Simulación educativa")}</span><div class="learning-goal"><strong>Tu objetivo</strong><br>${escape(a.objective)}</div><div class="dossier">${escape(a.context)}</div>${a.references?.length ? `<hr style="border:0;border-top:1px solid var(--line);margin:24px 0"><p class="muted" style="font-size:12px">Lecturas complementarias · el expediente contiene lo necesario para responder.</p><div class="source-links">${a.references.map((r) => `<a href="${escape(r.url)}" target="_blank" rel="noopener noreferrer">${escape(r.name)} ↗</a>`).join("")}</div>` : ""}</article>`;
+  return `<article class="card context-card"><span class="eyebrow">${icon("book")} Conceptos y caso</span><h2>${escape(a.name)}</h2><span class="badge teal">${escape(a.label || "Simulación educativa")}</span><div class="learning-goal"><strong>Tu objetivo</strong><br>${escape(a.objective)}</div><div class="dossier">${contextMarkup(a.context)}</div>${a.references?.length ? `<section class="reading-resources" aria-label="Lecturas de apoyo"><h3>Una lectura para ir más lejos.</h3><p class="muted">Esta guía reúne los conceptos y el caso para responder. Estos recursos te ayudan a profundizar con una ruta de lectura clara.</p><div class="source-links">${a.references.map((resource) => {
+    let href;
+    try {
+      const target = new URL(resource.url, location.href);
+      if (["https:", "http:"].includes(target.protocol)) href = target.href;
+    } catch {}
+    return `<article class="reading-resource"><h4>${href ? `<a href="${escape(href)}" target="_blank" rel="noopener noreferrer">${escape(resource.name)} <span aria-label="abre en una pestaña nueva">↗</span></a>` : escape(resource.name)}</h4>${resource.author ? `<p class="resource-author">${escape(resource.author)}</p>` : ""}${resource.section ? `<p><strong>Qué leer</strong><br>${escape(resource.section)}</p>` : ""}${resource.purpose ? `<p><strong>Para qué te sirve</strong><br>${escape(resource.purpose)}</p>` : ""}</article>`;
+  }).join("")}</div></section>` : ""}</article>`;
 }
 function lesson(week) {
   route = "lesson";
@@ -311,28 +409,30 @@ function lesson(week) {
         !x.teacherAdjustment,
     ).length;
   shell(
-    `${heading(`Semana ${week} · ${escape(c.code)}`, escape(w.title), "Lee las evidencias antes de empezar. Cada respuesta debe poder justificarse.", button("course", icon("back") + "Volver a las semanas", `data-course="${c.id}"`))}<div class="lesson-grid"><section>${dossier(a)}</section><section><article class="card"><span class="eyebrow">Tu laboratorio de aprendizaje</span><h2>Prueba. Conecta. Descubre.</h2><p class="muted">${a.questions.length} retos basados en este expediente. Recibirás explicación y podrás intentarlo de nuevo.</p><div class="task-tags">${[...new Set(a.questions.map((q) => q.type))].map((t) => `<span class="task-tag">${taskLabel[t] || t}</span>`).join("")}</div><ol class="method-list"><li>Lee el caso y localiza los documentos o datos.</li><li>Resuelve cada reto con esas evidencias.</li><li>Revisa la explicación; identifica qué cambiarías.</li></ol>${button("beginQuiz", "Comenzar práctica " + icon("arrow"), `data-week="${week}" data-mode="practice" class="primary full"`)}</article><article class="card"><span class="eyebrow">Actividad evaluada</span><h2>Demuestra lo que aprendiste.</h2><span class="badge ${s.kind}">${s.label}</span><div class="aside-row"><span>Intentos utilizados</span><strong>${count} / ${setting(c.id, week).maxAttempts}</strong></div><div class="aside-row"><span>Apertura</span><strong>${date(setting(c.id, week).open)}</strong></div><div class="aside-row"><span>Cierre</span><strong>${date(setting(c.id, week).close)}</strong></div><p class="muted" style="font-size:13px">La evaluación es semanal. Puedes revisar tus respuestas antes de entregar.</p>${button("beginQuiz", "Entrar a la evaluación", `data-week="${week}" data-mode="assessment" class="full" ${!s.open || count >= setting(c.id, week).maxAttempts ? "disabled" : ""}`)}</article></section></div>`,
+    `${heading(`Semana ${week} · ${escape(c.code)}`, escape(w.title), "Lee los conceptos y el caso antes de empezar. Cada respuesta debe poder justificarse.", button("course", icon("back") + "Volver a las semanas", `data-course="${c.id}"`))}<div class="lesson-grid"><section>${dossier(a)}</section><section><article class="card"><span class="eyebrow">Tu laboratorio de aprendizaje</span><h2>Prueba. Conecta. Descubre.</h2><p class="muted">${a.questions.length} retos para aplicar los conceptos al caso. Recibirás explicación y podrás intentarlo de nuevo.</p><div class="task-tags">${[...new Set(a.questions.map((q) => q.type))].map((t) => `<span class="task-tag">${taskLabel[t] || t}</span>`).join("")}</div><ol class="method-list"><li>Lee los conceptos y comprende la situación del caso.</li><li>Resuelve cada reto con los criterios aprendidos en esta semana.</li><li>Revisa la explicación; identifica qué cambiarías.</li></ol>${button("beginQuiz", "Comenzar práctica " + icon("arrow"), `data-week="${week}" data-mode="practice" class="primary full"`)}</article><article class="card"><span class="eyebrow">Actividad evaluada</span><h2>Demuestra lo que aprendiste.</h2><span class="badge ${s.kind}">${s.label}</span><div class="aside-row"><span>Intentos utilizados</span><strong>${count} / ${setting(c.id, week).maxAttempts}</strong></div><div class="aside-row"><span>Apertura</span><strong>${date(setting(c.id, week).open)}</strong></div><div class="aside-row"><span>Cierre</span><strong>${date(setting(c.id, week).close)}</strong></div><p class="muted" style="font-size:13px">La evaluación es semanal. Puedes revisar tus respuestas antes de entregar.</p>${button("beginQuiz", "Entrar a la evaluación", `data-week="${week}" data-mode="assessment" class="full" ${!s.open || count >= setting(c.id, week).maxAttempts ? "disabled" : ""}`)}</article></section></div>`,
     c.name,
   );
 }
 async function beginQuiz(week, activityMode) {
+  if (!requireWorkspace()) return;
   const c = course();
+  if (!c || !visibleCourses().some((item) => item.id === c.id))
+    return toast("Esta materia no está en tus matrículas.");
+  if (!["practice", "assessment"].includes(activityMode) ||
+    !c.weeks.some((item) => item.weekNumber === week))
+    return toast("Selecciona una semana y un tipo de actividad válidos.");
+  if (activityMode === "assessment" && teacher() && mode === "live")
+    return reviewAssessment(week);
   let a = c.activities.find((a) => a.week === week);
   if (activityMode === "assessment") {
     if (!availability(setting(c.id, week)).open)
       return toast("Esta evaluación está cerrada.");
-    if (mode === "live") a = await backend.getAssessment(c.id, week);
-    else if (
-      state.attempts.filter(
-        (x) =>
-          x.studentId === userId() &&
-          x.courseId === c.id &&
-          x.week === week &&
-          !x.teacherAdjustment,
-      ).length >= setting(c.id, week).maxAttempts
-    )
+    if (attemptCount(c.id, week) >= setting(c.id, week).maxAttempts)
       return toast("Ya utilizaste tus intentos.");
+    if (mode === "live") a = await backend.getAssessment(c.id, week);
   }
+  if (!workspaceAllowed() || currentCourse !== c.id) return;
+  if (!a?.questions?.length) throw Error("Esta actividad todavía no está disponible.");
   const draftKey = `sigin-draft:${mode}:${userId()}:${c.id}:${week}:${activityMode}`;
   let draft;
   try {
@@ -393,7 +493,7 @@ function questionMarkup(q, v) {
   }
   if (q.type === "crossword") {
     const layout = q.layout || crosswordLayout(q.entries);
-    return `<p class="muted">Usa las pistas del expediente. Escribe una letra por casilla, sin tildes. Las palabras comparten sus letras cuando se cruzan.</p><div class="crossword-scroll"><div class="crossword-grid" style="grid-template-columns:repeat(${layout.width},var(--cw-size,34px));grid-template-rows:repeat(${layout.height},var(--cw-size,34px))">${layout.cells
+    return `<p class="muted">Usa las pistas y los conceptos del caso. Escribe una letra por casilla, sin tildes. Las palabras comparten sus letras cuando se cruzan.</p><div class="crossword-scroll"><div class="crossword-grid" style="grid-template-columns:repeat(${layout.width},var(--cw-size,34px));grid-template-rows:repeat(${layout.height},var(--cw-size,34px))">${layout.cells
       .map((cell, i) => {
         const ref = cell.refs[0];
         return `<div class="cw-cell" style="grid-column:${cell.column};grid-row:${cell.row}">${cell.number ? `<small>${cell.number}</small>` : ""}<input class="cw-input" maxlength="1" data-refs="${escape(JSON.stringify(cell.refs))}" data-cell="${i}" value="${escape((v?.[ref.entry] || "")[ref.letter] || "")}" aria-label="${cell.refs.map((r) => `Palabra ${r.entry + 1}, letra ${r.letter + 1}`).join("; ")}" autocomplete="off"></div>`;
@@ -405,7 +505,7 @@ function questionMarkup(q, v) {
   return `<fieldset style="border:0;padding:0;margin:0"><legend class="sr-only">${escape(q.prompt)}</legend>${q.options.map((o, i) => `<label class="option"><input type="radio" name="choice" value="${i}" ${v === i ? "checked" : ""} required><span>${escape(o)}</span></label>`).join("")}</fieldset>`;
 }
 function quizDossier(a) {
-  return `<article class="card context-card"><details class="quiz-dossier" ${window.innerWidth > 900 ? "open" : ""}><summary>${icon("book")} Consultar el expediente</summary>${dossier(a)}</details></article>`;
+  return `<article class="card context-card"><details class="quiz-dossier" ${quiz.index === 0 || window.innerWidth > 900 ? "open" : ""}><summary>${icon("book")} Consultar conceptos y caso</summary>${dossier(a)}</details></article>`;
 }
 function renderQuiz(preserveScroll = false) {
   const previousScroll = window.scrollY;
@@ -415,10 +515,10 @@ function renderQuiz(preserveScroll = false) {
     v = quiz.answers[quiz.index],
     isCorrect = quiz.checked ? questionCorrect(q, v) : false;
   shell(
-    `${heading(`Semana ${quiz.week} · ${quiz.mode === "practice" ? "Laboratorio de práctica" : "Actividad evaluada"}`, escape(a.name), "Resuelve con el expediente. La evidencia está a tu alcance.", button("leaveQuiz", icon("back") + "Guardar y volver"))}<div class="quiz-grid"><section><article class="card"><div class="question-meta"><span>Reto ${quiz.index + 1} de ${a.questions.length}</span><span class="badge pink">${taskLabel[q.type] || "Decisión razonada"}</span></div><div class="progress" aria-label="Reto ${quiz.index + 1} de ${a.questions.length}"><span style="width:${((quiz.index + 1) / a.questions.length) * 100}%"></span></div><h2 class="question-title">${escape(q.prompt)}</h2><form id="quiz-answer">${questionMarkup(q, v)}${quiz.checked ? `<div class="feedback ${isCorrect ? "good" : ""}"><h3>${isCorrect ? "Bien razonado." : "Revisa la evidencia y vuelve a intentarlo."}</h3><p>${escape(q.explanation)}</p></div>` : ""}${quiz.mode === "practice" && !quiz.checked ? '<details class="hint"><summary>Cómo abordar este reto</summary><p>Identifica el documento que respalda tu decisión. En cálculos, distingue cantidades, unidades y denominadores. En secuencias, comprueba qué requisito permite pasar al siguiente paso.</p></details>' : ""}<div class="actions">${quiz.index > 0 ? button("previous", icon("back") + "Anterior") : ""}<button class="primary" type="submit">${quiz.mode === "practice" && !quiz.checked ? "Comprobar mi respuesta" : quiz.index === a.questions.length - 1 ? "Revisar antes de terminar" : "Siguiente reto"} ${icon("arrow")}</button></div><p class="error" id="quiz-error" role="alert"></p></form></article></section>${quizDossier(a)}</div>`,
+    `${heading(`Semana ${quiz.week} · ${quiz.mode === "practice" ? "Laboratorio de práctica" : "Actividad evaluada"}`, escape(a.name), "Lee los conceptos y el caso. Aplica los criterios de esta semana para justificar cada respuesta.", button("leaveQuiz", icon("back") + "Guardar y volver"))}<p class="case-reading-note">${icon("book")}<span><strong>Antes de responder, lee los conceptos y el caso.</strong> ${quiz.mode === "practice" ? "Esta práctica te permite explorar y aprender de la explicación de cada reto." : "Este examen utiliza su propio caso. Lee esta situación y aplica los criterios de la semana para decidir."}</span></p><div class="quiz-grid"><section><article class="card"><div class="question-meta"><span>Reto ${quiz.index + 1} de ${a.questions.length}</span><span class="badge pink">${taskLabel[q.type] || "Decisión razonada"}</span></div><div class="progress" aria-label="Reto ${quiz.index + 1} de ${a.questions.length}"><span style="width:${((quiz.index + 1) / a.questions.length) * 100}%"></span></div><h2 class="question-title">${escape(q.prompt)}</h2><form id="quiz-answer">${questionMarkup(q, v)}${quiz.checked ? `<div class="feedback ${isCorrect ? "good" : ""}"><h3>${isCorrect ? "Bien razonado." : "Revisa el concepto y vuelve a intentarlo."}</h3><p>${escape(q.explanation)}</p></div>` : ""}${quiz.mode === "practice" && !quiz.checked ? '<details class="hint"><summary>Cómo abordar este reto</summary><p>Identifica el concepto que respalda tu elección. En relaciones, explica qué conecta cada idea. En secuencias, comprueba qué requisito permite pasar al siguiente paso.</p></details>' : ""}<div class="actions">${quiz.index > 0 ? button("previous", icon("back") + "Anterior") : ""}<button class="primary" type="submit">${quiz.mode === "practice" && !quiz.checked ? "Comprobar mi respuesta" : quiz.index === a.questions.length - 1 ? "Revisar antes de terminar" : "Siguiente reto"} ${icon("arrow")}</button></div><p class="error" id="quiz-error" role="alert"></p></form></article></section>${quizDossier(a)}</div>`,
     course().code,
   );
-  if (preserveScroll) window.scrollTo(0, previousScroll);
+  if (preserveScroll) window.scrollTo({ top: previousScroll, left: 0, behavior: "instant" });
 }
 function answerText(q, v) {
   if (q.type === "matching") {
@@ -496,7 +596,7 @@ async function finish() {
       save();
     }
   } else {
-    if (mode === "live") await backend.savePractice(quiz.courseId, quiz.week);
+    if (mode === "live" && !teacher()) await backend.savePractice(quiz.courseId, quiz.week);
     state.practice[userId()] ??= {};
     state.practice[userId()][`${quiz.courseId}:${quiz.week}`] = true;
     if (mode === "preview") save();
@@ -508,11 +608,11 @@ async function finish() {
     `${heading(prev.mode === "practice" ? "Práctica completada" : "Actividad entregada", "La clave es entender por qué.", "Revisa lo que hiciste bien y los conceptos que puedes reforzar.")}<div class="two-col"><section>${a.questions
       .map((q, i) => {
         const f = result.feedback.find((f) => f.id === q.id) || {};
-        return `<article class="card"><span class="badge ${f.correct ? "available" : "scheduled"}">${f.correct ? "Reto resuelto" : "Para reforzar"}</span><h3 style="margin-top:14px">${escape(q.prompt)}</h3><div class="review-answer" style="white-space:pre-line">${escape(answerText(q, prev.answers[i]))}</div><p>${escape(f.explanation || "Revisa el expediente con la docente.")}</p></article>`;
+        return `<article class="card"><span class="badge ${f.correct ? "available" : "scheduled"}">${f.correct ? "Reto resuelto" : "Para reforzar"}</span><h3 style="margin-top:14px">${escape(q.prompt)}</h3><div class="review-answer" style="white-space:pre-line">${escape(answerText(q, prev.answers[i]))}</div><p>${escape(f.explanation || "Revisa los conceptos y el caso con la docente.")}</p></article>`;
       })
       .join(
         "",
-      )}</section><aside class="card"><span class="eyebrow">Tu resultado</span><div class="result-big">${Number(result.score).toFixed(1)} <small>/ 10</small></div><p class="muted">${prev.mode === "practice" ? "Resultado de práctica; no modifica tu calificación." : "El mejor resultado queda registrado por materia y semana."}</p>${button("lesson", "Volver al expediente", `data-week="${prev.week}" class="primary full"`)}</aside></div>`,
+      )}</section><aside class="card"><span class="eyebrow">Tu resultado</span><div class="result-big">${Number(result.score).toFixed(1)} <small>/ 10</small></div><p class="muted">${prev.mode === "practice" ? "Resultado de práctica; no modifica tu calificación." : "El mejor resultado queda registrado por materia y semana."}</p>${button("lesson", "Volver a conceptos y caso", `data-week="${prev.week}" class="primary full"`)}</aside></div>`,
     "Resultados",
   );
 }
@@ -589,7 +689,7 @@ function adminWeeks() {
   return course()
     .weeks.map((w) => {
       const s = setting(currentCourse, w.weekNumber);
-      return `<details class="week"><summary><span class="week-number">${w.weekNumber}</span><div class="week-summary-text"><h3>${escape(w.title)}</h3><span class="badge ${availability(s).kind}">${availability(s).label}</span></div><span class="chevron">${icon("chevron")}</span></summary><div class="week-content">${button("reviewAssessment", icon("eye") + "Ver evaluación", `data-week="${w.weekNumber}"`)}<p class="muted" style="font-size:13px">Revisa el expediente y los enunciados en modo de solo lectura, incluso si la semana está cerrada.</p><form data-schedule="${w.weekNumber}"><label><input type="checkbox" name="locked" ${s.locked ? "checked" : ""}> Cerrar esta evaluación</label><p class="muted" style="font-size:13px">La práctica continúa disponible. El cierre manual prevalece sobre las fechas.</p><div class="two-equal"><div><label>Apertura (hora de Ecuador)<input type="datetime-local" name="open" value="${s.open ? localDateTime(s.open) : ""}"></label></div><div><label>Cierre (hora de Ecuador)<input type="datetime-local" name="close" value="${s.close ? localDateTime(s.close) : ""}"></label></div></div><label>Intentos máximos<input type="number" name="maxAttempts" min="1" max="10" value="${s.maxAttempts}" required></label><button type="submit" class="primary">Guardar semana</button><p role="status" class="schedule-status"></p></form></div></details>`;
+      return `<details class="week"><summary><span class="week-number">${w.weekNumber}</span><div class="week-summary-text"><h3>${escape(w.title)}</h3><span class="badge ${availability(s).kind}">${availability(s).label}</span></div><span class="chevron">${icon("chevron")}</span></summary><div class="week-content">${button("reviewAssessment", icon("eye") + "Ver evaluación", `data-week="${w.weekNumber}"`)}<p class="muted" style="font-size:13px">Revisa los conceptos, el caso y los enunciados en modo de solo lectura, incluso si la semana está cerrada.</p><form data-schedule="${w.weekNumber}"><label><input type="checkbox" name="locked" ${s.locked ? "checked" : ""}> Cerrar esta evaluación</label><p class="muted" style="font-size:13px">La práctica continúa disponible. El cierre manual prevalece sobre las fechas.</p><div class="two-equal"><div><label>Apertura (hora de Ecuador)<input type="datetime-local" name="open" value="${s.open ? localDateTime(s.open) : ""}"></label></div><div><label>Cierre (hora de Ecuador)<input type="datetime-local" name="close" value="${s.close ? localDateTime(s.close) : ""}"></label></div></div><label>Intentos máximos<input type="number" name="maxAttempts" min="1" max="10" value="${s.maxAttempts}" required></label><button type="submit" class="primary">Guardar semana</button><p role="status" class="schedule-status"></p></form></div></details>`;
     })
     .join("");
 }
@@ -670,19 +770,19 @@ let author = {
   name: "",
   objective: "",
   context: "",
-  questions: [
-    { type: "choice", prompt: "", details: "", correct: "1", explanation: "" },
-  ],
+  questions: ["choice", "choice", "matching", "ordering", "crossword"].map((type) => ({
+    type, prompt: "", details: "", correct: "1", explanation: "",
+  })),
 };
 function authorMarkup() {
-  return `<article class="card"><span class="eyebrow">Evaluación semanal privada</span><h2>Un caso nuevo para demostrar aprendizaje</h2><p class="muted">Crea variantes diferentes de la práctica pública: otro expediente, cifras o preguntas. Los enunciados se muestran al estudiante; las respuestas y explicaciones se guardan aparte.</p><form id="assessment-author"><label>Semana<select name="week">${course()
+  return `<article class="card"><span class="eyebrow">Evaluación semanal privada</span><h2>Un caso nuevo para demostrar aprendizaje</h2><p class="muted">Crea variantes diferentes de la práctica pública: otro escenario, criterios o preguntas. Los enunciados se muestran al estudiante; las respuestas y explicaciones se guardan aparte.</p><form id="assessment-author"><label>Semana<select name="week">${course()
     .weeks.map(
       (w) =>
         `<option value="${w.weekNumber}" ${w.weekNumber === author.week ? "selected" : ""}>Semana ${w.weekNumber} · ${escape(w.title)}</option>`,
     )
     .join(
       "",
-    )}</select></label><label>Nombre de la actividad<input name="name" value="${escape(author.name)}" required maxlength="160"></label><label>Objetivo<input name="objective" value="${escape(author.objective)}" required maxlength="400"></label><label>Expediente y materiales para responder<textarea name="context" rows="9" minlength="200" required>${escape(author.context)}</textarea></label><p class="muted" style="font-size:13px">Incluye documentos, datos, reglas y unidades. Si es una simulación, identifícala expresamente.</p><div id="author-questions">${author.questions.map((q, i) => authorQuestion(q, i)).join("")}</div><div class="actions">${button("addAuthorQuestion", "Añadir otro reto")}<button type="submit" class="primary">Guardar evaluación privada</button></div><p id="author-status" role="status"></p></form></article>`;
+    )}</select></label><label>Nombre de la actividad<input name="name" value="${escape(author.name)}" required maxlength="160"></label><label>Objetivo<input name="objective" value="${escape(author.objective)}" required maxlength="400"></label><label>Conceptos, caso e instrucciones para responder<textarea name="context" rows="9" minlength="200" required>${escape(author.context)}</textarea></label><p class="muted" style="font-size:13px">Presenta los conceptos clave, una situación breve y qué debe hacer el estudiante. Si es una simulación, identifícala expresamente.</p><div id="author-questions">${author.questions.map((q, i) => authorQuestion(q, i)).join("")}</div><div class="actions">${button("addAuthorQuestion", "Añadir otro reto")}<button type="submit" class="primary">Guardar evaluación privada</button></div><p id="author-status" role="status"></p></form></article>`;
 }
 function authorQuestion(q, i) {
   const description = {
@@ -696,7 +796,7 @@ function authorQuestion(q, i) {
     crossword:
       "Una palabra y pista por línea: PALABRA | pista. Solo letras; el aula construirá los cruces.",
   };
-  return `<fieldset class="card" style="background:#f9fbff"><legend>Reto ${i + 1}</legend><label>Tipo<select data-author-type="${i}" name="type-${i}">${["choice", "matching", "ordering", "numeric", "crossword"].map((t) => `<option value="${t}" ${q.type === t ? "selected" : ""}>${taskLabel[t]}</option>`).join("")}</select></label><label>Enunciado<textarea name="prompt-${i}" rows="2" required>${escape(q.prompt)}</textarea></label><p class="muted" style="font-size:13px">${description[q.type]}</p>${q.type !== "numeric" ? `<label>${q.type === "choice" ? "Opciones" : "Contenido del reto"}<textarea name="details-${i}" rows="4" required>${escape(q.details)}</textarea></label>` : ""}${q.type === "choice" || q.type === "numeric" ? `<label>${q.type === "choice" ? "Número de la opción correcta" : "Resultado correcto"}<input name="correct-${i}" type="number" ${q.type === "choice" ? 'min="1" step="1"' : 'step="any"'} value="${escape(q.correct)}" required></label>` : ""}<label>Explicación para después de entregar<textarea name="explanation-${i}" rows="2" minlength="10" required>${escape(q.explanation)}</textarea></label>${author.questions.length > 1 ? button("removeAuthorQuestion", "Quitar reto", `data-index="${i}" class="link"`) : ""}</fieldset>`;
+  return `<fieldset class="card author-question"><legend>Reto ${i + 1}</legend><label>Tipo<select data-author-type="${i}" name="type-${i}">${["choice", "matching", "ordering", "crossword"].map((t) => `<option value="${t}" ${q.type === t ? "selected" : ""}>${taskLabel[t]}</option>`).join("")}</select></label><label>Enunciado<textarea name="prompt-${i}" rows="2" required>${escape(q.prompt)}</textarea></label><p class="muted" style="font-size:13px">${description[q.type]}</p>${q.type !== "numeric" ? `<label>${q.type === "choice" ? "Opciones" : "Contenido del reto"}<textarea name="details-${i}" rows="4" required>${escape(q.details)}</textarea></label>` : ""}${q.type === "choice" || q.type === "numeric" ? `<label>${q.type === "choice" ? "Número de la opción correcta" : "Resultado correcto"}<input name="correct-${i}" type="number" ${q.type === "choice" ? 'min="1" step="1"' : 'step="any"'} value="${escape(q.correct)}" required></label>` : ""}<label>Explicación para después de entregar<textarea name="explanation-${i}" rows="2" minlength="10" required>${escape(q.explanation)}</textarea></label>${author.questions.length > 1 ? button("removeAuthorQuestion", "Quitar reto", `data-index="${i}" class="link"`) : ""}</fieldset>`;
 }
 function captureAuthor() {
   const f = document.querySelector("#assessment-author");
@@ -810,11 +910,11 @@ function account() {
   );
 }
 function recover() {
-  app.innerHTML = `<main id="main" tabindex="-1" style="max-width:650px;margin:60px auto;padding:24px">${logo()}<article class="card" style="margin-top:30px"><span class="eyebrow">Recupera tu acceso</span><h1>Vuelve a tu aula.</h1><p class="muted">Escribe tu cédula. Si la cuenta existe, recibirás un enlace en tu correo institucional e{cédula}@live.uleam.edu.ec.</p><form id="recovery-form"><label>Usuario o cédula<input name="username" required autocomplete="username"></label><button type="submit" class="primary full">Solicitar enlace de recuperación</button><p id="recovery-status" role="status"></p></form>${button("login", "Volver al acceso", 'class="link full"')}</article></main>`;
+  app.innerHTML = `${guestHeader()}<main class="access-page" id="main" tabindex="-1"><article class="card"><span class="eyebrow">Recupera tu acceso</span><h1>Vuelve a tu aula.</h1><p class="muted">Escribe tu cédula. Si la cuenta existe, recibirás un enlace en tu correo institucional e{cédula}@live.uleam.edu.ec.</p><form id="recovery-form"><label>Usuario o cédula<input name="username" required autocomplete="username"></label><button type="submit" class="primary full">Solicitar enlace de recuperación</button><p id="recovery-status" role="status"></p></form>${button("login", "Volver al acceso", 'class="link full"')}</article></main>`;
   focus();
 }
 function changePassword(required = false) {
-  app.innerHTML = `<main id="main" tabindex="-1" style="max-width:650px;margin:60px auto;padding:24px">${logo()}<article class="card" style="margin-top:30px"><span class="eyebrow">Protege tu cuenta</span><h1>Elige tu nueva contraseña.</h1><p class="muted">${required ? "Antes de entrar, cambia la clave temporal. " : ""}Usa al menos doce caracteres y una contraseña distinta de tu cédula.</p><form id="password-form"><label>Nueva contraseña<input name="password" type="password" autocomplete="new-password" minlength="12" required></label><label>Confirmar contraseña<input name="confirm" type="password" autocomplete="new-password" minlength="12" required></label><button type="submit" class="primary full">Guardar mi contraseña</button><p id="password-status" role="status"></p></form></article></main>`;
+  app.innerHTML = `${guestHeader()}<main class="access-page" id="main" tabindex="-1"><article class="card"><span class="eyebrow">Protege tu cuenta</span><h1>Elige tu nueva contraseña.</h1><p class="muted">${required ? "Antes de entrar, cambia la clave temporal. " : ""}Usa al menos doce caracteres y una contraseña distinta de tu cédula.</p><form id="password-form"><label>Nueva contraseña<input name="password" type="password" autocomplete="new-password" minlength="12" required></label><label>Confirmar contraseña<input name="confirm" type="password" autocomplete="new-password" minlength="12" required></label><button type="submit" class="primary full">Guardar mi contraseña</button><p id="password-status" role="status"></p></form></article></main>`;
   focus();
 }
 async function excel() {
@@ -931,6 +1031,12 @@ app.addEventListener("click", async (event) => {
   b.disabled = true;
   try {
     switch (action) {
+      case "settings":
+        settings();
+        break;
+      case "closeSettings":
+        document.querySelector("#appearance-dialog")?.close();
+        break;
       case "loginRole":
         loginRole = b.dataset.role;
         login();
@@ -955,6 +1061,16 @@ app.addEventListener("click", async (event) => {
       case "home":
       case "myCourses":
         home();
+        break;
+      case "activities":
+        if (["practice", "assessment"].includes(b.dataset.mode)) activityMode = b.dataset.mode;
+        activitiesHub();
+        break;
+      case "activityMode":
+        if (!["practice", "assessment"].includes(b.dataset.mode))
+          return toast("Selecciona práctica o examen.");
+        activityMode = b.dataset.mode;
+        activitiesHub();
         break;
       case "course":
         openCourse(b.dataset.course);
@@ -1019,11 +1135,18 @@ app.addEventListener("click", async (event) => {
         login();
         break;
       case "beginQuiz":
+        if (b.dataset.course) {
+          if (!visibleCourses().some((item) => item.id === b.dataset.course))
+            return toast("Esta materia no está en tus matrículas.");
+          currentCourse = b.dataset.course;
+        }
         await beginQuiz(w, b.dataset.mode);
         break;
       case "leaveQuiz":
         captureQuestion();
-        lesson(quiz.week);
+        activityMode = quiz.mode;
+        quiz = null;
+        activitiesHub();
         break;
       case "previous":
         captureQuestion();
@@ -1332,8 +1455,12 @@ app.addEventListener("submit", async (event) => {
 });
 app.addEventListener("change", (event) => {
   const el = event.target;
+  if (el.name === "theme-choice") {
+    applyTheme(el.value);
+    return;
+  }
   if (
-    !["admin-course", "import-file"].includes(el.id) &&
+    !["admin-course", "import-file", "activity-course"].includes(el.id) &&
     el.dataset.authorType === undefined &&
     !(quiz && el.name === "choice")
   )
@@ -1348,6 +1475,12 @@ app.addEventListener("change", (event) => {
   if (el.id === "admin-course") {
     currentCourse = el.value;
     admin();
+  }
+  if (el.id === "activity-course") {
+    if (!visibleCourses().some((item) => item.id === el.value))
+      return toast("Esta materia no está en tus matrículas.");
+    currentCourse = el.value;
+    activitiesHub();
   }
   if (el.id === "import-file") importFile(el.files[0]);
   if (el.dataset.authorType !== undefined) {

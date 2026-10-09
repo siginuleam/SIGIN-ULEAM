@@ -1,6 +1,6 @@
 # SIGIN · Aula de aprendizaje práctico
 
-Tres materias y 48 semanas: Alfabetización y Competencias Informacionales (GIG-502), Comercio Exterior (CEX-103-AC) y Gobierno Electrónico y Administración Pública (GIG-406). Hay 240 retos de práctica en el sitio y otros 240 retos de evaluación, organizados en 48 bancos privados de Supabase. Los títulos semanales proceden del HTML y los dos sílabos proporcionados. Las actividades nuevas son simulaciones didácticas: expedientes con documentos, cifras, reglas y límites de interpretación; no describen procedimientos reales de las empresas citadas en el sílabo.
+Tres materias y 48 semanas: Alfabetización y Competencias Informacionales (GIG-502), Comercio Exterior (CEX-103-AC) y Gobierno Electrónico y Administración Pública (GIG-406). Hay 240 retos de práctica en el sitio y otros 240 retos de evaluación, organizados en 48 bancos privados de Supabase. Los títulos semanales proceden del HTML y los dos sílabos proporcionados. Las actividades desarrollan la teoría y los modelos de cada tema mediante conceptos clave, un caso breve y una tarea explícita. Los casos son simulaciones educativas; las referencias identifican autores, secciones y la utilidad de cada lectura.
 
 ## Desarrollo
 
@@ -16,11 +16,13 @@ npm start
 
 ## Experiencia
 
-- Escritorio con navegación lateral y contenido que aprovecha el ancho; móvil con menú y tarjetas apiladas.
-- Materias separadas; semanas agrupadas por unidad. Práctica libre y evaluación programada por semana.
-- Elección razonada, emparejamiento, secuencias, cálculos y crucigramas con cruces reales cuando los términos permiten conectar. Cada tarea tiene explicación. Todos los ejercicios se resuelven con su expediente.
-- Panel docente: horarios de Ecuador, límite de intentos, autor de evaluaciones privadas de cinco tipos, estudiantes manuales/Excel con vista previa, exportación y ajuste de notas con motivo.
-- La vista previa usa un visitante ficticio y almacenamiento local. No hay estudiantes reales precargados, contraseñas en código, ni recuperación simulada.
+- Portada ilustrada original y paleta suave. Escritorio con navegación lateral y contenido que aprovecha el ancho; móvil con menú y tarjetas apiladas.
+- Configuración de apariencia clara, oscura o del sistema, conservada en el navegador antes y después de iniciar sesión.
+- Materias separadas; semanas agrupadas por unidad. **Práctica y examen** permite elegir modalidad, materia y semana directamente. La práctica es libre; el examen respeta matrícula, calendario e intentos.
+- Cinco preguntas por semana: dos decisiones razonadas, relaciones de conceptos, una secuencia justificada y un crucigrama. Las actividades incluidas no exigen cálculos. Cada respuesta recibe una explicación y los casos contienen la información necesaria para resolverlos.
+- Lecturas complementarias con enlace a un documento o apartado concreto, autor, sección sugerida y propósito de lectura.
+- Panel docente: horarios de Ecuador, límite de intentos, autor de evaluaciones privadas de cuatro formatos, estudiantes manuales/Excel con vista previa, exportación y ajuste de notas con motivo.
+- La vista previa usa un visitante ficticio y almacenamiento local. No hay identidades reales ni contraseñas precargadas en el código público.
 
 ## Supabase y estado real
 
@@ -48,8 +50,10 @@ El repositorio está en la organización académica `siginuleam` y la dirección
 
 ## Validación
 
-Pruebas Node: 48 semanas/240 tareas, contexto suficiente, conservación de títulos, PDF, corrección de los cinco formatos, cuadrículas, importación y matrículas múltiples. Pruebas de adaptador/Edge: autenticación servidor, recuperación, refresh concurrente, altas autorizadas y rollback. PostgreSQL16 real: RLS, servidor de notas, límites simultáneos, horarios, cambio obligatorio y publicación privada.
+Pruebas Node: 48 semanas/240 tareas, contexto suficiente, conservación de títulos, PDF, corrección de los formatos y ausencia de cálculos en las actividades incluidas, cuadrículas, importación y matrículas múltiples. Pruebas de adaptador/Edge: autenticación servidor, recuperación, refresh concurrente, altas autorizadas y rollback. PostgreSQL16 real: RLS, servidor de notas, límites simultáneos, horarios, cambio obligatorio y publicación privada.
 
-Navegador: tres materias, cinco formatos, prácticas y evaluación de vista previa, plantilla Excel y layout en 360/390/768/1024/1440/1920 px. No equivale a validación de correo o permisos en el proyecto publicado.
+Navegador: tres materias, cuatro formatos y cinco preguntas por semana, ambos temas visuales, acceso directo a prácticas y examen, plantilla Excel y layout en 360/390/768/1024/1440/1920 px. No equivale a validación de correo o permisos en el proyecto publicado.
 
-Sitio publicado y Supabase real: inicio docente, tres materias, 48 semanas cerradas y revisión de un banco por materia. Cada vista mostró expediente y cinco formatos, sin soluciones ni controles de entrega. La prueba fue de solo lectura y no cambió calendarios, notas ni contraseñas.
+Sitio publicado y Supabase real: inicio docente, tres materias, 48 semanas cerradas y revisión de un banco por materia. Cada vista mostró un caso y cinco preguntas, sin soluciones ni controles de entrega. La prueba fue de solo lectura y no cambió calendarios, notas ni contraseñas.
+
+Las referencias enlazan documentos o apartados concretos y explican qué leer. Su comprobación HTTP externa quedó pendiente por la restricción de destinos del proxy del entorno; los destinos académicos se guardaron en el borrador de red para habilitarla. Esto no restringe los enlaces desde el navegador del alumnado.

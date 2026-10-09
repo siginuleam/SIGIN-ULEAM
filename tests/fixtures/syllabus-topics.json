@@ -1,0 +1,263 @@
+[
+  {
+    "id": "gig-502",
+    "code": "GIG-502",
+    "name": "Alfabetización y Competencias Informacionales",
+    "weeks": [
+      {
+        "weekNumber": 1,
+        "title": "Sociedad del Conocimiento y Fundamentos ALFIN/AMI en Retail",
+        "unit": "U1. Alfabetización Informacional"
+      },
+      {
+        "weekNumber": 2,
+        "title": "Necesidades y Comportamiento Informacional Organizacional",
+        "unit": "U1. Alfabetización Informacional"
+      },
+      {
+        "weekNumber": 3,
+        "title": "Modelos y Estándares ALFIN: ACRL, SCONUL, Big6 y UNESCO-AMI",
+        "unit": "U1. Alfabetización Informacional"
+      },
+      {
+        "weekNumber": 4,
+        "title": "Brecha Digital e Inclusión Informacional en Cadenas Productivas",
+        "unit": "U1. Alfabetización Informacional"
+      },
+      {
+        "weekNumber": 5,
+        "title": "Formulación de Preguntas Estratégicas y Vocabularios de Búsqueda",
+        "unit": "U2. Búsqueda y Organización"
+      },
+      {
+        "weekNumber": 6,
+        "title": "Fuentes Institucionales, Científicas y Datos Abiertos",
+        "unit": "U2. Búsqueda y Organización"
+      },
+      {
+        "weekNumber": 7,
+        "title": "Búsqueda Avanzada, Operadores Booleanos y Minería Documental",
+        "unit": "U2. Búsqueda y Organización"
+      },
+      {
+        "weekNumber": 8,
+        "title": "Organización de Información, Gestores Bibliográficos y Dossier Digital",
+        "unit": "U2. Búsqueda y Organización"
+      },
+      {
+        "weekNumber": 9,
+        "title": "Criterios de Evaluación: Autoridad, Actualidad y Fiabilidad (Test CRAAP)",
+        "unit": "U3. Modelos y Estándares de Evaluación"
+      },
+      {
+        "weekNumber": 10,
+        "title": "Desinformación Corporativa, Sesgos y Verificación Cruzada",
+        "unit": "U3. Modelos y Estándares de Evaluación"
+      },
+      {
+        "weekNumber": 11,
+        "title": "Propiedad Intelectual, Derechos de Autor y Citación Normalizada",
+        "unit": "U3. Modelos y Estándares de Evaluación"
+      },
+      {
+        "weekNumber": 12,
+        "title": "IA Generativa, Integridad Académica, Sesgos y Validación Crítica",
+        "unit": "U3. Modelos y Estándares de Evaluación"
+      },
+      {
+        "weekNumber": 13,
+        "title": "Síntesis y Transformación de Información en Conocimiento Comunicable",
+        "unit": "U4. Dimensiones y Ámbitos"
+      },
+      {
+        "weekNumber": 14,
+        "title": "Comunicación Estratégica según Propósito, Audiencia y Canal",
+        "unit": "U4. Dimensiones y Ámbitos"
+      },
+      {
+        "weekNumber": 15,
+        "title": "Accesibilidad, Calidad y Portafolio de Competencias Informacionales",
+        "unit": "U4. Dimensiones y Ámbitos"
+      },
+      {
+        "weekNumber": 16,
+        "title": "EXAMEN SEMESTRAL INTEGRAL DE ACREDITACIÓN (C4)",
+        "unit": "Evaluación Semestral Integral"
+      }
+    ]
+  },
+  {
+    "id": "cex-103",
+    "code": "CEX-103-AC",
+    "name": "Comercio Exterior",
+    "weeks": [
+      {
+        "weekNumber": 1,
+        "title": "Encuadre y socialización del sílabo. 1.1. Conceptos, diferencias e importancia del comercio exterior y comercio Internacional.",
+        "unit": "UNIDAD 1: CONCEPTOS BÁSICOS Y ANTECEDENTES DEL COMERCIO EXTERIOR."
+      },
+      {
+        "weekNumber": 2,
+        "title": "1.2. Elementos básicos del comercio exterior.",
+        "unit": "UNIDAD 1: CONCEPTOS BÁSICOS Y ANTECEDENTES DEL COMERCIO EXTERIOR."
+      },
+      {
+        "weekNumber": 3,
+        "title": "1.3. Origen e Historia del Comercio Internacional.",
+        "unit": "UNIDAD 1: CONCEPTOS BÁSICOS Y ANTECEDENTES DEL COMERCIO EXTERIOR."
+      },
+      {
+        "weekNumber": 4,
+        "title": "1.4. Evolución del comercio exterior en Ecuador.",
+        "unit": "UNIDAD 1: CONCEPTOS BÁSICOS Y ANTECEDENTES DEL COMERCIO EXTERIOR."
+      },
+      {
+        "weekNumber": 5,
+        "title": "2.1. Diferencias políticas, económicas, legales, culturales entre países.",
+        "unit": "UNIDAD 2: TEORÍAS DEL COMERCIO INTERNACIONAL."
+      },
+      {
+        "weekNumber": 6,
+        "title": "2.2. Teorías clásicas del Comercio Internacional. 2.3. Teorías de los factores de la producción.",
+        "unit": "UNIDAD 2: TEORÍAS DEL COMERCIO INTERNACIONAL."
+      },
+      {
+        "weekNumber": 7,
+        "title": "2.4. Nuevas teorías del comercio internacional. 2.5. Teorías de la Ventaja Competitiva.",
+        "unit": "UNIDAD 2: TEORÍAS DEL COMERCIO INTERNACIONAL."
+      },
+      {
+        "weekNumber": 8,
+        "title": "2.6 Ética y responsabilidad en el comercio internacional.",
+        "unit": "UNIDAD 2: TEORÍAS DEL COMERCIO INTERNACIONAL."
+      },
+      {
+        "weekNumber": 9,
+        "title": "3.1. Globalización, Mundialización e internacionalización.",
+        "unit": "UNIDAD 3: EL ESCENARIO INTERNACIONAL."
+      },
+      {
+        "weekNumber": 10,
+        "title": "3.2. Instituciones que regulan y facilitan el comercio internacional.",
+        "unit": "UNIDAD 3: EL ESCENARIO INTERNACIONAL."
+      },
+      {
+        "weekNumber": 11,
+        "title": "3.3. Factores que afectan el comercio internacional.",
+        "unit": "UNIDAD 3: EL ESCENARIO INTERNACIONAL."
+      },
+      {
+        "weekNumber": 12,
+        "title": "3.4. Medios y rutas de transporte internacional. 3.5. Introducción a los Incoterms y su aplicación básica en el comercio internacional.",
+        "unit": "UNIDAD 3: EL ESCENARIO INTERNACIONAL."
+      },
+      {
+        "weekNumber": 13,
+        "title": "4.1. Normativa y Política Comercial del Ecuador. 4.2. Instituciones del Comercio Exterior en el Ecuador",
+        "unit": "UNIDAD 4: EL ROL DEL ESTADO."
+      },
+      {
+        "weekNumber": 14,
+        "title": "4.3. Operaciones de Exportación, importación e intercambio compensado.",
+        "unit": "UNIDAD 4: EL ROL DEL ESTADO."
+      },
+      {
+        "weekNumber": 15,
+        "title": "4.4. Balanza de pagos: Estructura, importancia e interpretación básica.",
+        "unit": "UNIDAD 4: EL ROL DEL ESTADO."
+      },
+      {
+        "weekNumber": 16,
+        "title": "4.4. Balanza de pagos: Estructura, importancia e interpretación básica. EXAMEN FINAL",
+        "unit": "UNIDAD 4: EL ROL DEL ESTADO."
+      }
+    ]
+  },
+  {
+    "id": "gig-406",
+    "code": "GIG-406",
+    "name": "Gobierno Electrónico y Administración Pública",
+    "weeks": [
+      {
+        "weekNumber": 1,
+        "title": "S1. Fundamentos del gobierno digital: S1.1 Definición y características. S1.2 Evolución del gobierno electrónico. S1.3 Importancia en la gestión pública",
+        "unit": "U1. INTRODUCCIÓN AL GOBIERNO DIGITAL"
+      },
+      {
+        "weekNumber": 2,
+        "title": "S2. Modelos y servicios de gobierno electrónico: S2.1 Modelos de e-gob. S2.2 Servicios electrónicos y trámites en línea. S2.3 Calidad del servicio digital",
+        "unit": "U1. INTRODUCCIÓN AL GOBIERNO DIGITAL"
+      },
+      {
+        "weekNumber": 3,
+        "title": "S3.1 Derecho de acceso a la información. S3.2 Gobierno abierto.",
+        "unit": "U1. INTRODUCCIÓN AL GOBIERNO DIGITAL"
+      },
+      {
+        "weekNumber": 4,
+        "title": "S4. Participación ciudadana y colaboración digital: S4.1 Participación ciudadana digital. S4.2 Redes sociales en la gestión pública. S4.3 Crowdsourcing y colaboración.",
+        "unit": "U1. INTRODUCCIÓN AL GOBIERNO DIGITAL"
+      },
+      {
+        "weekNumber": 5,
+        "title": "S5. Datos abiertos y generación de valor público: S5.1 Datos abiertos. S5.2 Reutilización de información. S5.3 Impacto en la toma de decisiones",
+        "unit": "U1. INTRODUCCIÓN AL GOBIERNO DIGITAL"
+      },
+      {
+        "weekNumber": 6,
+        "title": "S 6. Marco legal del gobierno digital.",
+        "unit": "U2. MARCO LEGAL Y REGULATORIO DEL GOBIERNO DIGITAL"
+      },
+      {
+        "weekNumber": 7,
+        "title": "S 7. Transparencia y acceso a la información pública.",
+        "unit": "U2. MARCO LEGAL Y REGULATORIO DEL GOBIERNO DIGITAL"
+      },
+      {
+        "weekNumber": 8,
+        "title": "S 8. Protección de datos personales y privacidad.",
+        "unit": "U2. MARCO LEGAL Y REGULATORIO DEL GOBIERNO DIGITAL"
+      },
+      {
+        "weekNumber": 9,
+        "title": "S.9. Seguridad de la información y gestión de riesgos. S.9. Firma electrónica y autenticación digital",
+        "unit": "U2. MARCO LEGAL Y REGULATORIO DEL GOBIERNO DIGITAL"
+      },
+      {
+        "weekNumber": 10,
+        "title": "S 10. Transformación digital del Estado (definición, evolución, modelos)",
+        "unit": "U3. LA TRANSFORMACIÓN DIGITAL DEL ESTADO"
+      },
+      {
+        "weekNumber": 11,
+        "title": "S11. Actores de la transformación digital del Estado",
+        "unit": "U3. LA TRANSFORMACIÓN DIGITAL DEL ESTADO"
+      },
+      {
+        "weekNumber": 12,
+        "title": "S12. Procesos de transformación digital del Estado.",
+        "unit": "U3. LA TRANSFORMACIÓN DIGITAL DEL ESTADO"
+      },
+      {
+        "weekNumber": 13,
+        "title": "S13. Implementación de servicios digitales (UX, herramientas digitales).",
+        "unit": "U3. LA TRANSFORMACIÓN DIGITAL DEL ESTADO"
+      },
+      {
+        "weekNumber": 14,
+        "title": "S 14. Infraestructura tecnológica y plataformas del gobierno digital. S. 14. Analítica web",
+        "unit": "U4. TECNOLOGÍAS PARA EL GOBIERNO DIGITAL"
+      },
+      {
+        "weekNumber": 15,
+        "title": "S.15. Indicadores de gestión (KPIs). S.15. Evaluación y mejora de servicios digitales",
+        "unit": "U4. TECNOLOGÍAS PARA EL GOBIERNO DIGITAL"
+      },
+      {
+        "weekNumber": 16,
+        "title": "S 16. Evaluación Final",
+        "unit": "U4. TECNOLOGÍAS PARA EL GOBIERNO DIGITAL"
+      }
+    ]
+  }
+]

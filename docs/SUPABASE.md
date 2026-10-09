@@ -10,7 +10,7 @@ El proyecto remoto está activo. El esquema está aplicado y la URL y clave publ
 - Existe únicamente el estudiante de prueba autorizado, matriculado en las tres materias. Su sesión solo puede consultar su propio perfil. El usuario ya cambió su contraseña y el servidor registró que dejó de usar la clave temporal; su nueva contraseña permanece privada y no se usó en pruebas del entorno. Las altas futuras siguen exigiendo ese cambio antes de cargar el aula.
 - `manage-students` está desplegada y activa, con la comprobación JWT heredada desactivada porque verifica cada sesión con Auth. Su secreto de orígenes admite `https://siginuleam.github.io`. Una petición docente sobre el estudiante existente respondió 200 y conservó la contraseña; una petición con rol estudiante fue rechazada con 403. La lectura anónima de perfiles devuelve 401.
 - Una solicitud de recuperación fue aceptada con HTTP 200 y el usuario confirmó que el mensaje llegó a su buzón institucional. El cambio de contraseña posterior quedó registrado en la base de datos. Custom SMTP no está configurado: antes de incorporar más estudiantes, prepara un proveedor SMTP y revisa los límites del servicio de correo predeterminado.
-- Los 48 bancos privados están cargados y verificados: 16 por materia, cinco retos por semana, con un total de 240 retos de evaluación adicionales a los 240 de práctica. Usan expedientes nuevos y los cinco formatos. Los 48 enunciados se consultaron mediante una sesión docente real y no contienen campos de solución. Las 48 evaluaciones permanecen cerradas deliberadamente para que la docente las revise y configure el calendario.
+- Los 48 bancos privados están cargados y verificados: 16 por materia, cinco retos por semana, con un total de 240 retos de evaluación adicionales a los 240 de práctica. Usan casos nuevos y cinco preguntas de cuatro formatos: dos decisiones, relaciones, secuencia y crucigrama, sin cálculos. Los 48 enunciados se consultaron mediante una sesión docente real y no contienen campos de solución. Las 48 evaluaciones permanecen cerradas deliberadamente para que la docente las revise y configure el calendario.
 - El corrector remoto pasó una comprobación SQL transaccional con contexto de identidad del estudiante: 10 para respuestas correctas y 0 para erróneas en los 48 bancos; 48 reintentos con el mismo identificador devolvieron el mismo intento sin duplicarlo; los 48 bancos rechazaron un tercer intento nuevo. También se comprobaron cierre manual, plazo vencido y apertura futura. Toda la transacción se revirtió: la comprobación posterior confirmó cero notas guardadas, cero evaluaciones abiertas, 48 bancos y un único estudiante. No se necesitó conocer ni cambiar su nueva contraseña.
 
 Los pasos siguientes se conservan como instrucciones para mantener o reinstalar el proyecto; no hace falta repetir altas que ya existen. No se publican cédulas, contraseñas ni listados de personas.
@@ -79,9 +79,9 @@ Si ya creaste manualmente una cuenta con el mismo correo pero sin perfil, comple
 
 Los bancos iniciales ya están cargados. Para revisar un banco sin modificarlo ni consumir intentos, abre **Espacio docente → Semanas y horarios**, selecciona materia y semana y pulsa **Ver evaluación**. La docente puede consultar el expediente y los enunciados aunque la evaluación esté cerrada.
 
-Esta vista se comprobó en el sitio publicado con la cuenta docente y respuestas reales de Supabase: un banco de cada materia, con expediente y los cinco formatos, sin campos de solución ni controles de entrega. La comprobación no cambió calendarios, notas, matrículas ni contraseñas.
+Esta vista se comprobó en el sitio publicado con la cuenta docente y respuestas reales de Supabase: un banco de cada materia, con caso y cinco preguntas, sin campos de solución ni controles de entrega. La comprobación no cambió calendarios, notas, matrículas ni contraseñas.
 
-Para sustituir o crear un banco, cierra primero la evaluación de esa semana. En **Espacio docente → Crear evaluación**, elige semana e introduce título, objetivo y expediente con datos suficientes. Añade los retos: opciones y posición correcta; relaciones; pasos en orden; resultado numérico; o palabras y pistas del crucigrama. Incluye la explicación que se mostrará después de entregar. **Guardar evaluación privada** envía enunciados y claves separados al servidor, exige sesión docente y comprueba el formato. Después habilita la semana y configura sus fechas en **Semanas y horarios**.
+Para sustituir o crear un banco, cierra primero la evaluación de esa semana. En **Espacio docente → Crear evaluación**, elige semana e introduce título, objetivo y expediente con datos suficientes. Añade los retos: opciones y posición correcta; relaciones; pasos en orden; o palabras y pistas del crucigrama. Incluye la explicación que se mostrará después de entregar. **Guardar evaluación privada** envía enunciados y claves separados al servidor, exige sesión docente y comprueba el formato. Después habilita la semana y configura sus fechas en **Semanas y horarios**.
 
 La interfaz genera internamente `public_payload` (expediente y enunciados sin respuestas) y `answer_key` (claves y explicaciones). No subas esas claves al repositorio ni las distribuyas a estudiantes.
 
@@ -94,18 +94,18 @@ Ejemplo mínimo de **formato**, para adaptar con un caso y datos propios antes d
     "questions": [
       {
         "id": "caso-nuevo-q1",
-        "type": "numeric",
-        "prompt": "En el documento se registran 40 trámites y 8 devoluciones. ¿Qué porcentaje fue devuelto?"
+        "type": "choice",
+        "prompt": "¿Qué permite seguir el estado del trámite, además de iniciar la solicitud?",
+        "options": ["Publicar requisitos y un formulario descargable", "Asignar identificador y mostrar etapa actual y pasos pendientes", "Validar campos y confirmar la recepción del formulario"]
       }
     ]
   },
   "answer_key": [
     {
       "id": "caso-nuevo-q1",
-      "type": "numeric",
-      "correct": 20,
-      "tolerance": 0.01,
-      "explanation": "Divide devoluciones entre trámites y multiplica por 100."
+      "type": "choice",
+      "correct": 1,
+      "explanation": "Un identificador unido al estado permite seguir el trámite. Descargar requisitos o confirmar recepción no informa las etapas posteriores."
     }
   ]
 }

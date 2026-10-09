@@ -32,10 +32,15 @@ const originalAlfinTitles = [
 ];
 const allActivities = courses.flatMap((course) => course.activities);
 const allQuestions = allActivities.flatMap((activity) => activity.questions);
+const topicBaseline = JSON.parse(
+  readFileSync(new URL("./fixtures/syllabus-topics.json", import.meta.url), "utf8"),
+);
+const plain = (text) =>
+  String(text).normalize("NFD").replace(/[\u0300-\u036f]/gu, "").toLowerCase();
 const correctAnswer = (question) => {
   if (question.type === "matching")
     return question.pairs.map((_, index) => index);
-  if (question.type === "ordering")
+  if (["ordering", "order"].includes(question.type))
     return question.items.map((_, index) => index);
   if (question.type === "crossword")
     return question.entries.map((entry) => entry.word);
@@ -76,15 +81,23 @@ test("tres materias completas: 48 semanas, 48 expedientes y 240 retos asociados 
         5,
         `${course.id}, semana ${activity.week}`,
       );
-      assert.ok(
-        new Set(activity.questions.map((question) => question.type)).size >= 3,
-        `Variedad de interacción ${course.id}, semana ${activity.week}`,
+      assert.deepEqual(
+        activity.questions.map((question) => question.type).sort(),
+        ["choice", "choice", "crossword", "matching", "ordering"],
+        `Dos decisiones, relaciones, secuencia y crucigrama: ${course.id}, semana ${activity.week}`,
       );
     }
   }
 });
 
-test("los dieciséis temas originales ALFIN conservan texto y orden, incluido el examen", () => {
+test("las tres materias conservan los 48 temas, unidades y orden del sílabo", () => {
+  assert.deepEqual(
+    courses.map(({ id, code, name, weeks }) => ({
+      id, code, name,
+      weeks: weeks.map(({ weekNumber, title, unit }) => ({ weekNumber, title, unit })),
+    })),
+    topicBaseline,
+  );
   assert.deepEqual(
     courses
       .find((course) => course.id === "gig-502")
@@ -93,16 +106,22 @@ test("los dieciséis temas originales ALFIN conservan texto y orden, incluido el
   );
 });
 
-test("cada expediente contiene contexto sustantivo, objetivo, simulación explícita y explicaciones", () => {
+test("cada semana enseña conceptos y presenta un caso breve con instrucciones y explicaciones", () => {
   assert.equal(
     new Set(allActivities.map((activity) => activity.context)).size,
     48,
   );
   for (const activity of allActivities) {
-    assert.ok(
-      activity.context.trim().split(/\s+/u).length >= 250,
-      `${activity.name}: contexto insuficiente`,
-    );
+    const wordCount = activity.context.trim().split(/\s+/u).length;
+    assert.ok(wordCount >= 110 && wordCount <= 260,
+      `${activity.name}: ${wordCount} palabras; necesita contexto suficiente y conciso`);
+    const context = plain(activity.context);
+    assert.match(context, /conceptos?\s+claves?/u,
+      `${activity.name}: faltan los conceptos que se deben aprender`);
+    assert.match(context, /caso\s+breve/u,
+      `${activity.name}: falta delimitar el caso aplicado`);
+    assert.match(context, /que\s+debes\s+hacer|instrucciones|tu\s+(?:tarea|reto)/u,
+      `${activity.name}: no explica qué debe hacer el estudiante`);
     assert.ok(
       activity.context.includes("\n\n"),
       `${activity.name}: falta separar documentos o párrafos`,
@@ -130,6 +149,26 @@ test("cada expediente contiene contexto sustantivo, objetivo, simulación explí
         question.explanation.trim().length > 30,
         `${question.id}: explicación insuficiente`,
       );
+    }
+  }
+});
+
+test("cada semana enlaza lecturas específicas con autor, sección y propósito", () => {
+  for (const activity of allActivities) {
+    const references = (activity.references || []).filter((reference) =>
+      /^https:\/\//u.test(reference.url));
+    assert.ok(references.length, `${activity.name}: falta una lectura externa para profundizar`);
+    for (const reference of references) {
+      const url = new URL(reference.url);
+      const path = url.pathname.replace(/\/+$/u, "");
+      assert.ok(
+        (path && !/^\/(?:[a-z]{2}(?:-[a-z]{2})?)?$/iu.test(path) &&
+          !/^\/(?:index|home|inicio)\.(?:html?|php|aspx?)$/iu.test(path)) || url.searchParams.size,
+        `${activity.name}: ${reference.url} lleva a una portada, no a una lectura específica`,
+      );
+      for (const [field, minimum] of [["author", 3], ["section", 5], ["purpose", 20]])
+        assert.ok(typeof reference[field] === "string" && reference[field].trim().length >= minimum,
+          `${activity.name}: la lectura no identifica ${field}`);
     }
   }
 });
@@ -168,10 +207,10 @@ test("los sílabos PDF ofrecidos en enlaces locales existen y conservan cabecera
   }
 });
 
-test("el motor reconoce las soluciones publicadas de los cinco tipos y rechaza alteraciones", () => {
+test("las prácticas usan cuatro tipos sin cálculo numérico y califican correctamente", () => {
   assert.deepEqual(
     [...new Set(allQuestions.map((question) => question.type))].sort(),
-    ["choice", "crossword", "matching", "numeric", "ordering"],
+    ["choice", "crossword", "matching", "ordering"],
   );
   for (const question of allQuestions) {
     const solution = correctAnswer(question);
@@ -192,32 +231,6 @@ test("el motor reconoce las soluciones publicadas de los cinco tipos y rechaza a
         `${question.id}: opción correcta inexistente`,
       );
       incorrect = (question.correct + 1) % question.options.length;
-    } else if (question.type === "numeric") {
-      assert.ok(
-        Number.isFinite(question.correct),
-        `${question.id}: resultado no finito`,
-      );
-      incorrect = question.correct + (question.tolerance ?? 0.01) + 1;
-      assert.equal(
-        questionCorrect(question, String(question.correct)),
-        true,
-        `${question.id}: entrada numérica textual`,
-      );
-      assert.equal(
-        questionCorrect(question, ""),
-        false,
-        `${question.id}: entrada vacía`,
-      );
-      assert.equal(
-        questionCorrect(question, null),
-        false,
-        `${question.id}: entrada nula`,
-      );
-      assert.equal(
-        questionCorrect(question, "no es número"),
-        false,
-        `${question.id}: entrada inválida`,
-      );
     } else if (question.type === "crossword") {
       incorrect = solution.map((word, index) =>
         index === 0 ? `${word}ZZ` : word,

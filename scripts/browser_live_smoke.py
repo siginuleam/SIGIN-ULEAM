@@ -6,6 +6,7 @@ SIGIN_TEST_URL=http://127.0.0.1:4173/SIGIN-ULEAM/ python scripts/browser_live_sm
 import copy
 import json
 import os
+import re
 import subprocess
 import unicodedata
 from pathlib import Path
@@ -31,7 +32,7 @@ fixture = json.loads(subprocess.check_output([
 course = fixture['course']
 activity = fixture['activity']
 public_payload = {k: copy.deepcopy(v) for k, v in activity.items() if k != 'questions'}
-public_payload['name'] = 'Banco privado de prueba · cinco interacciones'
+public_payload['name'] = 'Banco privado de prueba · cinco retos'
 public_payload['questions'] = []
 answers = []
 answer_by_id = {}
@@ -61,7 +62,9 @@ for source in activity['questions']:
     public_payload['questions'].append(q)
     answers.append({'id': source['id'], 'value': value})
     answer_by_id[source['id']] = value
-assert {q['type'] for q in public_payload['questions']} == {'choice', 'matching', 'numeric', 'order', 'crossword'}
+assert {q['type'] for q in public_payload['questions']} == {'choice', 'matching', 'order', 'crossword'}
+assert len(public_payload['questions']) == 5
+assert sum(q['type'] == 'choice' for q in public_payload['questions']) == 2
 serialized = json.dumps(public_payload)
 assert '"correct"' not in serialized and '"explanation"' not in serialized
 assert '"pairs"' not in serialized and '"word"' not in serialized
@@ -124,6 +127,8 @@ def mock_supabase(route):
         assert body == {'p_course_id': 'gig-406', 'p_week': 1}
         if state['bank_missing']:
             response, status = {'message': 'NO_ASSESSMENT_KEY'}, 400
+        elif not state['teacher_mode'] and len(attempts) >= 2:
+            response, status = {'message': 'ATTEMPTS_EXHAUSTED'}, 400
         else:
             response = public_payload
     elif path == '/rest/v1/rpc/submit_assessment':
@@ -163,6 +168,14 @@ with sync_playwright() as playwright:
     assert page.locator('[data-action="switchRole"]').count() == 0
     assert page.locator('[data-course="gig-502"], [data-course="gig-308"]').count() == 0
     assert 'Docente' not in page.locator('.profile').inner_text(), 'Untrusted user_metadata leaked into role'
+    page.locator('.sidebar [data-action="settings"]').click()
+    page.locator('[name="theme-choice"][value="dark"]').locator('..').click()
+    expect(page.locator('html')).to_have_attribute('data-theme', 'dark')
+    page.reload()
+    page.locator('.course-card').wait_for()
+    expect(page.locator('html')).to_have_attribute('data-theme', 'dark')
+    assert page.evaluate("localStorage.getItem('sigin-theme-v1')") == 'dark'
+    assert page.locator('.course-card').count() == 1
 
     page.evaluate("""() => { const b=document.createElement('button');b.dataset.action='switchRole';b.textContent='Intentar cambiar rol';document.querySelector('#app').append(b); }""")
     page.get_by_role('button', name='Intentar cambiar rol').click()
@@ -187,10 +200,59 @@ with sync_playwright() as playwright:
     assert page.locator('#toast').inner_text() == 'Esta sección requiere una cuenta docente.'
     assert len([r for r in requests if r['path'].endswith('/get_assessment')]) == requests_before_review
 
-    page.locator('.course-card').get_by_role('button').click()
-    page.get_by_role('button', name='Explorar el caso', exact=False).first.click()
-    page.get_by_role('button', name='Entrar a la evaluación').click()
+    # The direct launcher preserves enrollments and closed weeks; practice still works.
+    page.locator('.sidebar [data-action="activities"]').click()
+    assert page.locator('#activity-course option').count() == 1
+    assert page.locator('#activity-course').input_value() == course['id']
+    page.locator('[data-action="activityMode"][data-mode="assessment"]').click()
+    assert page.locator('[data-action="beginQuiz"][data-week="2"]').is_disabled()
+    before_closed = len(requests)
+    page.evaluate("""() => {const b=document.createElement('button');b.dataset.action='beginQuiz';b.dataset.course='gig-406';b.dataset.week='2';b.dataset.mode='assessment';b.textContent='Intentar examen cerrado';document.querySelector('#app').append(b);} """)
+    page.get_by_role('button', name='Intentar examen cerrado').click()
+    expect(page.locator('#toast')).to_have_text('Esta evaluación está cerrada.')
+    assert page.locator('#quiz-answer').count() == 0
+    assert len(requests) == before_closed
+    page.evaluate("""() => {const b=document.createElement('button');b.dataset.action='beginQuiz';b.dataset.course='gig-502';b.dataset.week='1';b.dataset.mode='practice';b.textContent='Intentar práctica de otra materia';document.querySelector('#app').append(b);} """)
+    page.get_by_role('button', name='Intentar práctica de otra materia').click()
+    expect(page.locator('#toast')).to_have_text('Esta materia no está en tus matrículas.')
+    assert page.locator('#quiz-answer').count() == 0
+    page.locator('[data-action="activityMode"][data-mode="practice"]').click()
+    second_week = page.locator('details.week').nth(1)
+    second_week.locator('summary').click()
+    second_week.locator('[data-action="beginQuiz"][data-mode="practice"]').click()
+    assert page.locator('.case-reading-note').is_visible()
+    assert page.locator('.quiz-dossier').get_attribute('open') is not None
+    practice_question = page.evaluate("async()=>{const {courses}=await import('./assets/courses.js');return courses.find(c=>c.id==='gig-406').activities[1].questions[0];}")
+    assert practice_question['type'] == 'choice'
+    page.get_by_label(practice_question['options'][practice_question['correct']], exact=True).check()
+    page.get_by_role('button', name='Comprobar mi respuesta', exact=False).click()
+    assert page.get_by_role('heading', name='Bien razonado.').is_visible()
+    assert page.get_by_text(practice_question['explanation'], exact=True).is_visible()
+    page.get_by_role('button', name='Siguiente reto', exact=False).click()
+    next_practice_question = page.evaluate("async()=>{const {courses}=await import('./assets/courses.js');return courses.find(c=>c.id==='gig-406').activities[1].questions[1];}")
+    assert next_practice_question['type'] == 'choice'
+    selected_option = page.get_by_label(next_practice_question['options'][next_practice_question['correct']], exact=True)
+    selected_option.check()
+    question_position = page.locator('.question-meta').inner_text()
+    question_prompt = page.locator('.question-title').inner_text()
+    assert 'Reto 2' in question_position
+    for appearance in ['light', 'dark']:
+        page.locator('.sidebar [data-action="settings"]').click()
+        page.locator('#appearance-dialog').wait_for()
+        page.locator('#appearance-dialog [name="theme-choice"][value="%s"]' % appearance).locator('..').click()
+        expect(page.locator('html')).to_have_attribute('data-theme', appearance)
+        page.locator('[data-action="closeSettings"]').click()
+        assert page.locator('.question-meta').inner_text() == question_position
+        assert page.locator('.question-title').inner_text() == question_prompt
+        assert selected_option.is_checked()
+        assert page.locator('#quiz-answer').count() == 1
+    assert not [r for r in requests[before_closed:] if r['method'] != 'GET']
+    page.get_by_role('button', name='Guardar y volver', exact=False).click()
+    page.locator('[data-action="activityMode"][data-mode="assessment"]').click()
+    page.locator('[data-action="beginQuiz"][data-week="1"][data-mode="assessment"]').click()
     page.get_by_role('heading', name=public_payload['name'], level=1).wait_for()
+    assert page.locator('.case-reading-note').is_visible()
+    assert page.locator('.quiz-dossier').get_attribute('open') is not None
     assert page.locator('.feedback').count() == 0
     assert page.get_by_role('button', name='Comprobar mi respuesta', exact=False).count() == 0
 
@@ -198,8 +260,6 @@ with sync_playwright() as playwright:
         value = answer_by_id[q['id']]
         if q['type'] == 'choice':
             page.get_by_label(q['options'][value], exact=True).check()
-        elif q['type'] == 'numeric':
-            page.locator('#numeric-answer').fill(str(value))
         elif q['type'] == 'matching':
             for left, right in enumerate(value):
                 page.locator('[data-action="matchLeft"][data-index="%s"]' % left).click()
@@ -225,6 +285,20 @@ with sync_playwright() as playwright:
         assert page.get_by_text(q['explanation'], exact=True).is_visible()
     assert page.locator('[data-action="admin"]').count() == 0
 
+    # Previously used attempts block the launcher and manually inserted controls.
+    attempts.append({**attempts[0], 'id': 'fixture-attempt-2'})
+    page.reload()
+    page.locator('.course-card').wait_for()
+    page.locator('.sidebar [data-action="activities"]').click()
+    page.locator('[data-action="activityMode"][data-mode="assessment"]').click()
+    assert page.locator('[data-action="beginQuiz"][data-week="1"]').is_disabled()
+    requests_before_quota = len(requests)
+    page.evaluate("""() => {const b=document.createElement('button');b.dataset.action='beginQuiz';b.dataset.course='gig-406';b.dataset.week='1';b.dataset.mode='assessment';b.textContent='Intentar examen sin intentos';document.querySelector('#app').append(b);} """)
+    page.get_by_role('button', name='Intentar examen sin intentos').click()
+    expect(page.locator('#toast')).to_have_text('Ya utilizaste tus intentos.')
+    assert page.locator('#quiz-answer').count() == 0
+    assert len(requests) == requests_before_quota
+
     # Password changes must use Auth; mismatch must not produce a request.
     page.locator('.side-nav').get_by_role('button', name='Mi cuenta', exact=True).click()
     page.get_by_role('button', name='Cambiar mi contraseña').click()
@@ -238,6 +312,7 @@ with sync_playwright() as playwright:
     page.locator('.course-card').wait_for()
     assert len([r for r in requests if r['path'] == '/auth/v1/user' and r['method'] == 'PUT']) == 1
     page.locator('.side-nav').get_by_role('button', name='Salir', exact=True).click()
+    expect(page.locator('html')).to_have_attribute('data-theme', 'dark')
 
     # A recovery failure must remain a failure, with no simulated delivery.
     page.get_by_role('button', name='Olvidé mi contraseña').click()
@@ -279,7 +354,11 @@ with sync_playwright() as playwright:
     assert review.locator('input,textarea,select,form,button').count() == 0
     for q in public_payload['questions']:
         assert review.get_by_role('heading', name=q['prompt'], exact=True).is_visible()
-    assert review.get_by_text(public_payload['context'], exact=True).is_visible()
+    for title in ['Conceptos clave', 'Caso breve', 'Qué debes hacer']:
+        assert review.get_by_role('heading', name=re.compile(r'^'+re.escape(title)+r'(?:\s*[:·—–-].*)?$', re.I)).is_visible()
+    for block in public_payload['context'].split('\n\n'):
+        paragraph = block.split('\n', 1)[-1].strip()
+        assert review.get_by_text(paragraph, exact=True).is_visible()
     assert review.get_by_text(public_payload['questions'][0]['options'][0], exact=True).is_visible()
     matching = next(q for q in public_payload['questions'] if q['type'] == 'matching')
     assert review.get_by_text(matching['lefts'][0], exact=True).is_visible()
@@ -294,5 +373,5 @@ with sync_playwright() as playwright:
     assert page.locator('.assessment-review').count() == 0
     assert not errors, errors
     assert not [r for r in requests if r['path'].endswith('/publish_assessment') or r['path'].endswith('/manage-students')]
-    print('PASS: isolated live login; enrollment/role guards; five private interactions; server grading; password change; recovery success/failure; teacher read-only review of closed bank and missing-bank errors; no JS errors')
+    print('PASS: isolated live login; theme survives authenticated reload/logout; direct practice/exam enrollment, calendar and quota guards; five private retos without numeric questions; server grading; password change; recovery success/failure; teacher read-only review; no JS errors')
     browser.close()

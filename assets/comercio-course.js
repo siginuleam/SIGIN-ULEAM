@@ -1,1327 +1,3707 @@
-// Temas transcritos del sílabo CEX-103-AC, período 2026-2.
-// Todos los números, empresas y expedientes de las actividades son simulaciones educativas.
-const choice = (prompt, options, correct, explanation) => ({
-  type: "choice",
-  prompt,
-  options,
-  correct,
-  explanation,
-});
-const matching = (prompt, pairs, explanation) => ({
-  type: "matching",
-  prompt,
-  pairs: pairs.map(([left, right]) => ({ left, right })),
-  explanation,
-});
-const ordering = (prompt, items, explanation) => ({
-  type: "ordering",
-  prompt,
-  items,
-  explanation,
-});
-const numeric = (prompt, correct, unit, explanation, tolerance = 0.01) => ({
-  type: "numeric",
-  prompt,
-  correct,
-  unit,
-  tolerance,
-  explanation,
-});
-const crossword = (prompt, entries, explanation) => ({
-  type: "crossword",
-  prompt,
-  entries: entries.map(([word, clue]) => ({ word, clue })),
-  explanation,
-});
-const refs = {
-  wto: {
-    name: "OMC · Comprender la OMC",
-    url: "https://www.wto.org/spanish/thewto_s/whatis_s/whatis_s.htm",
-  },
-  pro: {
-    name: "PRO ECUADOR · Información y promoción de exportaciones",
-    url: "https://www.proecuador.gob.ec/",
-  },
-  senae: {
-    name: "SENAE · Servicio Nacional de Aduana del Ecuador",
-    url: "https://www.aduana.gob.ec/",
-  },
-  bce: {
-    name: "Banco Central del Ecuador · Estadísticas económicas",
-    url: "https://www.bce.fin.ec/",
-  },
-  itc: {
-    name: "Centro de Comercio Internacional · Recursos comerciales",
-    url: "https://www.intracen.org/",
-  },
-  icc: {
-    name: "ICC · Reglas Incoterms®",
-    url: "https://iccwbo.org/business-solutions/incoterms-rules/",
-  },
-  ilo: {
-    name: "OIT · Normas internacionales del trabajo",
-    url: "https://www.ilo.org/es",
-  },
-  agro: {
-    name: "Agrocalidad · Autoridad fito y zoosanitaria",
-    url: "https://www.agrocalidad.gob.ec/",
-  },
-};
-const unitNames = [
-  "UNIDAD 1: CONCEPTOS BÁSICOS Y ANTECEDENTES DEL COMERCIO EXTERIOR.",
-  "UNIDAD 2: TEORÍAS DEL COMERCIO INTERNACIONAL.",
-  "UNIDAD 3: EL ESCENARIO INTERNACIONAL.",
-  "UNIDAD 4: EL ROL DEL ESTADO.",
-];
-const topics = [
-  "Encuadre y socialización del sílabo. 1.1. Conceptos, diferencias e importancia del comercio exterior y comercio Internacional.",
-  "1.2. Elementos básicos del comercio exterior.",
-  "1.3. Origen e Historia del Comercio Internacional.",
-  "1.4. Evolución del comercio exterior en Ecuador.",
-  "2.1. Diferencias políticas, económicas, legales, culturales entre países.",
-  "2.2. Teorías clásicas del Comercio Internacional. 2.3. Teorías de los factores de la producción.",
-  "2.4. Nuevas teorías del comercio internacional. 2.5. Teorías de la Ventaja Competitiva.",
-  "2.6 Ética y responsabilidad en el comercio internacional.",
-  "3.1. Globalización, Mundialización e internacionalización.",
-  "3.2. Instituciones que regulan y facilitan el comercio internacional.",
-  "3.3. Factores que afectan el comercio internacional.",
-  "3.4. Medios y rutas de transporte internacional. 3.5. Introducción a los Incoterms y su aplicación básica en el comercio internacional.",
-  "4.1. Normativa y Política Comercial del Ecuador. 4.2. Instituciones del Comercio Exterior en el Ecuador",
-  "4.3. Operaciones de Exportación, importación e intercambio compensado.",
-  "4.4. Balanza de pagos: Estructura, importancia e interpretación básica.",
-  "4.4. Balanza de pagos: Estructura, importancia e interpretación básica. EXAMEN FINAL",
-];
-
-const activities = [
-  {
-    week: 1,
-    name: "Misión 01 · ¿Vender fuera ya es comercio exterior?",
-    objective:
-      "Distinguir una operación internacional de una venta local y reconstruir su circuito comercial con evidencia.",
-    context: `SIMULACIÓN EDUCATIVA · Cooperativa Costa Cacao. La empresa y todos los documentos de este expediente son ficticios. No describen operaciones de una organización real.
-
-La cooperativa reúne a pequeños productores de Manabí. Actualmente entrega pasta de cacao a cafeterías de Manta. Su responsable comercial recibe dos solicitudes: una cafetería local pide 900 frascos y una tienda de Nordia, país ficticio, pide 1.200 frascos de 250 gramos. Tu equipo debe explicar a los productores qué cambia cuando el cliente está fuera del país. Una venta grande no es automáticamente una exportación: importa que la operación cruce una frontera y cómo se realiza y documenta.
-
-Documento A — Oferta local: comprador establecido en Manta; 900 frascos; precio unitario USD 3,00; entrega en el local del comprador; pago por transferencia nacional. Documento B — Solicitud internacional: comprador establecido en Nordia; 1.200 frascos; precio unitario USD 3,40; entrega y distribución de gastos todavía por negociar; petición de información sobre composición, origen, embalaje y plazo. Es una solicitud, no una exportación ya ejecutada. No sumes cantidades de ambos pedidos cuando calcules el valor de B.
-
-Guía de conceptos: comercio exterior observa las operaciones de un país con el resto del mundo; comercio internacional estudia el intercambio entre países y sus relaciones más amplias. Exportar es vender o enviar bienes hacia otro territorio conforme al régimen aplicable; importar es introducir bienes desde otro territorio. La aduana controla el movimiento transfronterizo de mercancías. El origen identifica dónde se obtiene o transforma un producto según las reglas correspondientes; no equivale automáticamente al puerto de salida.
-
-Ruta de trabajo acordada para el ejercicio: primero confirmar producto y comprador; después negociar precio y condiciones; luego preparar documentos y despacho; finalmente transportar, entregar y conciliar el pago. Una divisa es moneda extranjera desde la perspectiva del país analizado. En Ecuador se usa el dólar estadounidense, por lo que no debe confundirse toda venta internacional con una conversión de moneda. Tu recomendación debe apoyarse en el expediente y señalar las condiciones todavía no acordadas.`,
-    references: [refs.wto, refs.pro],
-    questions: [
-      choice(
-        "¿Qué afirmación describe con precisión la solicitud B?",
-        [
-          "Ya se ejecutó una exportación por recibir un correo extranjero.",
-          "Es una oportunidad de operación internacional; falta acordar condiciones y ejecutarla.",
-          "Es comercio local porque se cotiza en dólares.",
-          "Es una importación de la cooperativa.",
-        ],
-        1,
-        "El domicilio extranjero del comprador abre una operación internacional, pero una solicitud no prueba despacho, entrega ni pago.",
-      ),
-      matching(
-        "Relaciona cada concepto con el elemento pertinente del expediente.",
-        [
-          [
-            "Comercio exterior",
-            "Operaciones de Ecuador con compradores de otros países",
-          ],
-          ["Exportador", "Cooperativa que vende el producto hacia Nordia"],
-          ["Importador", "Comprador que introduce el producto en Nordia"],
-          [
-            "Origen",
-            "Criterio que identifica dónde se obtiene o transforma el producto",
-          ],
-        ],
-        "El punto de vista importa: una misma mercancía se exporta desde Ecuador y se importa en el destino.",
-      ),
-      ordering(
-        "Reconstruye la ruta acordada para esta primera operación.",
-        [
-          "Confirmar producto y comprador",
-          "Negociar precio y condiciones",
-          "Preparar documentos y despacho",
-          "Transportar, entregar y conciliar el pago",
-        ],
-        "La secuencia evita despachar antes de definir lo que se vendió y quién asume los gastos.",
-      ),
-      numeric(
-        "¿Cuál es el valor comercial de la solicitud B, antes de gastos todavía no negociados?",
-        4080,
-        "USD",
-        "1.200 frascos × USD 3,40 = USD 4.080. No incluye la venta local ni presupone un Incoterm.",
-      ),
-      crossword(
-        "Completa el vocabulario del primer expediente.",
-        [
-          [
-            "ADUANA",
-            "Autoridad que controla el movimiento transfronterizo de mercancías.",
-          ],
-          [
-            "ORIGEN",
-            "Identifica dónde se obtiene o transforma un bien según las reglas aplicables.",
-          ],
-          [
-            "DIVISA",
-            "Moneda extranjera desde la perspectiva del país analizado.",
-          ],
-        ],
-        "Estas palabras permiten describir una operación con más precisión que decir solamente «venta al extranjero».",
-      ),
-    ],
-  },
-  {
-    week: 2,
-    name: "Misión 02 · El embarque que no cabe en su ficha",
-    objective:
-      "Construir una ficha comercial coherente y detectar diferencias entre unidades, peso neto, peso bruto y documentos.",
-    context: `SIMULACIÓN EDUCATIVA · Taller de caracterización de un producto. Todas las cantidades, fichas y mensajes son inventados para el aprendizaje; no son una clasificación aduanera ni requisitos vigentes de un destino real.
-
-Costa Cacao prepara una propuesta de exportación de barras de chocolate. La asistente registró «600 unidades» en la factura preliminar. El encargado de bodega advierte que preparó 600 cajas, no 600 barras. Si la discrepancia llega al comprador, se puede cobrar mal, reservar un transporte insuficiente o declarar cantidades inconsistentes. Tu misión consiste en reconstruir una ficha que permita a otra persona entender exactamente qué se venderá.
-
-Ficha de producción: cada caja contiene 12 barras; cada barra tiene 90 gramos de producto; el envase y la caja suman 0,12 kilogramos por caja. No hay pallets incluidos en estos pesos. Son 600 cajas iguales. Peso neto significa únicamente mercancía; peso bruto incluye los embalajes considerados en la ficha. En este ejercicio, cada caja contiene 1,08 kilogramos netos y pesa 1,20 kilogramos brutos. Debes conservar las unidades y no mezclar gramos con kilogramos.
-
-Carpeta comercial: la factura identifica vendedor, comprador, mercancía, cantidades, precios y condiciones; la lista de empaque detalla distribución por cajas y pesos; el documento de transporte acredita información del traslado según su modalidad; un documento de origen, cuando corresponda, sustenta una regla de origen. Ninguno reemplaza automáticamente a los demás. Una ficha comercial también debe incluir composición, presentación, conservación y vida útil: el comprador necesita verificar que el producto es adecuado antes de contratar.
-
-Mensaje de control: «Para este taller, validaremos la clasificación arancelaria consultando descripción, ingredientes y proceso; no la deduciremos solo del nombre chocolate». La clasificación organiza mercancías para la gestión comercial y aduanera. En una operación real debe confirmarse en fuentes oficiales y con el detalle del producto. Secuencia de revisión: contar barras y cajas; calcular y contrastar pesos; comparar factura y empaque; registrar y corregir diferencias antes de enviar la propuesta. Tu respuesta debe hacer visible la corrección, no ocultar el dato original.`,
-    references: [refs.senae, refs.pro],
-    questions: [
-      choice(
-        "La factura dice «600 unidades» y bodega preparó 600 cajas. ¿Qué acción reduce el riesgo?",
-        [
-          "Aceptar el dato: caja y barra son equivalentes.",
-          "Corregir la unidad y documentar 600 cajas / 7.200 barras en los documentos pertinentes.",
-          "Cambiar el peso sin cambiar la cantidad.",
-          "Enviar primero y aclarar cuando cobre el cliente.",
-        ],
-        1,
-        "600 cajas × 12 barras = 7.200 barras. Cantidad y unidad deben quedar expresadas de forma consistente.",
-      ),
-      matching(
-        "Une el documento con la pregunta que ayuda a responder.",
-        [
-          ["Factura comercial", "¿Qué se vende, a quién y por qué precio?"],
-          [
-            "Lista de empaque",
-            "¿Cómo se distribuyen las cajas y cuánto pesan?",
-          ],
-          [
-            "Documento de transporte",
-            "¿Cómo se identifica el traslado contratado?",
-          ],
-          [
-            "Ficha comercial",
-            "¿Qué composición, presentación y conservación tiene el producto?",
-          ],
-        ],
-        "Los documentos cumplen funciones complementarias; su información común debe coincidir.",
-      ),
-      ordering(
-        "Ordena la revisión indicada por el mensaje de control.",
-        [
-          "Contar barras y cajas",
-          "Calcular y contrastar pesos",
-          "Comparar factura y lista de empaque",
-          "Registrar y corregir diferencias antes de enviar",
-        ],
-        "Primero se establece la realidad física y después se verifica la coherencia documental.",
-      ),
-      numeric(
-        "¿Cuál es el peso bruto total de las 600 cajas, sin pallets?",
-        720,
-        "kg",
-        "Cada caja: 12 × 90 g = 1.080 g = 1,08 kg netos; + 0,12 kg de embalaje = 1,20 kg. 600 × 1,20 = 720 kg.",
-      ),
-      crossword(
-        "Resuelve los términos de la ficha.",
-        [
-          ["NETO", "Peso del producto sin el embalaje considerado."],
-          ["BRUTO", "Peso que incluye mercancía y embalaje."],
-          [
-            "EMPAQUE",
-            "Protección y presentación que organiza físicamente la mercancía.",
-          ],
-        ],
-        "Declarar peso neto como bruto puede producir reservas logísticas y documentos incorrectos.",
-      ),
-    ],
-  },
-  {
-    week: 3,
-    name: "Misión 03 · El archivo que cuenta una evolución",
-    objective:
-      "Reconstruir una trayectoria comercial y distinguir evidencia histórica, inferencia y causalidad no demostrada.",
-    context: `SIMULACIÓN EDUCATIVA · Archivo histórico de una cooperativa ficticia. Los registros empresariales y sus fechas fueron creados para este ejercicio. Son una herramienta de análisis; no una historia real de las exportaciones ecuatorianas.
-
-El comercio entre comunidades existía mucho antes de las empresas contemporáneas: el trueque intercambiaba bienes directamente; las monedas facilitaron comparar valores; las rutas ampliaron intercambios, junto con costos, riesgos e intermediación. No hubo una sola ruta ni una evolución idéntica en todos los pueblos. Tu trabajo consiste en conectar estos elementos generales con un archivo empresarial concreto sin presentar una coincidencia temporal como prueba de causalidad.
-
-Tarjeta 1 — 1998: Costa Cacao vende sacos a compradores cercanos; los acuerdos se anotan en un cuaderno; no aparece cliente extranjero. Tarjeta 2 — 2005: una distribuidora extranjera compra el primer lote registrado para destino internacional; la carpeta conserva factura, lista de empaque y comprobante de recepción. Tarjeta 3 — 2012: se introduce registro de lotes y proveedores para responder a un comprador que pide trazabilidad. Tarjeta 4 — 2018: la cooperativa ofrece barras con marca propia y características diferenciadas, además de materia prima. Tarjeta 5 — 2024: incorpora un catálogo digital y recibe consultas desde nuevos mercados. El catálogo demuestra una herramienta comercial, no que cada consulta se convirtió en venta.
-
-Cuaderno de análisis: una ruta une lugares de intercambio; un arancel es un gravamen aplicado a mercancías conforme al régimen correspondiente; la trazabilidad permite seguir lotes y registros. La existencia de un documento de recepción fortalece la evidencia de una operación ejecutada. Un mensaje de interés comercial aporta evidencia más limitada. La ausencia de un registro tampoco permite afirmar con certeza que nunca ocurrió una venta.
-
-Informe solicitado: construye una cronología; diferencia venta local, exportación documentada, capacidad de control y diferenciación; explica cómo los medios de información pueden reducir obstáculos. La línea temporal no debe afirmar que «el catálogo causó todas las ventas» porque faltan datos sobre conversiones y otros factores. Para calcular intervalos usa diferencia entre años, sin contar cada año de manera inclusiva. La evidencia debe sostener exactamente el alcance de tu conclusión.`,
-    references: [refs.wto, refs.pro],
-    questions: [
-      choice(
-        "¿Qué conclusión está mejor sustentada por el archivo?",
-        [
-          "En 1998 ya se exportaba porque el cacao es exportable.",
-          "El catálogo de 2024 garantiza ventas internacionales.",
-          "En 2005 existe evidencia documental de una operación internacional ejecutada.",
-          "La trazabilidad nació en el mundo en 2012.",
-        ],
-        2,
-        "Factura, empaque y recepción de 2005 respaldan esa operación. Las demás afirmaciones exceden lo que muestra el archivo.",
-      ),
-      matching(
-        "Relaciona cada evidencia con el cambio que respalda.",
-        [
-          ["Cuaderno de 1998", "Registro de ventas cercanas"],
-          [
-            "Carpeta de 2005",
-            "Primera operación internacional documentada en el archivo",
-          ],
-          ["Registro de lotes de 2012", "Capacidad de trazabilidad"],
-          ["Oferta de 2018", "Diferenciación mediante marca y presentación"],
-        ],
-        "Cada documento permite una afirmación acotada; no demuestra todos los resultados comerciales.",
-      ),
-      ordering(
-        "Reconstruye la trayectoria de Costa Cacao de la más antigua a la más reciente.",
-        [
-          "Ventas locales en cuaderno (1998)",
-          "Lote internacional documentado (2005)",
-          "Registro de lotes y proveedores (2012)",
-          "Barras con marca propia (2018)",
-          "Catálogo digital (2024)",
-        ],
-        "Ordenar eventos ayuda a describir evolución; para explicar sus causas harían falta más fuentes.",
-      ),
-      numeric(
-        "¿Cuántos años transcurrieron entre el lote internacional documentado y la oferta de barras con marca?",
-        13,
-        "años",
-        "2018 − 2005 = 13 años. Es un intervalo temporal, no una medida del efecto de una política.",
-      ),
-      crossword(
-        "Recupera tres conceptos del análisis histórico.",
-        [
-          [
-            "TRUEQUE",
-            "Intercambio directo de bienes sin una moneda como medio de pago.",
-          ],
-          [
-            "ARANCEL",
-            "Gravamen aplicado a mercancías conforme al régimen correspondiente.",
-          ],
-          ["RUTA", "Trayecto que conecta lugares de intercambio."],
-        ],
-        "Medios de pago, reglas y trayectos ayudan a entender cómo cambian las condiciones del comercio.",
-      ),
-    ],
-  },
-  {
-    week: 4,
-    name: "Misión 04 · ¿Diversificarse significa exportar más?",
-    objective:
-      "Interpretar una evolución comercial con datos comparables y distinguir crecimiento total de cambios en la composición.",
-    context: `SIMULACIÓN EDUCATIVA · Observatorio de comercio de un país de práctica inspirado en preguntas ecuatorianas. Las cifras de la tabla son inventadas y NO son estadísticas del Ecuador. Para describir el país real se deben consultar las series y notas del Banco Central del Ecuador.
-
-Tu equipo prepara una infografía titulada «¿Cambió la estructura exportadora?». Antes de usar números debe definir período, cobertura, unidad y fuente. Como hitos de contexto ecuatoriano, distingue el desarrollo de exportaciones petroleras desde la década de 1970, la adopción del dólar en 2000 y cambios posteriores en acuerdos y mercados. Estos hitos orientan preguntas históricas; no explican por sí solos cada variación anual ni se convierten en porcentajes de la tabla ficticia.
-
-Tabla didáctica — exportaciones en millones de USD, misma cobertura y método. Año 2000: cacao 60; conservas de pescado 20; petróleo 120; total 200. Año 2025: cacao 90; conservas de pescado 70; petróleo 140; total 300. En esta tabla, cacao y petróleo se agrupan como bienes primarios; conservas como elaboración industrial. No es una clasificación completa de todos los bienes de un país real. Tampoco incorpora importaciones, por lo que no permite calcular una balanza comercial.
-
-Memo de interpretación: crecimiento absoluto compara valores entre períodos; participación divide el componente por el total del mismo período. El total creció 100 millones, pero una categoría puede aumentar en dólares y perder participación. Las conservas pasan de 20/200 a 70/300. Los bienes primarios de 2025 suman 90 + 140. Diversificar puede significar incorporar productos, destinos o mayor variedad; una sola tabla de tres productos no mide todas esas dimensiones.
-
-El editor propone escribir «la dolarización causó toda la expansión». Tu informe debe rechazar esa conclusión: no hay diseño causal, series suficientes ni comparación de factores. También debe evitar atribuir al Ecuador los valores del ejercicio. Procedimiento solicitado: declarar fuente y carácter simulado; validar los totales; calcular participaciones; comparar y redactar una conclusión con límites. Así la infografía comunica una tendencia verificable sin inventar una explicación histórica.`,
-    references: [refs.bce, refs.pro],
-    questions: [
-      choice(
-        "¿Cuál sería un pie de infografía responsable?",
-        [
-          "Datos oficiales del Ecuador: la dolarización explica toda la expansión.",
-          "Tabla simulada: aumentan total y participación de conservas; no demuestra causas ni representa cifras reales de Ecuador.",
-          "Las importaciones cayeron porque aumentaron las exportaciones.",
-          "No hubo cambio porque sigue habiendo petróleo.",
-        ],
-        1,
-        "La tabla permite comparar valores y participación, pero no medir importaciones ni demostrar causalidad.",
-      ),
-      matching(
-        "Relaciona cada indicador con su cálculo o alcance.",
-        [
-          ["Crecimiento absoluto del total", "300 − 200 = 100 millones"],
-          ["Participación de conservas en 2000", "20 ÷ 200 × 100 = 10 %"],
-          ["Bienes primarios en 2025", "90 + 140 = 230 millones"],
-          [
-            "Balanza comercial",
-            "Requiere exportaciones e importaciones comparables",
-          ],
-        ],
-        "Un indicador responde una pregunta concreta y no reemplaza los demás.",
-      ),
-      ordering(
-        "Organiza la revisión de la infografía antes de publicarla.",
-        [
-          "Declarar fuente y carácter simulado",
-          "Validar que las categorías sumen los totales",
-          "Calcular participaciones por período",
-          "Comparar y redactar una conclusión con límites",
-        ],
-        "La revisión comienza por la identidad y alcance de los datos, antes de interpretar los porcentajes.",
-      ),
-      numeric(
-        "En la tabla simulada, ¿qué porcentaje de las exportaciones de 2025 corresponde a bienes primarios? Redondea a dos decimales.",
-        76.67,
-        "%",
-        "(90 + 140) ÷ 300 × 100 = 76,666… %, aproximadamente 76,67 %. No es un indicador real del Ecuador.",
-        0.02,
-      ),
-      crossword(
-        "Completa los términos para leer la evolución.",
-        [
-          ["DOLAR", "Moneda adoptada por Ecuador en el año 2000."],
-          ["DESTINO", "Mercado hacia el que se dirige una exportación."],
-          [
-            "SERIE",
-            "Conjunto de observaciones comparables a través del tiempo.",
-          ],
-        ],
-        "Para estudiar evolución se necesitan series comparables y una interpretación que respete su cobertura.",
-      ),
-    ],
-  },
-  {
-    week: 5,
-    name: "Misión 05 · Elegir mercado con una matriz defendible",
-    objective:
-      "Comparar dos mercados ficticios mediante criterios económicos, legales, logísticos y culturales sin depender de estereotipos.",
-    context: `SIMULACIÓN EDUCATIVA · Comité de selección de mercado. Nordia y Costamar son países ficticios. Los puntajes, exigencias y observaciones siguientes se crean exclusivamente para practicar una decisión comparativa.
-
-Costa Cacao debe elegir dónde ensayar su primera venta de barras. El gerente prefiere Nordia porque recibió un mensaje entusiasta. La encargada de operaciones propone comparar evidencia antes de decidir. Tu equipo recibirá una matriz con cuatro criterios. Los puntajes van de 1 a 5: una puntuación mayor siempre indica mayor conveniencia para la cooperativa. Los pesos suman 100 %. No conviertas las preferencias personales del gerente en datos ni supongas que un país entero tiene una sola cultura.
-
-Matriz — margen estimado, peso 30 %: Nordia 4, Costamar 3. Facilidad de cumplir requisitos documentados, peso 25 %: Nordia 2, Costamar 5. Fiabilidad logística, peso 25 %: Nordia 5, Costamar 3. Adecuación de propuesta comercial a la investigación del cliente, peso 20 %: Nordia 3, Costamar 4. La puntuación ponderada se obtiene multiplicando cada puntaje por su peso decimal y sumando resultados. No sumes porcentajes como si fueran puntajes independientes.
-
-Notas del expediente: en Nordia el cliente pide rehacer etiqueta y demostrar conservación; en Costamar el borrador ya cumple la lista ficticia del taller. Los clientes de ambos mercados fueron entrevistados individualmente. La investigación de preferencias se refiere a esos compradores, no a toda la población. Como dimensión política, el comité revisará estabilidad de reglas y acceso a información; como dimensión económica, margen y capacidad de pago; como dimensión legal, requisitos y contratos; como dimensión cultural, idioma y expectativas comerciales verificadas.
-
-Una mayor puntuación no elimina la necesidad de verificar requisitos oficiales en una operación real. El orden acordado es fijar criterios y pesos antes de puntuar, comprobar la evidencia, calcular y realizar una revisión de riesgos antes de seleccionar. Si cambia un peso, la elección puede cambiar. La recomendación debe explicar ventajas y límites del método, en lugar de afirmar que un mercado «es el mejor del mundo».`,
-    references: [refs.itc, refs.pro],
-    questions: [
-      choice(
-        "¿Qué conclusión corresponde a los puntajes y pesos definidos?",
-        [
-          "Nordia gana porque tiene un criterio con 5.",
-          "Costamar obtiene 3,70 y supera a Nordia, que obtiene 3,55; la elección debe revisar riesgos.",
-          "Ambos empatan al sumar los pesos.",
-          "Se puede omitir el cumplimiento documental si el margen es alto.",
-        ],
-        1,
-        "Nordia: 4×0,30 + 2×0,25 + 5×0,25 + 3×0,20 = 3,55. Costamar: 3×0,30 + 5×0,25 + 3×0,25 + 4×0,20 = 3,70.",
-      ),
-      matching(
-        "Relaciona la dimensión con la investigación apropiada.",
-        [
-          [
-            "Política",
-            "Estabilidad de reglas y acceso a información institucional",
-          ],
-          ["Económica", "Margen previsto y capacidad de pago del cliente"],
-          ["Legal", "Requisitos documentados y condiciones contractuales"],
-          ["Cultural", "Idioma y expectativas verificadas del comprador"],
-        ],
-        "Una comparación útil usa evidencia concreta y evita convertir nacionalidades en estereotipos.",
-      ),
-      ordering(
-        "Ordena la metodología de selección acordada.",
-        [
-          "Fijar criterios y pesos antes de puntuar",
-          "Comprobar evidencia y asignar puntajes",
-          "Calcular resultados ponderados",
-          "Revisar riesgos y justificar la selección",
-        ],
-        "Establecer pesos después de ver el resultado permite manipular la elección.",
-      ),
-      numeric(
-        "Calcula la puntuación ponderada de Costamar en la escala de 1 a 5.",
-        3.7,
-        "puntos",
-        "3×0,30 + 5×0,25 + 3×0,25 + 4×0,20 = 0,90 + 1,25 + 0,75 + 0,80 = 3,70.",
-      ),
-      crossword(
-        "Resuelve los conceptos de la matriz.",
-        [
-          ["CRITERIO", "Aspecto definido para evaluar opciones."],
-          ["PESO", "Importancia relativa asignada a un criterio."],
-          [
-            "MARGEN",
-            "Diferencia económica esperada entre ingresos y costos considerados.",
-          ],
-        ],
-        "Explicitar criterios y pesos permite discutir la decisión y reproducir el cálculo.",
-      ),
-    ],
-  },
-  {
-    week: 6,
-    name: "Misión 06 · La negociación de los costos de oportunidad",
-    objective:
-      "Aplicar ventaja absoluta y comparativa y distinguirlas de explicaciones basadas en dotaciones de factores.",
-    context: `SIMULACIÓN EDUCATIVA · Laboratorio de dos economías. Ecuador-laboratorio y Nordia-laboratorio son modelos simplificados: los tiempos de producción NO son datos de países reales ni predicciones comerciales.
-
-Dos equipos disponen de horas de trabajo idénticas y pueden fabricar tabletas de chocolate o camisas. El modelo supone calidad equivalente, rendimientos constantes, ausencia de transporte y pleno uso del trabajo. Permite entender una teoría, pero no incorpora salarios, barreras, aprendizaje, ambiente ni todas las condiciones reales. Tu tarea es decidir la especialización usando costos de oportunidad; no basta mirar quién produce más rápido un solo bien.
-
-Tabla de trabajo por unidad: Ecuador-laboratorio necesita 6 horas por tableta y 3 horas por camisa; Nordia-laboratorio necesita 8 horas por tableta y 2 horas por camisa. Ventaja absoluta significa requerir menos recursos por unidad: Ecuador-laboratorio la tiene en chocolate y Nordia-laboratorio en camisas. Costo de oportunidad indica cuánto de otro bien se deja de producir. En Ecuador-laboratorio, 6 horas usadas en una tableta permiten fabricar 2 camisas. En Nordia-laboratorio, 8 horas usadas en una tableta permiten fabricar 4 camisas.
-
-Memo de negociación: la ventaja comparativa corresponde al menor costo de oportunidad. Si se acuerda intercambiar una tableta por 3 camisas, Ecuador-laboratorio obtiene más camisas que las 2 sacrificadas al fabricar una tableta; Nordia-laboratorio entrega 3 en vez de sacrificar 4 para fabricar su propia tableta. Ese rango ayuda a explicar ganancias posibles del intercambio en este modelo, sin asegurar cómo se distribuyen en la vida real.
-
-Tarjeta de factores: las teorías de dotaciones analizan recursos como trabajo, capital y tierra y la intensidad con que los utilizan los bienes. No deben confundirse con afirmar «el país con más personas siempre exporta todo». Secuencia solicitada: leer requerimientos físicos; calcular costos de oportunidad; identificar ventaja comparativa; evaluar un intercambio mutuamente conveniente. Mantén separadas las unidades: horas por tableta, camisas por tableta y precio de intercambio son medidas distintas.`,
-    references: [refs.wto, refs.itc],
-    questions: [
-      choice(
-        "En el modelo, ¿qué especialización se apoya en la ventaja comparativa?",
-        [
-          "Ecuador-laboratorio en camisas y Nordia-laboratorio en chocolate.",
-          "Ambos en chocolate porque tiene más horas.",
-          "Ecuador-laboratorio en chocolate y Nordia-laboratorio en camisas.",
-          "No hay ventaja comparativa porque ambos pueden fabricar ambos bienes.",
-        ],
-        2,
-        "Ecuador sacrifica 2 camisas por tableta y Nordia 4; Ecuador tiene menor costo de oportunidad del chocolate. Nordia tiene menor costo de oportunidad de camisas.",
-      ),
-      matching(
-        "Relaciona el concepto con la evidencia del laboratorio.",
-        [
-          [
-            "Ventaja absoluta en chocolate",
-            "6 horas frente a 8 horas por tableta",
-          ],
-          [
-            "Costo de oportunidad en Ecuador-laboratorio",
-            "2 camisas por tableta",
-          ],
-          [
-            "Costo de oportunidad en Nordia-laboratorio",
-            "4 camisas por tableta",
-          ],
-          [
-            "Dotación de factores",
-            "Disponibilidad relativa de trabajo, capital y tierra",
-          ],
-        ],
-        "Ventaja absoluta compara recursos por unidad; comparativa compara sacrificios relativos.",
-      ),
-      ordering(
-        "Ordena el razonamiento de la negociación.",
-        [
-          "Leer requerimientos de horas por bien",
-          "Calcular costos de oportunidad",
-          "Identificar la ventaja comparativa",
-          "Evaluar el intercambio de 1 tableta por 3 camisas",
-        ],
-        "Sin costos de oportunidad no se puede justificar la especialización comparativa.",
-      ),
-      numeric(
-        "¿Cuántas camisas deja de fabricar Nordia-laboratorio por producir una tableta de chocolate?",
-        4,
-        "camisas por tableta",
-        "8 horas por tableta ÷ 2 horas por camisa = 4 camisas.",
-      ),
-      crossword(
-        "Resuelve los términos de la teoría.",
-        [
-          [
-            "CAPITAL",
-            "Factor que incluye recursos productivos como maquinaria.",
-          ],
-          [
-            "TRABAJO",
-            "Factor asociado al esfuerzo humano usado en producción.",
-          ],
-          ["RELATIVO", "Carácter del costo que compara un bien con otro."],
-        ],
-        "Las teorías explican mecanismos distintos; una tabla de horas no describe todas las dotaciones o instituciones.",
-      ),
-    ],
-  },
-  {
-    week: 7,
-    name: "Misión 07 · Escala, diferenciación y una promesa verificable",
-    objective:
-      "Evaluar economías de escala y una propuesta de ventaja competitiva sin confundir tamaño, demanda y rentabilidad.",
-    context: `SIMULACIÓN EDUCATIVA · Comité de expansión de Costa Cacao. La función de costos, las solicitudes y los atributos comerciales son inventados. No representan precios ni competitividad real de una empresa ecuatoriana.
-
-La cooperativa recibe una consulta por barras de origen trazable. El gerente propone multiplicar producción por cuatro porque «si sale más barato, todo se venderá». Tu equipo debe diferenciar una reducción de costo medio de la existencia de compradores. Las nuevas teorías del comercio incorporan, entre otros mecanismos, economías de escala y diferenciación: intercambiar variedades puede tener sentido incluso entre economías parecidas. La ventaja competitiva también depende de capacidades, condiciones del entorno y decisiones sostenibles, no de un eslogan.
-
-Hoja de costos del mes: costo fijo USD 12.000; costo variable USD 6 por unidad. Costo total = 12.000 + 6 × Q. Costo medio = costo total ÷ Q. Capacidad máxima disponible: 4.000 unidades. Producción actual: 1.000 unidades. Pedido confirmado: 1.000 unidades. Las 3.000 adicionales son solo una posibilidad sin orden de compra. No hay costos de almacenaje incluidos en la hoja, por lo que el análisis no puede concluir rentabilidad neta completa de producir todo.
-
-Carpeta de diferenciación: registro de lotes que conecta proveedor y producto; pruebas internas de consistencia; diseño de etiqueta; propuesta de servicio de reposición. Un competidor vende otra presentación con un precio menor. El comité no dispone de una certificación externa de sostenibilidad y no puede anunciarla como existente. Debe distinguir atributos comprobados de aspiraciones. Reducir costo medio es una ventaja potencial; ofrecer calidad consistente y evidencia de trazabilidad puede generar valor diferente del precio.
-
-Ruta para decidir: calcular costo medio a ambas escalas; validar pedidos y financiación; comparar atributos verificables; aprobar una expansión gradual con indicadores. A 1.000 unidades el costo medio es 18 dólares; a 4.000 será menor, pero los ingresos de unidades no vendidas no existen. Tu recomendación debe expresar esa tensión y evitar sacrificar confianza comercial mediante afirmaciones no demostradas.`,
-    references: [refs.itc, refs.pro],
-    questions: [
-      choice(
-        "¿Qué recomendación utiliza correctamente la información?",
-        [
-          "Producir 4.000 y contabilizar como ingresos las unidades sin comprador.",
-          "Subir la escala sin revisar financiación porque el costo medio baja.",
-          "Validar demanda y financiación; aprovechar escala gradualmente y comunicar atributos comprobados.",
-          "Anunciar certificación externa porque se planea obtenerla.",
-        ],
-        2,
-        "Menor costo medio no prueba ventas ni rentabilidad final. La trazabilidad sí puede comunicarse si existe evidencia; una certificación inexistente no.",
-      ),
-      matching(
-        "Relaciona cada evidencia con el mecanismo que muestra.",
-        [
-          ["Costo fijo repartido entre más unidades", "Economía de escala"],
-          ["Presentación distinta con atributos relevantes", "Diferenciación"],
-          ["Registro que conecta proveedor y lote", "Trazabilidad verificable"],
-          [
-            "3.000 unidades sin orden de compra",
-            "Riesgo de demanda no confirmada",
-          ],
-        ],
-        "Escala y diferenciación pueden aportar ventajas, pero necesitan capacidad y demanda efectivas.",
-      ),
-      ordering(
-        "Ordena el proceso de aprobación de la expansión.",
-        [
-          "Calcular costo medio a las dos escalas",
-          "Validar pedidos y financiación",
-          "Comparar atributos verificables de la oferta",
-          "Aprobar expansión gradual con indicadores",
-        ],
-        "La expansión se sustenta en cálculos y evidencia, no únicamente en el deseo de producir más.",
-      ),
-      numeric(
-        "Calcula el costo medio si efectivamente se producen 4.000 unidades.",
-        9,
-        "USD por unidad",
-        "(12.000 + 6 × 4.000) ÷ 4.000 = 36.000 ÷ 4.000 = USD 9. Es costo productivo medio, no beneficio.",
-      ),
-      crossword(
-        "Completa los conceptos de la estrategia.",
-        [
-          [
-            "ESCALA",
-            "Tamaño productivo cuyo aumento puede repartir costos fijos.",
-          ],
-          [
-            "CALIDAD",
-            "Consistencia del producto respecto de características definidas.",
-          ],
-          [
-            "DEMANDA",
-            "Compras potenciales que deben validarse antes de expandir.",
-          ],
-        ],
-        "La ventaja competitiva combina capacidades y valor para el cliente con viabilidad comercial.",
-      ),
-    ],
-  },
-  {
-    week: 8,
-    name: "Misión 08 · El pedido urgente y la responsabilidad",
-    objective:
-      "Tomar una decisión comercial que integre evidencia laboral, afirmaciones ambientales y compromisos con el comprador.",
-    context: `SIMULACIÓN EDUCATIVA · Auditoría de un pedido urgente. La jornada, tarifas y documentos siguientes pertenecen a un reglamento ficticio del taller. No son una liquidación laboral válida para Ecuador ni sustituyen la normativa aplicable.
-
-Un comprador ofrece adelantar el pago si Costa Cacao entrega antes de lo previsto. El supervisor propone extender la jornada y usar un sello «100 % sostenible» en las cajas para mejorar imagen. La responsable de cumplimiento pide revisar los efectos sobre personas, costos y confianza. Ética comercial no consiste solo en cumplir una fecha; también exige que una afirmación publicitaria sea sustentable y que los acuerdos laborales se respeten.
-
-Registro A — plantilla: 42 personas; cada una trabajó 45 horas en la semana. Regla didáctica del taller: jornada ordinaria de 40 horas; tarifa ordinaria USD 4 por hora; cada hora adicional se remunera a 1,5 veces esa tarifa. Solo debes calcular el pago de las horas adicionales, no toda la nómina. El reloj de asistencia registra 5 horas extra por persona. La oficina de pagos había preparado USD 840 para esas horas, calculándolas al valor ordinario.
-
-Registro B — materiales: el proveedor de envases declara «reciclable según infraestructura disponible», pero no adjunta certificado de contenido reciclado ni un análisis de ciclo de vida. Registro C — trazabilidad: se pueden identificar proveedores y lotes, aunque faltan dos comprobantes de recepción. Registro D — comprador: permite ajustar plazo si se comunica el problema antes del despacho. Estos documentos no sustentan prometer que todo el producto es «100 % sostenible».
-
-Protocolo acordado: identificar brechas con evidencia; corregir pago y registros; negociar un plazo realista; comunicar atributos verificables y guardar respaldo. Una declaración propia, una certificación externa y una intención de mejora no son equivalentes. Transparencia implica reconocer lo que todavía falta, no esconderlo detrás de una etiqueta atractiva. Tu decisión debe considerar bienestar, coherencia documental y viabilidad del pedido. En una operación real, las obligaciones laborales y ambientales deben validarse con las autoridades y profesionales correspondientes.`,
-    references: [refs.ilo, refs.itc],
-    questions: [
-      choice(
-        "¿Qué comunicación al comprador se sustenta en el expediente?",
-        [
-          "Producto 100 % sostenible y certificado, sin excepciones.",
-          "Podemos demostrar parte de la trazabilidad y estamos cerrando dos registros; proponemos ajustar el plazo antes del despacho.",
-          "La intención de mejorar equivale a una certificación externa.",
-          "No informar las brechas mientras el comprador no pregunte.",
-        ],
-        1,
-        "La propuesta reconoce capacidades y límites reales del expediente y utiliza la posibilidad de renegociación.",
-      ),
-      matching(
-        "Relaciona la evidencia con lo que permite afirmar.",
-        [
-          [
-            "Reloj con 45 horas",
-            "5 horas adicionales por persona bajo la regla ficticia",
-          ],
-          [
-            "Declaración de reciclabilidad",
-            "Atributo condicionado a infraestructura disponible",
-          ],
-          [
-            "Dos recepciones sin comprobante",
-            "Brecha de trazabilidad pendiente",
-          ],
-          [
-            "Permiso de ajustar plazo",
-            "Oportunidad de negociar antes del despacho",
-          ],
-        ],
-        "Las afirmaciones deben conservar las condiciones y el alcance de cada prueba.",
-      ),
-      ordering(
-        "Ordena el protocolo responsable antes de entregar.",
-        [
-          "Identificar brechas con evidencia",
-          "Corregir pago y registros pendientes",
-          "Negociar un plazo realista con el comprador",
-          "Comunicar atributos verificables y conservar respaldo",
-        ],
-        "Corregir y transparentar los problemas protege a las personas y la confianza comercial.",
-      ),
-      numeric(
-        "Según la regla ficticia, ¿cuánto corresponde pagar en total por las horas adicionales de las 42 personas?",
-        1260,
-        "USD",
-        "42 × (45 − 40) × (4 × 1,5) = 42 × 5 × 6 = USD 1.260. No incluye salario ordinario ni es asesoría laboral.",
-      ),
-      crossword(
-        "Resuelve el vocabulario de responsabilidad.",
-        [
-          [
-            "ETICA",
-            "Análisis de decisiones y deberes hacia las personas y el entorno.",
-          ],
-          [
-            "EVIDENCIA",
-            "Respaldo necesario para sostener una afirmación comercial.",
-          ],
-          ["RESPETO", "Trato debido a personas y compromisos en la operación."],
-        ],
-        "Una promesa atractiva pierde valor si no se respalda o se consigue incumpliendo compromisos.",
-      ),
-    ],
-  },
-  {
-    week: 9,
-    name: "Misión 09 · Una barra y su red internacional",
-    objective:
-      "Reconocer interdependencias globales y diferenciar tendencias internacionales de acciones concretas de una empresa.",
-    context: `SIMULACIÓN EDUCATIVA · Mapa de una cadena de valor. Países, proveedores, costos y acuerdos de este caso son ficticios. El expediente sirve para representar interdependencias, no para describir la cadena real de un producto comercial.
-
-Una barra fabricada por Costa Cacao utiliza cacao local, un envase importado y un diseño encargado a una profesional de otro país. Se vende mediante una tienda extranjera, que paga usando un servicio financiero internacional. La etiqueta «hecho en Ecuador» no implica que cada insumo, servicio o decisión se origine en el mismo territorio. Tu equipo debe dibujar la red y explicar qué actividades dependen de otras antes de recomendar una expansión.
-
-Ficha de costo por barra, en USD: cacao y transformación local 50; envase comprado a proveedor extranjero 30; diseño y servicios contratados en el extranjero 10; gestión local 10. Total considerado: 100. Para la pregunta numérica cuenta solo el envase como mercancía importada; el diseño es un servicio y no debe sumarse a ese porcentaje. El proveedor de envases tarda 20 días y no tiene sustituto aprobado. La tienda extranjera quiere pedidos cada 15 días, por lo que el equipo debe planificar inventario o desarrollar alternativas.
-
-Guía conceptual del taller: globalización describe el crecimiento de conexiones e interdependencias económicas y de otros ámbitos; mundialización suele utilizarse como término próximo, aunque su enfoque cambia entre autores. No se evalúa una separación rígida universal entre ambos. Internacionalización empresarial se refiere a decisiones concretas de operar, comprar, vender o establecer vínculos fuera del mercado doméstico. Una orden de compra de envases es una acción empresarial; la expansión general de cadenas y redes es una tendencia de mayor alcance.
-
-Notas de riesgo: una interrupción del proveedor de envases puede impedir usar cacao disponible; un fallo de comunicación puede retrasar el diseño; una demora en pago puede tensionar caja. La ruta de preparación es mapear eslabones; identificar dependencias críticas; validar alternativas e inventario; negociar un calendario coherente. El objetivo no es rechazar toda conexión exterior, sino decidir con información y reconocer que una cadena internacional necesita coordinación.`,
-    references: [refs.wto, refs.itc],
-    questions: [
-      choice(
-        "¿Cuál distingue correctamente tendencia y decisión empresarial?",
-        [
-          "Comprar envases extranjeros es una acción de internacionalización; la extensión de redes es una tendencia de globalización.",
-          "Globalización solo significa tener una cuenta de correo.",
-          "Mundialización y globalización tienen una separación rígida aceptada por todos los autores.",
-          "Fabricar localmente impide tener interdependencias internacionales.",
-        ],
-        0,
-        "La compra exterior es una acción de la empresa dentro de conexiones más amplias. Los términos globalización y mundialización varían según el marco académico.",
-      ),
-      matching(
-        "Ubica cada eslabón en el mapa.",
-        [
-          ["Cacao y transformación", "Actividad local de producción"],
-          [
-            "Envase del extranjero",
-            "Mercancía importada y dependencia de proveedor",
-          ],
-          ["Diseño desde otro país", "Servicio contratado internacionalmente"],
-          ["Tienda extranjera", "Canal comercial en el mercado de destino"],
-        ],
-        "Una cadena incluye bienes y servicios; ambos pueden conectar varios territorios.",
-      ),
-      ordering(
-        "Organiza la preparación antes de aceptar entregas cada 15 días.",
-        [
-          "Mapear los eslabones de la cadena",
-          "Identificar dependencias críticas y plazos",
-          "Validar alternativas e inventario",
-          "Negociar un calendario coherente",
-        ],
-        "El plazo del envase debe coordinarse con producción y entregas; no se resuelve ignorando la dependencia.",
-      ),
-      numeric(
-        "¿Qué porcentaje del costo considerado corresponde exclusivamente al envase como mercancía importada?",
-        30,
-        "%",
-        "30 ÷ 100 × 100 = 30 %. El servicio de diseño internacional no se cuenta como mercancía importada en esta pregunta.",
-      ),
-      crossword(
-        "Completa los términos de la cadena.",
-        [
-          ["RED", "Conjunto de vínculos entre actores de varios territorios."],
-          ["INSUMO", "Bien utilizado para producir o presentar otro producto."],
-          [
-            "SERVICIO",
-            "Prestación como diseño que puede contratarse a través de fronteras.",
-          ],
-        ],
-        "Mapear los vínculos permite identificar interdependencias y decisiones que la empresa puede gestionar.",
-      ),
-    ],
-  },
-  {
-    week: 10,
-    name: "Misión 10 · La consulta enviada a la institución equivocada",
-    objective:
-      "Asignar funciones a instituciones internacionales y nacionales y construir una consulta comercial bien fundamentada.",
-    context: `SIMULACIÓN EDUCATIVA · Mesa de orientación comercial. Los correos y necesidades del expediente son inventados. Los nombres institucionales corresponden a entidades reales; sus enlaces son material de consulta complementario y no autorizaciones para este envío ficticio.
-
-La asistente de Costa Cacao redactó un mensaje a la OMC: «Por favor, aprueben nuestra factura y reserven un barco». El coordinador explica que reunir instituciones en una lista no permite saber qué hace cada una. Tu equipo debe convertir cinco solicitudes confusas en consultas dirigidas al actor adecuado. Diferencia una organización que administra un marco de reglas entre sus miembros de una autoridad aduanera o un proveedor privado de transporte.
-
-Carpeta de necesidades: A, entender el marco multilateral de comercio y las funciones de la OMC; B, obtener orientación de promoción exportadora y acceso a recursos sobre mercados; C, consultar procedimientos aduaneros ecuatorianos; D, encontrar formación y herramientas para pequeñas empresas que participan en comercio; E, entender la distribución de obligaciones bajo reglas Incoterms. Ninguna solicitud incluye una controversia estatal formal ni pide asesoría para un litigio específico.
-
-Fichas institucionales: OMC es un foro de acuerdos y reglas comerciales entre miembros, con funciones de negociación, seguimiento y solución de diferencias dentro de su marco; no valida facturas privadas ni reserva transporte. PRO ECUADOR facilita promoción exportadora y recursos de internacionalización. SENAE es la autoridad aduanera ecuatoriana. El Centro de Comercio Internacional, ITC, ofrece asistencia y recursos vinculados al desarrollo comercial. La Cámara de Comercio Internacional, ICC, publica reglas Incoterms; no es una autoridad aduanera estatal. Una naviera o un operador logístico presta servicios de traslado, una función comercial distinta.
-
-Protocolo de consulta: describir producto, origen y destino; separar la pregunta institucional de la operativa; ubicar una fuente oficial; verificar fecha y alcance antes de tomar una decisión. Si una página ofrece información general, eso no demuestra que se cumplió un requisito de un producto concreto. Una buena consulta necesita contexto suficiente, pero no debe enviar datos personales innecesarios ni confundir recomendaciones promocionales con permisos obligatorios.`,
-    references: [refs.wto, refs.itc, refs.pro, refs.senae, refs.icc],
-    questions: [
-      choice(
-        "¿Cómo debería corregirse el correo inicial a la OMC?",
-        [
-          "Pedir a la OMC que cambie la etiqueta y cobre el pedido.",
-          "Separar funciones: consultar marco multilateral en OMC, procedimientos en SENAE y transporte con un proveedor logístico.",
-          "Mandar la misma petición a todas las instituciones sin contexto.",
-          "Suponer que orientación promocional equivale a despacho aduanero aprobado.",
-        ],
-        1,
-        "La institución debe corresponder a la función requerida; la OMC no ejecuta tareas comerciales privadas ni valida esa factura.",
-      ),
-      matching(
-        "Asigna cada entidad a su función.",
-        [
-          ["OMC", "Marco multilateral de acuerdos y reglas comerciales"],
-          ["PRO ECUADOR", "Orientación y promoción exportadora"],
-          ["SENAE", "Procedimientos y control aduanero ecuatoriano"],
-          ["ITC", "Recursos y asistencia para desarrollo comercial"],
-          ["ICC", "Publicación de reglas Incoterms"],
-        ],
-        "Funciones complementarias no significan autoridades intercambiables.",
-      ),
-      ordering(
-        "Ordena el protocolo para hacer una consulta útil.",
-        [
-          "Describir producto, origen y destino",
-          "Separar pregunta institucional de operativa",
-          "Ubicar una fuente oficial competente",
-          "Verificar fecha y alcance antes de decidir",
-        ],
-        "La información precisa permite identificar la autoridad y el material aplicables.",
-      ),
-      choice(
-        "¿Qué demuestra una guía general encontrada en un sitio oficial?",
-        [
-          "Que el embarque privado ya fue autorizado.",
-          "Que no es necesario revisar el producto o destino.",
-          "Que existe orientación cuyo alcance y aplicabilidad deben verificarse.",
-          "Que el vendedor puede omitir documentos.",
-        ],
-        2,
-        "Un recurso general ayuda a orientarse, pero no reemplaza la verificación de requisitos concretos.",
-      ),
-      crossword(
-        "Identifica tres siglas de la mesa institucional.",
-        [
-          [
-            "OMC",
-            "Organización que reúne reglas y acuerdos comerciales multilaterales.",
-          ],
-          ["ITC", "Sigla del Centro de Comercio Internacional."],
-          ["ICC", "Sigla de la Cámara de Comercio Internacional."],
-        ],
-        "Las siglas se vuelven útiles cuando puedes asociarlas con funciones y límites.",
-      ),
-    ],
-  },
-  {
-    week: 11,
-    name: "Misión 11 · El margen que cambió antes de cobrar",
-    objective:
-      "Analizar riesgos cambiarios, logísticos y regulatorios mediante un expediente de escenarios, distinguiendo hechos y probabilidades.",
-    context: `SIMULACIÓN EDUCATIVA · Reunión de riesgos de un cobro internacional. Tipos de cambio, probabilidades y costos son supuestos didácticos, no cotizaciones, pronósticos ni recomendaciones financieras reales.
-
-Costa Cacao pactó cobrar EUR 5.000 después de entregar un lote. Sus costos se pagan en dólares. Al elaborar presupuesto se usó USD 1,10 por euro; antes del cobro el tipo hipotético es USD 1,05 por euro. Tu equipo debe explicar por qué la cantidad de euros no cambió, pero sí el ingreso convertido a dólares. Este riesgo es diferente de que un cliente no pague y de que el transporte se retrase. Separarlos permite elegir acciones de prevención pertinentes.
-
-Escenario cambiario: con la tasa presupuestada, 5.000 × 1,10 = USD 5.500; con la tasa nueva, 5.000 × 1,05 = USD 5.250. La comparación supone conversión de la totalidad al mismo tipo, sin comisiones. El expediente no especifica un producto de cobertura ni autoriza contratarlo. Una alternativa de gestión es negociar moneda de facturación o planificar escenarios, verificando costos y condiciones.
-
-Escenario logístico: una tabla del taller asigna 60 % de probabilidad a entrega sin gasto adicional; 25 % a retraso con gasto de USD 400; 15 % a retraso con gasto de USD 1.000. Las probabilidades suman 100 %. El costo adicional esperado es la suma de cada costo por su probabilidad, no el máximo gasto ni una certeza. Escenario regulatorio: el comprador comunica que estudia un cambio de etiquetado, pero todavía no hay norma publicada. Debe registrarse como señal por verificar en una fuente oficial, no como obligación confirmada.
-
-Protocolo de decisión: identificar exposición; medir impacto; seleccionar respuesta viable; monitorear evidencia. Respuestas posibles incluyen diversificar proveedores, dejar holgura logística o negociar condiciones de cobro. El informe debe conservar el carácter condicional de los escenarios y comparar acciones con el riesgo que atienden. Un porcentaje sin fuente o una comunicación informal no puede convertirse silenciosamente en hecho.`,
-    references: [refs.bce, refs.pro],
-    questions: [
-      choice(
-        "¿Qué interpretación del cobro es correcta?",
-        [
-          "El ingreso en USD aumenta porque el euro pasa de 1,10 a 1,05.",
-          "Se cobrarán menos euros automáticamente.",
-          "Con EUR 5.000 constantes, el ingreso convertido cae USD 250, antes de comisiones.",
-          "No existe riesgo cambiario en operaciones de Ecuador.",
-        ],
-        2,
-        "USD 5.500 − USD 5.250 = USD 250 menos. Que Ecuador use dólares no elimina exposición cuando se cobra en otra moneda.",
-      ),
-      matching(
-        "Relaciona cada señal con el riesgo pertinente.",
-        [
-          ["Tipo de cambio del cobro en euros", "Riesgo cambiario"],
-          ["Demora del traslado con gasto adicional", "Riesgo logístico"],
-          [
-            "Cliente que no paga lo pactado",
-            "Riesgo de crédito o incumplimiento",
-          ],
-          [
-            "Posible cambio de etiqueta no publicado",
-            "Señal regulatoria pendiente de verificación",
-          ],
-        ],
-        "No todas las pérdidas posibles tienen la misma causa ni requieren la misma respuesta.",
-      ),
-      ordering(
-        "Ordena el protocolo de gestión de riesgos.",
-        [
-          "Identificar la exposición",
-          "Medir el impacto de los escenarios",
-          "Seleccionar una respuesta viable",
-          "Monitorear evidencia y actualizar escenarios",
-        ],
-        "Una respuesta concreta debe dirigirse a una exposición que se identificó y se pudo evaluar.",
-      ),
-      numeric(
-        "¿Cuál es el costo logístico adicional esperado según la tabla didáctica?",
-        250,
-        "USD",
-        "0,60×0 + 0,25×400 + 0,15×1.000 = 0 + 100 + 150 = USD 250. Es un promedio ponderado, no un gasto seguro.",
-      ),
-      crossword(
-        "Completa los términos del análisis.",
-        [
-          ["RIESGO", "Posibilidad de un resultado adverso bajo incertidumbre."],
-          ["CAMBIO", "En «tipo de …», relación entre monedas."],
-          [
-            "ESCENARIO",
-            "Conjunto explícito de supuestos usado para evaluar consecuencias.",
-          ],
-        ],
-        "Declarar supuestos evita presentar un ejercicio de escenarios como una predicción exacta.",
-      ),
-    ],
-  },
-  {
-    week: 12,
-    name: "Misión 12 · Un Incoterm no es un seguro contra todo",
-    objective:
-      "Elegir una ruta viable y distinguir gastos, riesgos y obligaciones básicas bajo reglas Incoterms.",
-    context: `SIMULACIÓN EDUCATIVA · Mesa logística de un lote no perecedero. Precios, tiempos, puertos y contrato son supuestos del taller. Las explicaciones se refieren a reglas Incoterms® 2020 y no reemplazan asesoría contractual ni requisitos reales.
-
-Costa Cacao despachará un lote con valor base FOB hipotético de USD 24.000. La mercancía tolera 60 días de tránsito y gestión. El comprador necesita entrega dentro de 35 días. Ruta marítima del ejercicio: 25 días de transporte más 5 días de gestión; costo de flete USD 1.500 y seguro USD 120. Ruta aérea: 3 días más 5 de gestión; costo de flete USD 10.800. El presupuesto de flete admite hasta USD 4.500. No se añaden a estos datos otros cargos. Los números sirven para comparar rutas bajo los supuestos, no para reservar transporte.
-
-Guía contractual: las reglas Incoterms distribuyen ciertas obligaciones, costos y riesgo entre comprador y vendedor; no resuelven por sí solas propiedad, forma de pago ni todos los incumplimientos. FOB y CIF se utilizan para transporte marítimo o por vías navegables interiores. En FOB el vendedor entrega cuando la mercancía está a bordo del buque designado en el puerto de embarque y allí se transfiere riesgo. En CIF también se transfiere riesgo a bordo en origen, aunque el vendedor contrata y paga flete y seguro hasta destino conforme a la regla.
-
-Para mercancía en contenedor entregada a un transportista antes de subir al buque, FCA puede describir mejor el punto de entrega. DAP implica entrega a disposición del comprador en el lugar convenido, lista para descargar; el despacho de importación corresponde al comprador. El lugar designado y la versión deben expresarse en contrato. No es correcto decir «CIF mantiene todo riesgo en el vendedor hasta destino» solo porque paga el flete.
-
-Secuencia de diseño: comprobar plazo y presupuesto; elegir modalidad; acordar punto y obligaciones; verificar documentos y contrato. En la cotización simplificada del ejercicio, pasar de la base FOB a CIF añade flete y seguro indicados. Tu propuesta debe explicar tanto viabilidad de ruta como transferencia de riesgo.`,
-    references: [refs.icc, refs.senae],
-    questions: [
-      choice(
-        "¿Qué propuesta cumple los supuestos sin interpretar mal CIF?",
-        [
-          "Usar vía aérea porque cabe en USD 4.500.",
-          "La vía marítima tarda 30 días y cabe en presupuesto; bajo CIF el riesgo se transfiere a bordo en origen.",
-          "CIF implica que el vendedor asume siempre el riesgo hasta la bodega final.",
-          "FOB puede aplicarse indistintamente a cualquier viaje aéreo.",
-        ],
-        1,
-        "25 + 5 = 30 días; el flete USD 1.500 cabe en USD 4.500. En CIF pagar transporte hasta destino no desplaza la transferencia de riesgo a destino.",
-      ),
-      matching(
-        "Relaciona cada regla o concepto con su descripción básica.",
-        [
-          ["FOB", "Entrega a bordo en origen en transporte marítimo o fluvial"],
-          ["CIF", "Riesgo a bordo en origen; vendedor contrata flete y seguro"],
-          ["FCA", "Entrega al transportista en el lugar convenido"],
-          [
-            "DAP",
-            "Entrega lista para descargar; comprador gestiona importación",
-          ],
-        ],
-        "Los detalles del lugar de entrega y la versión acordada son esenciales; costos y riesgo no son lo mismo.",
-      ),
-      ordering(
-        "Ordena el diseño logístico del expediente.",
-        [
-          "Comprobar plazo y presupuesto",
-          "Elegir modalidad y ruta viable",
-          "Acordar punto de entrega y obligaciones",
-          "Verificar documentos y contrato",
-        ],
-        "La regla debe describir la operación elegida y el punto real de entrega.",
-      ),
-      numeric(
-        "En la cotización simplificada, ¿cuál es el valor CIF al añadir los únicos flete y seguro indicados a USD 24.000?",
-        25620,
-        "USD",
-        "24.000 + 1.500 + 120 = USD 25.620. Es una cotización didáctica con los costos expresamente incluidos.",
-      ),
-      crossword(
-        "Resuelve los términos logísticos.",
-        [
-          ["FLETE", "Precio del transporte de la mercancía."],
-          [
-            "RIESGO",
-            "Posibilidad de pérdida o daño cuya distribución se acuerda.",
-          ],
-          ["SEGURO", "Cobertura contratada bajo condiciones y límites."],
-        ],
-        "Que una parte pague flete o seguro no significa que conserve el riesgo durante todo el viaje.",
-      ),
-    ],
-  },
-  {
-    week: 13,
-    name: "Misión 13 · La ficha normativa antes de cotizar",
-    objective:
-      "Diferenciar política comercial, control aduanero y controles sectoriales, y calcular un arancel puramente didáctico.",
-    context: `SIMULACIÓN EDUCATIVA · Expediente de revisión normativa. El gravamen, el listado documental y el destino de este taller son ficticios. No son tarifas vigentes ni una guía legal para importar o exportar un producto real.
-
-Costa Cacao consulta una captura antigua que afirma: «todo chocolate paga 8 %». La analista propone dejar de usarla como regla universal. El tratamiento depende, entre otros aspectos, de clasificación, régimen, origen, destino, normativa y fecha. La política comercial fija orientaciones e instrumentos; la autoridad aduanera aplica procedimientos y controles dentro de su competencia; otras entidades pueden intervenir según el producto. Tu misión consiste en preparar una ficha con fuentes, responsables y límites antes de fijar un precio final.
-
-Listado didáctico del comprador: factura coherente, lista de empaque y evidencia de origen cuando se solicite en el contrato del taller. Este listado no reemplaza requisitos oficiales. Fichas institucionales: SENAE atiende procedimientos y control aduanero; PRO ECUADOR proporciona orientación de promoción exportadora; Agrocalidad ejerce competencias fito y zoosanitarias. Los alimentos procesados y otros bienes regulados pueden exigir revisión de autoridades sanitarias competentes según producto y jurisdicción. No se debe pedir el mismo certificado para todas las mercancías por suponer que cualquier alimento está sujeto a idéntico control.
-
-Hoja de cálculo ficticia: base aduanera acordada para la pregunta USD 10.000; arancel ad valorem didáctico 8 %; se excluyen de este cálculo IVA, tasas y otros tributos. «Ad valorem» significa calculado como porcentaje del valor de la base definida. Esta hoja no determina la base real de una operación ni afirma que el chocolate tenga esa tasa. Tampoco una preferencia por origen se aplica solo porque el vendedor la mencione: debe verificarse elegibilidad y respaldo.
-
-Ruta de validación: identificar producto y características; comprobar clasificación y régimen con fuentes oficiales; verificar medidas, origen y vigencia; documentar condiciones en la cotización. Tu informe debe marcar cada dato como confirmado, supuesto o pendiente. La fecha de una captura y la presencia de un logotipo no aseguran vigencia. Guardar un enlace y su alcance ayuda a justificar la decisión sin prometer un permiso inexistente.`,
-    references: [refs.senae, refs.pro, refs.agro],
-    questions: [
-      choice(
-        "¿Qué tratamiento merece la captura «todo chocolate paga 8 %»?",
-        [
-          "Aplicarla a cualquier producto y país porque incluye un porcentaje.",
-          "Usarla como regla oficial permanente.",
-          "Verificar clasificación, régimen, origen, destino y vigencia; el 8 % del taller es solo un supuesto.",
-          "Ignorar todos los tributos porque se trata de una exportación.",
-        ],
-        2,
-        "Un porcentaje aislado no prueba el tratamiento aplicable; el ejercicio distingue su cálculo ficticio de la verificación normativa real.",
-      ),
-      matching(
-        "Relaciona cada función con el actor o instrumento adecuado.",
-        [
-          [
-            "SENAE",
-            "Procedimientos y control aduanero dentro de su competencia",
-          ],
-          ["PRO ECUADOR", "Orientación de promoción exportadora"],
-          ["Agrocalidad", "Competencias fito y zoosanitarias según producto"],
-          [
-            "Arancel ad valorem",
-            "Porcentaje aplicado a una base de valor definida",
-          ],
-        ],
-        "Control, orientación y cálculo tributario son funciones distintas.",
-      ),
-      ordering(
-        "Ordena la validación antes de fijar condiciones definitivas.",
-        [
-          "Identificar producto y características",
-          "Comprobar clasificación y régimen",
-          "Verificar medidas, origen y vigencia",
-          "Documentar condiciones y pendientes en la cotización",
-        ],
-        "Una norma solo puede evaluarse correctamente cuando se identifica la mercancía y la operación.",
-      ),
-      numeric(
-        "Calcula únicamente el arancel didáctico del 8 % sobre la base ficticia de USD 10.000.",
-        800,
-        "USD",
-        "10.000 × 0,08 = USD 800. Se excluyen otros tributos y no es una tasa real del producto.",
-      ),
-      crossword(
-        "Completa los términos normativos.",
-        [
-          ["NORMA", "Disposición cuya vigencia y alcance deben comprobarse."],
-          [
-            "ARANCEL",
-            "Gravamen asociado a mercancías bajo condiciones aplicables.",
-          ],
-          [
-            "REGIMEN",
-            "Tratamiento aduanero bajo el cual se presenta una operación.",
-          ],
-        ],
-        "La ficha normativa convierte una intuición en requisitos y supuestos trazables.",
-      ),
-    ],
-  },
-  {
-    week: 14,
-    name: "Misión 14 · El intercambio que también necesita documentos",
-    objective:
-      "Analizar exportación, importación e intercambio compensado y reconciliar un acuerdo con componente de pago monetario.",
-    context: `SIMULACIÓN EDUCATIVA · Negociación de mercancía por maquinaria. Partes, valores y condiciones fueron inventados. No se presentan como un contrato real ni como exención de obligaciones comerciales, fiscales o aduaneras.
-
-Costa Cacao quiere adquirir una máquina de empaque de un fabricante de Nordia. Este acepta recibir cacao como parte del pago. El gerente cree que, al intercambiar bienes, «ya no hay importación, exportación ni documentación». Tu equipo debe demostrar por qué la forma de pago no elimina los movimientos transfronterizos ni la necesidad de valorar las prestaciones. Hay una operación de salida del cacao y otra de entrada de la máquina, aunque estén vinculadas por el mismo acuerdo.
-
-Propuesta del taller: Costa Cacao entrega 1.500 kilogramos de cacao valorados contractualmente a USD 8 por kilogramo; el fabricante entrega una máquina valorada a USD 15.000. La diferencia se pagará en dólares. Para esta conciliación no se incorporan transporte, seguros, tributos ni comisiones; se registran como pendientes de negociación y pueden afectar el costo real final. Valorar la mercancía en el contrato permite calcular el componente monetario sin asumir que ambos bienes tienen el mismo valor.
-
-Carpeta documental: descripción y valor de cada prestación; identificación de las partes; documentos de salida y entrada pertinentes; pruebas de entrega; comprobante del pago complementario. El acuerdo debe establecer calidad, lugar, plazo, responsabilidades, cómo se resolverían discrepancias y qué ocurre si solo una parte entrega. «Intercambio compensado» abarca acuerdos que vinculan prestaciones o compras y no significa automáticamente ausencia total de dinero. En este ejemplo existe una compensación parcial con saldo monetario.
-
-Memo de riesgos: la máquina puede llegar después de que salga el cacao; el precio asignado puede diferir de otras ofertas; la garantía debe revisarse; las normas aplicables no desaparecen porque se llame trueque. Ruta de trabajo: valorar las dos prestaciones; calcular diferencia; acordar obligaciones y documentos; ejecutar y conciliar ambas entregas. La recomendación debe separar el valor compensado del dinero que falta y no confundir una menor necesidad de efectivo con una operación gratis.`,
-    references: [refs.senae, refs.itc],
-    questions: [
-      choice(
-        "¿Cuál describe el acuerdo sin ocultar obligaciones?",
-        [
-          "No hay comercio exterior porque parte del pago es cacao.",
-          "Se vinculan una exportación y una importación; la compensación parcial no elimina documentación y deja un saldo en dinero.",
-          "Ambos valores deben igualarse aunque cambien cantidades.",
-          "El trueque elimina automáticamente tributos y garantías.",
-        ],
-        1,
-        "La forma de pago no borra movimientos, valoración ni obligaciones aplicables; aquí USD 12.000 de cacao cubren parte de una máquina de USD 15.000.",
-      ),
-      matching(
-        "Relaciona cada elemento con su papel en el acuerdo.",
-        [
-          ["Cacao que sale de Ecuador", "Prestación exportada de Costa Cacao"],
-          [
-            "Máquina que entra a Ecuador",
-            "Prestación importada por Costa Cacao",
-          ],
-          [
-            "Valor de cacao de USD 12.000",
-            "Parte compensada del precio de la máquina",
-          ],
-          ["Diferencia en dólares", "Pago monetario complementario"],
-        ],
-        "Las dos prestaciones deben poder identificarse y conciliarse por separado.",
-      ),
-      ordering(
-        "Ordena la preparación y cierre del intercambio.",
-        [
-          "Valorar las dos prestaciones",
-          "Calcular el saldo monetario",
-          "Acordar obligaciones y documentos",
-          "Ejecutar y conciliar ambas entregas",
-        ],
-        "Conocer cantidades y valores permite negociar responsabilidades y verificar el cierre.",
-      ),
-      numeric(
-        "¿Qué saldo monetario debe pagar Costa Cacao bajo los valores del taller?",
-        3000,
-        "USD",
-        "Cacao: 1.500 × 8 = USD 12.000. Máquina: USD 15.000. Diferencia: 15.000 − 12.000 = USD 3.000.",
-      ),
-      crossword(
-        "Completa el vocabulario del intercambio.",
-        [
-          ["SALDO", "Diferencia pendiente después de compensar prestaciones."],
-          [
-            "GARANTIA",
-            "Compromiso cuyo alcance debe revisarse al comprar la máquina.",
-          ],
-          ["VALOR", "Magnitud monetaria asignada a cada prestación."],
-        ],
-        "La compensación exige valoración, condiciones verificables y conciliación, aunque reduzca pagos en dinero.",
-      ),
-    ],
-  },
-  {
-    week: 15,
-    name: "Misión 15 · La balanza que no termina en mercancías",
-    objective:
-      "Interpretar una cuenta corriente simplificada y distinguir bienes, servicios, renta y transferencias de financiación.",
-    context: `SIMULACIÓN EDUCATIVA · Laboratorio de balanza de pagos. Las cifras siguientes se expresan en millones de USD y pertenecen a una economía ficticia. NO son datos del Ecuador. Para analizar Ecuador deben utilizarse estadísticas y notas metodológicas del Banco Central.
-
-Una presentadora dice: «Las importaciones superan exportaciones, así que toda la balanza de pagos tiene ese mismo déficit». Tu equipo debe revisar la afirmación. La balanza de pagos registra transacciones entre residentes y no residentes durante un período. La cuenta corriente incluye bienes, servicios, ingreso primario e ingreso secundario. Una exportación de bienes no es una remesa; un préstamo externo no se convierte en ingreso corriente por entrar dinero a una cuenta bancaria.
-
-Tabla del trimestre ficticio: bienes, créditos por exportaciones 800 y débitos por importaciones 950; servicios, créditos 180 y débitos 110; ingreso primario, créditos 30 y débitos 50; ingreso secundario, créditos 90 y débitos 10. En este laboratorio, saldo de cada componente = créditos − débitos. El ingreso primario puede incluir remuneraciones e ingresos de inversión; las transferencias personales se registran en ingreso secundario según su naturaleza. No se clasifica una transacción solo por la forma bancaria del pago.
-
-Cuenta de capital simplificada: saldo positivo de 5. Para la discusión de financiación se supone ausencia de errores y omisiones. La cuenta corriente sumada a capital indica capacidad o necesidad de financiación. Un resultado de −15 señala necesidad de financiación neta por 15 bajo estos supuestos. Si se muestra la cuenta financiera con la convención «adquisición neta de activos menos pasivos», el saldo sería −15, no +15. Este ejercicio evita mezclar convenciones de signo y no desglosa activos, pasivos o reservas.
-
-Ruta de resolución: clasificar transacciones; calcular cada saldo; sumar cuenta corriente; incorporar capital e interpretar la financiación. Un déficit corriente no equivale por sí solo a insolvencia ni un superávit prueba bienestar para todos. El informe debe mencionar cobertura, unidades, supuestos y límites antes de formular conclusiones de política.`,
-    references: [refs.bce],
-    questions: [
-      choice(
-        "¿Dónde se clasifica un nuevo préstamo recibido de un acreedor no residente?",
-        [
-          "Exportación de servicios porque entra dinero.",
-          "Ingreso secundario como toda transferencia bancaria.",
-          "Cuenta financiera como aumento de un pasivo, según el registro correspondiente.",
-          "Exportación de bienes aunque no haya mercancía.",
-        ],
-        2,
-        "Un préstamo genera una obligación financiera; no se convierte en ingreso corriente por su canal de pago.",
-      ),
-      matching(
-        "Relaciona cada transacción con el componente apropiado.",
-        [
-          [
-            "Venta de mercancía a no residente",
-            "Bienes de la cuenta corriente",
-          ],
-          [
-            "Servicio prestado a no residente",
-            "Servicios de la cuenta corriente",
-          ],
-          ["Renta de inversión", "Ingreso primario"],
-          ["Transferencia personal sin contraprestación", "Ingreso secundario"],
-        ],
-        "La naturaleza económica define la clasificación; movimiento bancario no significa categoría única.",
-      ),
-      ordering(
-        "Ordena la resolución de la tabla.",
-        [
-          "Clasificar las transacciones",
-          "Calcular créditos menos débitos por componente",
-          "Sumar los cuatro saldos de cuenta corriente",
-          "Incorporar capital e interpretar financiación",
-        ],
-        "Primero se obtiene corriente y después se analiza su relación con capital y financiación.",
-      ),
-      numeric(
-        "¿Cuál es el saldo total de la cuenta corriente ficticia?",
-        -20,
-        "millones de USD",
-        "Bienes −150; servicios +70; primario −20; secundario +80. Suma: −150 + 70 − 20 + 80 = −20.",
-      ),
-      crossword(
-        "Completa los términos de la balanza.",
-        [
-          [
-            "CORRIENTE",
-            "Cuenta que reúne bienes, servicios e ingresos primario y secundario.",
-          ],
-          [
-            "REMESA",
-            "Envío personal que puede formar parte del ingreso secundario según su naturaleza.",
-          ],
-          ["PASIVO", "Obligación financiera, como un préstamo recibido."],
-        ],
-        "Interpretar una balanza exige comprender naturaleza y signos de las transacciones, no solo cuánto dinero entra.",
-      ),
-    ],
-  },
-  {
-    week: 16,
-    name: "Misión final · Defender un dossier de internacionalización",
-    objective:
-      "Integrar decisiones comerciales, documentación, riesgo y lectura de balanza de pagos en un examen basado en evidencia.",
-    context: `SIMULACIÓN EDUCATIVA · Examen final integrador. Empresa, valores, destinos y transacciones son ficticios. Este dossier reúne aprendizajes de las 16 semanas; ninguna cifra se presenta como dato oficial ecuatoriano.
-
-El comité docente recibe una propuesta de Costa Cacao. Debes revisarla como analista: detectar supuestos incorrectos, justificar una decisión y calcular resultados con las unidades pertinentes. La propuesta mantiene un producto de 500 cajas, cada una con 10 barras de 100 gramos. El peso neto total es 500 kilogramos; no se aporta peso bruto. La cotización FOB hipotética es USD 12.500. Costos considerados: producción USD 7.000, traslado y preparación hasta el punto FOB USD 900, documentación USD 300. No hay impuestos, intereses ni otros gastos incluidos en el margen del taller.
-
-Anexo logístico: si se pactara CIF en la misma operación marítima del ejercicio, se añadirían flete USD 1.000 y seguro USD 100 tanto al precio acordado como a los costos asumidos por el vendedor. En FOB y CIF, el riesgo se transfiere a bordo en origen bajo las reglas básicas descritas; pagar más transporte no equivale a conservar riesgo hasta destino. Para contenedores entregados antes de embarcar se debe revisar si FCA expresa mejor el punto real de entrega. Debe precisarse lugar y versión de la regla.
-
-Anexo de integridad: hay trazabilidad de todos los lotes, pero no certificación externa de sostenibilidad. Se puede comunicar lo primero con respaldo; no anunciar lo segundo. Anexo macroeconómico, en millones de USD: bienes, exportaciones 12,5 e importaciones 8; servicios, exportaciones 1 e importaciones 2; ingreso primario y secundario, saldo cero en este esquema. La cuenta corriente resulta 3,5. Estos flujos agregados no son la contabilidad de beneficio de la empresa.
-
-Ruta de defensa: validar cantidades y fuentes; comprobar documentos y condiciones; calcular margen; presentar decisión con límites y seguimiento. El margen solicitado es ingreso FOB menos los únicos costos indicados: no es utilidad neta real ni saldo de balanza de pagos. Tu respuesta debe reconocer datos faltantes sin rellenarlos con cifras inventadas.`,
-    references: [refs.bce, refs.icc, refs.senae],
-    questions: [
-      choice(
-        "¿Qué observación mejora el dossier sin inventar datos?",
-        [
-          "Anunciar sostenibilidad certificada porque existe trazabilidad.",
-          "Afirmar peso bruto de 500 kg porque es el peso neto.",
-          "Verificar peso bruto y punto de entrega; comunicar trazabilidad respaldada sin anunciar una certificación inexistente.",
-          "Confundir el margen empresarial con el saldo corriente de 3,5 millones.",
-        ],
-        2,
-        "Peso neto no determina bruto; trazabilidad no equivale a certificación. La cuenta corriente agregada y el margen de una empresa son medidas diferentes.",
-      ),
-      matching(
-        "Relaciona cada resultado con su significado.",
-        [
-          ["500 kilogramos", "Peso neto de 500 cajas × 10 barras × 100 gramos"],
-          ["USD 8.200", "Costos FOB considerados: 7.000 + 900 + 300"],
-          ["USD 13.600", "Precio CIF didáctico: 12.500 + 1.000 + 100"],
-          ["3,5 millones de USD", "Saldo corriente del anexo macroeconómico"],
-        ],
-        "Mantener las unidades evita mezclar producción, costos, precios y estadísticas de una economía.",
-      ),
-      ordering(
-        "Ordena la defensa final de la propuesta.",
-        [
-          "Validar cantidades y fuentes del expediente",
-          "Comprobar documentos y condiciones de entrega",
-          "Calcular el margen con los costos indicados",
-          "Presentar decisión, límites y seguimiento",
-        ],
-        "El dossier debe permitir reproducir la conclusión y saber qué queda pendiente.",
-      ),
-      numeric(
-        "¿Cuál es el margen de la cotización FOB, considerando solo los costos indicados?",
-        4300,
-        "USD",
-        "12.500 − (7.000 + 900 + 300) = 12.500 − 8.200 = USD 4.300. No es utilidad neta real; faltan otras partidas.",
-      ),
-      crossword(
-        "Completa las claves del dossier final.",
-        [
-          [
-            "DOSSIER",
-            "Carpeta estructurada de evidencia y propuesta comercial.",
-          ],
-          [
-            "MARGEN",
-            "Diferencia entre ingreso y los costos definidos para el cálculo.",
-          ],
-          [
-            "ORIGEN",
-            "Dato que se verifica bajo reglas aplicables, no solo por el puerto de salida.",
-          ],
-        ],
-        "La integración final exige argumentos y evidencia, además de memorizar términos.",
-      ),
-    ],
-  },
-];
-
-activities.forEach((activity) => {
-  activity.label =
-    "Simulación educativa · expediente ficticio con evidencia suficiente";
-  activity.references.unshift({
-    name: "Sílabo CEX-103-AC · ULEAM · 2026-2",
-    url: "./documents/comercio-silabo.pdf",
-  });
-  activity.questions.forEach((question, index) => {
-    question.id = `cex-w${activity.week}-q${index + 1}`;
-  });
-});
-
+// Temas originales conservados. Prácticas de teoría, conceptos y modelos.
 export const commerceCourse = {
-  id: "cex-103",
-  code: "CEX-103-AC",
-  name: "Comercio Exterior",
-  teacher: "ANDRADE ALVARADO SONIA PATRICIA",
-  career: "COMERCIO EXTERIOR - 2026 NS - MATRIZ",
-  level: "1",
-  parallel: "C",
-  period: "2026-2 PERIODO ORDINARIO",
-  description:
-    "Del primer expediente comercial a la defensa de una propuesta internacional: casos, documentos y decisiones con evidencia.",
-  source: "Sílabo CEX-103-AC · PAA-03-F-003 · generado 1/9/2026",
-  syllabusSource: "./documents/comercio-silabo.pdf",
-  sourceNotes:
-    "El PDF coloca S.9 después de S.12 en su tabla; aquí se respeta la numeración explícita. S.15 y S.16 comparten el tema 4.4; se conserva y se agrega EXAMEN FINAL en S.16, como indica el sílabo.",
-  weeks: topics.map((title, index) => ({
-    weekNumber: index + 1,
-    unit: unitNames[Math.floor(index / 4)],
-    title,
-    enterpriseCase: activities[index].name,
-    activity: activities[index],
-  })),
-  activities,
+  "id": "cex-103",
+  "code": "CEX-103-AC",
+  "name": "Comercio Exterior",
+  "teacher": "ANDRADE ALVARADO SONIA PATRICIA",
+  "career": "COMERCIO EXTERIOR - 2026 NS - MATRIZ",
+  "level": "1",
+  "parallel": "C",
+  "period": "2026-2 PERIODO ORDINARIO",
+  "description": "Del primer expediente comercial a la defensa de una propuesta internacional: casos, documentos y decisiones con evidencia.",
+  "source": "Sílabo CEX-103-AC · PAA-03-F-003 · generado 1/9/2026",
+  "syllabusSource": "./documents/comercio-silabo.pdf",
+  "sourceNotes": "El PDF coloca S.9 después de S.12 en su tabla; aquí se respeta la numeración explícita. S.15 y S.16 comparten el tema 4.4; se conserva y se agrega EXAMEN FINAL en S.16, como indica el sílabo.",
+  "weeks": [
+    {
+      "weekNumber": 1,
+      "unit": "UNIDAD 1: CONCEPTOS BÁSICOS Y ANTECEDENTES DEL COMERCIO EXTERIOR.",
+      "title": "Encuadre y socialización del sílabo. 1.1. Conceptos, diferencias e importancia del comercio exterior y comercio Internacional.",
+      "enterpriseCase": "¿Qué cambia al comerciar con otro país?",
+      "activity": {
+        "week": 1,
+        "name": "¿Qué cambia al comerciar con otro país?",
+        "objective": "Identifica país y actores; distingue venta local, exportación e importación; señala qué evidencia permite hablar de una operación ejecutada. Revisa el sílabo y ubica este fundamento dentro del recorrido de la materia.",
+        "label": "Simulación educativa · práctica conceptual",
+        "context": "Conceptos clave\nComercio exterior observa las operaciones de un país con otros territorios; comercio internacional analiza el intercambio y sus relaciones más amplias. Exportar e importar describen direcciones distintas de una operación: un mismo bien puede ser exportación para el país vendedor e importación para el comprador. Importan actores, reglas y condiciones, no solo idioma o moneda. El sílabo organiza un recorrido desde estos fundamentos hasta teorías, instituciones y balanza de pagos. Aprender el concepto exige reconocer perspectiva y evidencia, antes de afirmar que una consulta ya es una transacción completada.\n\nCaso breve · simulación educativa\nUna asociación artesanal de Manabí recibe una consulta de una tienda extranjera y vende también a un local cercano. Un compañero llama «importación» a todo porque el comprador usa otro idioma. La consulta todavía no tiene aceptación ni entrega. Debes explicar las dos perspectivas sin confundir interés con ejecución.\n\nQué debes hacer\nIdentifica país y actores; distingue venta local, exportación e importación; señala qué evidencia permite hablar de una operación ejecutada. Revisa el sílabo y ubica este fundamento dentro del recorrido de la materia.\n\nSecuencia indicada para este caso: Identificar país desde el que se analiza → Ubicar origen y destino de la mercancía → Reconocer salida o entrada para ese país → Verificar evidencia antes de afirmar ejecución.",
+        "references": [
+          {
+            "name": "Sílabo CEX-103-AC · ULEAM · 2026-2",
+            "url": "./documents/comercio-silabo.pdf",
+            "author": "ANDRADE ALVARADO SONIA PATRICIA · Universidad Laica Eloy Alfaro de Manabí",
+            "section": "Semana 1: Encuadre y socialización del sílabo. 1.1. Conceptos, diferencias e importancia del comercio exterior y comercio Internacional.",
+            "purpose": "Comprobar tema y ubicación semanal del contenido de la asignatura."
+          },
+          {
+            "name": "Comprender la OMC · ¿Qué es la OMC?",
+            "url": "https://www.wto.org/spanish/thewto_s/whatis_s/tif_s/fact1_s.htm",
+            "author": "Organización Mundial del Comercio",
+            "section": "Apartados «¿Qué es la OMC?» y funciones del sistema de comercio",
+            "purpose": "Distinguir intercambio internacional, reglas y actores; no confundir organización con operador privado."
+          },
+          {
+            "name": "SENAE · Para exportar",
+            "url": "https://www.aduana.gob.ec/servicio-al-ciudadano/para-exportar/",
+            "author": "Servicio Nacional de Aduana del Ecuador",
+            "section": "Qué es una exportación; actores y orientación de procedimientos",
+            "purpose": "Distinguir movimiento de mercancías y funciones documentales; consultar condiciones vigentes para casos reales."
+          }
+        ],
+        "questions": [
+          {
+            "type": "choice",
+            "prompt": "¿Qué distingue mejor comercio exterior de comercio internacional?",
+            "options": [
+              "Exterior estudia solo mercancías; internacional estudia solo servicios.",
+              "El primero mira operaciones de un país con otros; el segundo estudia relaciones de intercambio más amplias.",
+              "Exterior se limita a actividades de empresas grandes; internacional incluye pequeñas.",
+              "Exterior describe destino del bien; internacional describe exclusivamente su medio de pago."
+            ],
+            "correct": 1,
+            "explanation": "La perspectiva del país distingue el enfoque; moneda y canal no definen por sí solos el intercambio.",
+            "id": "cex-w1-q1"
+          },
+          {
+            "type": "choice",
+            "prompt": "¿Cómo debe describirse la consulta artesanal?",
+            "options": [
+              "La consulta prueba salida comercial porque ya identifica un cliente exterior.",
+              "Debe llamarse importación desde Ecuador porque quien inicia el contacto es extranjero.",
+              "Es una oportunidad de venta exterior; para Ecuador sería exportación al ejecutarse, y entrada para el destino.",
+              "La venta local y la propuesta exterior tienen igual clasificación porque el producto es idéntico."
+            ],
+            "correct": 2,
+            "explanation": "Dirección y perspectiva importan. La consulta no prueba aceptación, despacho ni recepción.",
+            "id": "cex-w1-q2"
+          },
+          {
+            "type": "matching",
+            "prompt": "Relaciona cada concepto con su perspectiva.",
+            "pairs": [
+              {
+                "left": "Exportación",
+                "right": "Salida comercial hacia otro territorio"
+              },
+              {
+                "left": "Importación",
+                "right": "Entrada comercial desde otro territorio"
+              },
+              {
+                "left": "Comercio exterior",
+                "right": "Operaciones de un país con otros"
+              },
+              {
+                "left": "Comercio internacional",
+                "right": "Relaciones de intercambio entre países"
+              }
+            ],
+            "explanation": "Los conceptos describen enfoque y dirección, no tamaño de una venta.",
+            "id": "cex-w1-q3"
+          },
+          {
+            "type": "ordering",
+            "prompt": "Ordena el análisis conceptual antes de nombrar la operación.",
+            "items": [
+              "Identificar país desde el que se analiza",
+              "Ubicar origen y destino de la mercancía",
+              "Reconocer salida o entrada para ese país",
+              "Verificar evidencia antes de afirmar ejecución"
+            ],
+            "explanation": "Primero fija perspectiva; después determina dirección y alcance de evidencia.",
+            "id": "cex-w1-q4"
+          },
+          {
+            "type": "crossword",
+            "prompt": "Completa vocabulario del fundamento comercial.",
+            "entries": [
+              {
+                "word": "COMERCIO",
+                "clue": "Intercambio de bienes y servicios."
+              },
+              {
+                "word": "ORIGEN",
+                "clue": "Procedencia que debe examinarse, sin confundirla con destino."
+              },
+              {
+                "word": "DESTINO",
+                "clue": "Territorio o mercado hacia el que se dirige una operación."
+              }
+            ],
+            "explanation": "La orientación del intercambio ayuda a nombrar la operación correctamente.",
+            "id": "cex-w1-q5"
+          }
+        ]
+      }
+    },
+    {
+      "weekNumber": 2,
+      "unit": "UNIDAD 1: CONCEPTOS BÁSICOS Y ANTECEDENTES DEL COMERCIO EXTERIOR.",
+      "title": "1.2. Elementos básicos del comercio exterior.",
+      "enterpriseCase": "Los elementos que conectan una operación",
+      "activity": {
+        "week": 2,
+        "name": "Los elementos que conectan una operación",
+        "objective": "Reconoce producto y actores; relaciona cada documento con su función; compara lo acordado con la evidencia disponible y señala los vacíos. No calcules precios ni supongas permisos: explica qué información hace falta.",
+        "label": "Simulación educativa · práctica conceptual",
+        "context": "Conceptos clave\nLos elementos básicos incluyen producto, vendedor, comprador, mercado, condiciones de entrega, pago, transporte y documentación. Sus funciones se complementan. La factura describe transacción y condiciones comerciales; la lista de empaque caracteriza distribución física; el documento de transporte identifica traslado. Un contrato debe hacer explícitos compromisos y no sustituye controles públicos aplicables. La aduana y un transportista tampoco son el mismo actor. Antes de usar un documento, identifica qué pregunta responde y qué información no aporta. Para casos reales consulta procedimientos vigentes y características específicas de la mercancía.\n\nCaso breve · simulación educativa\nUn equipo prepara una propuesta de artesanías. Tiene fotos y una lista de cajas, pero no especifica comprador, condición de entrega ni pago. El estudiante cree que la lista de empaque reemplaza la factura y que la empresa de transporte puede aprobar cualquier requisito aduanero. Debes revisar funciones y vacíos.\n\nQué debes hacer\nReconoce producto y actores; relaciona cada documento con su función; compara lo acordado con la evidencia disponible y señala los vacíos. No calcules precios ni supongas permisos: explica qué información hace falta.\n\nSecuencia indicada para este caso: Identificar producto y partes → Reconocer condiciones acordadas → Relacionar documentos con sus funciones → Señalar información faltante antes de ejecutar.",
+        "references": [
+          {
+            "name": "Sílabo CEX-103-AC · ULEAM · 2026-2",
+            "url": "./documents/comercio-silabo.pdf",
+            "author": "ANDRADE ALVARADO SONIA PATRICIA · Universidad Laica Eloy Alfaro de Manabí",
+            "section": "Semana 2: 1.2. Elementos básicos del comercio exterior.",
+            "purpose": "Comprobar tema y ubicación semanal del contenido de la asignatura."
+          },
+          {
+            "name": "SENAE · Para exportar",
+            "url": "https://www.aduana.gob.ec/servicio-al-ciudadano/para-exportar/",
+            "author": "Servicio Nacional de Aduana del Ecuador",
+            "section": "Qué es una exportación; actores y orientación de procedimientos",
+            "purpose": "Distinguir movimiento de mercancías y funciones documentales; consultar condiciones vigentes para casos reales."
+          },
+          {
+            "name": "SENAE · Para importar",
+            "url": "https://www.aduana.gob.ec/servicio-al-ciudadano/para-importar/",
+            "author": "Servicio Nacional de Aduana del Ecuador",
+            "section": "Qué es una importación y orientación al importador",
+            "purpose": "Reconocer operación de entrada y autoridad competente, sin fijar tasas ni listas universales."
+          }
+        ],
+        "questions": [
+          {
+            "type": "choice",
+            "prompt": "¿Qué relación entre documentos es correcta?",
+            "options": [
+              "Factura y empaque tienen igual alcance porque ambas mencionan el producto.",
+              "El documento de transporte determina condiciones económicas que faltan en el contrato.",
+              "Factura, empaque y transporte tienen funciones complementarias.",
+              "La fotografía basta para identificar aceptación comercial y distribución de obligaciones."
+            ],
+            "correct": 2,
+            "explanation": "Documentos diferentes responden preguntas comerciales, físicas y de traslado.",
+            "id": "cex-w2-q1"
+          },
+          {
+            "type": "choice",
+            "prompt": "¿Qué debe corregir el equipo artesanal?",
+            "options": [
+              "Tomar la lista de cajas como acuerdo comercial y completar condiciones después del despacho.",
+              "Solicitar al transportista que confirme pago, aunque no sea parte del acuerdo comercial.",
+              "Usar fotos para sustituir documentación, ya que permiten reconocer el producto.",
+              "Añadir actores y condiciones pendientes y distinguir factura de empaque y control público."
+            ],
+            "correct": 3,
+            "explanation": "El expediente debe expresar compromisos y respetar funciones de actores y documentos.",
+            "id": "cex-w2-q2"
+          },
+          {
+            "type": "matching",
+            "prompt": "Relaciona elemento y función.",
+            "pairs": [
+              {
+                "left": "Factura",
+                "right": "Descripción comercial de la transacción"
+              },
+              {
+                "left": "Lista de empaque",
+                "right": "Organización física de la carga"
+              },
+              {
+                "left": "Transportista",
+                "right": "Servicio de traslado"
+              },
+              {
+                "left": "Aduana",
+                "right": "Control público dentro de su competencia"
+              }
+            ],
+            "explanation": "Servicios logísticos y control regulador son funciones distintas.",
+            "id": "cex-w2-q3"
+          },
+          {
+            "type": "ordering",
+            "prompt": "Ordena una revisión básica de coherencia.",
+            "items": [
+              "Identificar producto y partes",
+              "Reconocer condiciones acordadas",
+              "Relacionar documentos con sus funciones",
+              "Señalar información faltante antes de ejecutar"
+            ],
+            "explanation": "Los documentos se evalúan según operación y compromisos identificados.",
+            "id": "cex-w2-q4"
+          },
+          {
+            "type": "crossword",
+            "prompt": "Completa los elementos comerciales.",
+            "entries": [
+              {
+                "word": "FACTURA",
+                "clue": "Documento que describe la transacción comercial."
+              },
+              {
+                "word": "EMPAQUE",
+                "clue": "Organización y protección física del bien."
+              },
+              {
+                "word": "CONTRATO",
+                "clue": "Acuerdo que establece compromisos entre partes."
+              }
+            ],
+            "explanation": "Cada término cubre un aspecto distinto del expediente.",
+            "id": "cex-w2-q5"
+          }
+        ]
+      }
+    },
+    {
+      "weekNumber": 3,
+      "unit": "UNIDAD 1: CONCEPTOS BÁSICOS Y ANTECEDENTES DEL COMERCIO EXTERIOR.",
+      "title": "1.3. Origen e Historia del Comercio Internacional.",
+      "enterpriseCase": "Una historia con distintos caminos",
+      "activity": {
+        "week": 3,
+        "name": "Una historia con distintos caminos",
+        "objective": "Distingue práctica de intercambio, medio que la facilita e institución que la organiza. Ordena primero las categorías y después interpreta relaciones, separando descripción histórica de causalidad no demostrada. Consulta la lectura sobre antecedentes del GATT.",
+        "label": "Simulación educativa · práctica conceptual",
+        "context": "Conceptos clave\nEl intercambio entre comunidades antecede a empresas y redes digitales. Trueque, medios monetarios, rutas e intermediación ayudan a comprender cómo se facilitaron transacciones en diferentes épocas. No todas las sociedades siguieron una secuencia única. Más adelante, acuerdos e instituciones multilaterales organizaron parte del comercio contemporáneo: el GATT y la OMC son antecedentes institucionales, no el origen de todo intercambio humano. Una cronología ordena hechos; demostrar causas necesita evidencia adicional. Distingue prácticas históricas, tecnologías y reglas antes de explicar su relación.\n\nCaso breve · simulación educativa\nUna exposición universitaria muestra rutas antiguas, uso de moneda y acuerdos multilaterales. Su título afirma que el comercio nació con internet. El grupo necesita corregirlo y explicar por qué una herramienta reciente puede facilitar conexiones sin originar toda la actividad comercial. No se pide memorizar fechas ni inventar una ruta universal.\n\nQué debes hacer\nDistingue práctica de intercambio, medio que la facilita e institución que la organiza. Ordena primero las categorías y después interpreta relaciones, separando descripción histórica de causalidad no demostrada. Consulta la lectura sobre antecedentes del GATT.\n\nSecuencia indicada para este caso: Identificar lo que la afirmación sostiene → Ubicar prácticas y períodos relevantes → Distinguir medios de instituciones → Redactar relación con límites de evidencia.",
+        "references": [
+          {
+            "name": "Sílabo CEX-103-AC · ULEAM · 2026-2",
+            "url": "./documents/comercio-silabo.pdf",
+            "author": "ANDRADE ALVARADO SONIA PATRICIA · Universidad Laica Eloy Alfaro de Manabí",
+            "section": "Semana 3: 1.3. Origen e Historia del Comercio Internacional.",
+            "purpose": "Comprobar tema y ubicación semanal del contenido de la asignatura."
+          },
+          {
+            "name": "Comprender la OMC · Los años del GATT: de La Habana a Marrakech",
+            "url": "https://www.wto.org/spanish/thewto_s/whatis_s/tif_s/fact4_s.htm",
+            "author": "Organización Mundial del Comercio",
+            "section": "Evolución del GATT y creación de la OMC",
+            "purpose": "Relacionar antecedentes del intercambio con la construcción posterior de instituciones multilaterales."
+          }
+        ],
+        "questions": [
+          {
+            "type": "choice",
+            "prompt": "¿Cuál es un antecedente institucional del comercio contemporáneo?",
+            "options": [
+              "El trueque es una institución multilateral que administra tratados comerciales.",
+              "El uso de moneda equivale a un acuerdo entre Estados sobre reglas comerciales.",
+              "Las rutas constituyen siempre organizaciones jurídicas formales del intercambio.",
+              "GATT, dentro de la construcción de acuerdos multilaterales."
+            ],
+            "correct": 3,
+            "explanation": "GATT organiza acuerdos posteriores a prácticas de intercambio mucho más antiguas.",
+            "id": "cex-w3-q1"
+          },
+          {
+            "type": "choice",
+            "prompt": "¿Qué título corrige mejor la exposición?",
+            "options": [
+              "Cómo cambiaron medios, rutas y reglas del intercambio.",
+              "Cómo internet reemplazó todos los mecanismos previos y explica cada intercambio actual.",
+              "Una ruta histórica única seguida por todas las sociedades para llegar al comercio digital.",
+              "La fecha de la OMC como inicio de toda transacción entre comunidades."
+            ],
+            "correct": 0,
+            "explanation": "Una historia puede explicar cambios sin reducirlos a una tecnología reciente.",
+            "id": "cex-w3-q2"
+          },
+          {
+            "type": "matching",
+            "prompt": "Relaciona concepto y categoría histórica.",
+            "pairs": [
+              {
+                "left": "Trueque",
+                "right": "Intercambio directo sin moneda como medio de pago"
+              },
+              {
+                "left": "Moneda",
+                "right": "Medio que facilita valorar e intercambiar"
+              },
+              {
+                "left": "Ruta",
+                "right": "Conexión física entre lugares"
+              },
+              {
+                "left": "GATT",
+                "right": "Acuerdos multilaterales del comercio contemporáneo"
+              }
+            ],
+            "explanation": "Práctica, medio, conexión e institución representan categorías diferentes.",
+            "id": "cex-w3-q3"
+          },
+          {
+            "type": "ordering",
+            "prompt": "Ordena el análisis de una afirmación histórica.",
+            "items": [
+              "Identificar lo que la afirmación sostiene",
+              "Ubicar prácticas y períodos relevantes",
+              "Distinguir medios de instituciones",
+              "Redactar relación con límites de evidencia"
+            ],
+            "explanation": "La interpretación se apoya en categorías y no en una cronología inventada.",
+            "id": "cex-w3-q4"
+          },
+          {
+            "type": "crossword",
+            "prompt": "Completa términos históricos.",
+            "entries": [
+              {
+                "word": "TRUEQUE",
+                "clue": "Intercambio directo sin moneda."
+              },
+              {
+                "word": "MONEDA",
+                "clue": "Medio de valoración y pago."
+              },
+              {
+                "word": "RUTA",
+                "clue": "Trayecto de conexión comercial."
+              }
+            ],
+            "explanation": "Estos términos describen mecanismos históricos distintos.",
+            "id": "cex-w3-q5"
+          }
+        ]
+      }
+    },
+    {
+      "weekNumber": 4,
+      "unit": "UNIDAD 1: CONCEPTOS BÁSICOS Y ANTECEDENTES DEL COMERCIO EXTERIOR.",
+      "title": "1.4. Evolución del comercio exterior en Ecuador.",
+      "enterpriseCase": "Leer la evolución comercial de Ecuador",
+      "activity": {
+        "week": 4,
+        "name": "Leer la evolución comercial de Ecuador",
+        "objective": "Reconoce etapas y productos; compara patrón primario y diversificación; explica coexistencia y distingue antecedentes de un perfil de período. Consulta entorno económico del examen OMC de Ecuador, sin cálculos.",
+        "label": "Simulación educativa · práctica conceptual",
+        "context": "Conceptos clave\nLa evolución ecuatoriana incluye especializaciones que pueden coexistir. El auge cacaotero de fines del siglo XIX e inicios del XX consolidó un patrón agroexportador. La expansión bananera de posguerra amplió esa trayectoria. Las exportaciones petroleras desde 1972 incorporaron un producto energético importante. Posteriormente camarón, flores y elaborados contribuyeron a diversificar oferta, sin eliminar productos anteriores. Exportador primario describe predominio de bienes con transformación limitada; diversificación amplía productos o destinos y no implica industrialización completa. Un perfil de período muestra composición; explicar evolución exige relacionar etapas y contexto. Estas referencias no se usan para calcular intervalos ni atribuir todo cambio a una sola causa.\n\nCaso breve · simulación educativa\nUn grupo expone cacao, banano, petróleo y nuevos productos ecuatorianos. Afirma que la etapa petrolera borró agricultura y que diversificar equivale a exportar solo manufacturas. Debes corregir esas ideas y distinguir coexistencia, incorporación de productos y transformación comercial, sin calcular indicadores.\n\nQué debes hacer\nReconoce etapas y productos; compara patrón primario y diversificación; explica coexistencia y distingue antecedentes de un perfil de período. Consulta entorno económico del examen OMC de Ecuador, sin cálculos.\n\nSecuencia indicada: Auge cacaotero → Expansión bananera de posguerra → Incorporación petrolera exportadora → Ampliación con camarón, flores y elaborados.",
+        "references": [
+          {
+            "name": "Sílabo CEX-103-AC · ULEAM · 2026-2",
+            "url": "./documents/comercio-silabo.pdf",
+            "author": "ANDRADE ALVARADO SONIA PATRICIA · Universidad Laica Eloy Alfaro de Manabí",
+            "section": "Semana 4: 1.4. Evolución del comercio exterior en Ecuador.",
+            "purpose": "Comprobar tema y ubicación semanal del contenido de la asignatura."
+          },
+          {
+            "name": "Comprender la OMC · Los años del GATT: de La Habana a Marrakech",
+            "url": "https://www.wto.org/spanish/thewto_s/whatis_s/tif_s/fact4_s.htm",
+            "author": "Organización Mundial del Comercio",
+            "section": "Evolución del GATT y creación de la OMC",
+            "purpose": "Relacionar antecedentes del intercambio con la construcción posterior de instituciones multilaterales."
+          },
+          {
+            "name": "OMC · Examen de las Políticas Comerciales: Ecuador WT/TPR/S/383 (2019)",
+            "url": "https://www.wto.org/spanish/tratop_s/tpr_s/s383_s.pdf",
+            "author": "Organización Mundial del Comercio · Secretaría",
+            "section": "Capítulo 1: entorno económico; estructura y evolución del comercio de mercancías.",
+            "purpose": "Situar composición y diversificación ecuatorianas, distinguiendo período del informe y antecedentes históricos."
+          }
+        ],
+        "questions": [
+          {
+            "type": "choice",
+            "prompt": "¿Qué describe diversificación exportadora posterior?",
+            "options": [
+              "Sustituir necesariamente todos los productos anteriores.",
+              "Exportar solo petróleo porque es etapa posterior.",
+              "Incorporar productos o mercados sin exigir desaparición de cacao, banano o petróleo.",
+              "Cambiar todo destino sin conservar categorías."
+            ],
+            "correct": 2,
+            "explanation": "Diversificación amplía oferta o destinos; no implica sustitución total ni industrialización completa.",
+            "id": "cex-w4-q1"
+          },
+          {
+            "type": "choice",
+            "prompt": "¿Cómo debe corregirse la exposición sobre etapas ecuatorianas?",
+            "options": [
+              "Reconocer agroexportación, incorporación petrolera y diversificación con coexistencia.",
+              "Mantener desaparición agrícola como consecuencia automática del petróleo.",
+              "Ordenar productos sin diferenciar etapas.",
+              "Usar un perfil como causa de toda historia."
+            ],
+            "correct": 0,
+            "explanation": "Las etapas describen cambios y coexistencia, no desaparición automática de actividades.",
+            "id": "cex-w4-q2"
+          },
+          {
+            "type": "matching",
+            "prompt": "Relaciona producto con etapa o aporte.",
+            "pairs": [
+              {
+                "left": "Cacao",
+                "right": "Auge agroexportador de fines del XIX e inicios del XX"
+              },
+              {
+                "left": "Banano",
+                "right": "Expansión agrícola de posguerra"
+              },
+              {
+                "left": "Petróleo",
+                "right": "Incorporación energética desde 1972"
+              },
+              {
+                "left": "Camarón y flores",
+                "right": "Ampliación posterior de oferta"
+              }
+            ],
+            "explanation": "La trayectoria combina antecedentes y coexistencia, sin pedir cantidades.",
+            "id": "cex-w4-q3"
+          },
+          {
+            "type": "ordering",
+            "prompt": "Ordena estas referencias históricas ecuatorianas.",
+            "items": [
+              "Auge cacaotero",
+              "Expansión bananera de posguerra",
+              "Incorporación petrolera exportadora",
+              "Ampliación con camarón, flores y elaborados"
+            ],
+            "explanation": "La secuencia sigue historia cualitativa enseñada, no importancia actual.",
+            "id": "cex-w4-q4"
+          },
+          {
+            "type": "crossword",
+            "prompt": "Completa productos de la trayectoria.",
+            "entries": [
+              {
+                "word": "CACAO",
+                "clue": "Producto del auge agroexportador temprano."
+              },
+              {
+                "word": "BANANO",
+                "clue": "Producto de expansión agrícola de posguerra."
+              },
+              {
+                "word": "CAMARON",
+                "clue": "Producto de diversificación posterior."
+              }
+            ],
+            "explanation": "Reconocer productos ayuda a interpretar etapas y coexistencia.",
+            "id": "cex-w4-q5"
+          }
+        ]
+      }
+    },
+    {
+      "weekNumber": 5,
+      "unit": "UNIDAD 2: TEORÍAS DEL COMERCIO INTERNACIONAL.",
+      "title": "2.1. Diferencias políticas, económicas, legales, culturales entre países.",
+      "enterpriseCase": "Países distintos, preguntas comparables",
+      "activity": {
+        "week": 5,
+        "name": "Países distintos, preguntas comparables",
+        "objective": "Clasifica cada observación como política, económica, legal o cultural; distingue evidencia de opinión; ordena una comparación que defina preguntas antes de concluir. No uses matrices numéricas: justifica las categorías y los límites del caso.",
+        "label": "Simulación educativa · práctica conceptual",
+        "context": "Conceptos clave\nComparar países requiere reconocer dimensiones políticas, económicas, legales y culturales. Lo político incluye instituciones y estabilidad de reglas; lo económico, estructura productiva y condiciones de mercado; lo legal, normas y compromisos aplicables; lo cultural, comunicación y expectativas contextualizadas. Una diferencia no significa superioridad automática. Tampoco un solo comprador representa a toda una población. Las teorías explican mecanismos; los casos necesitan evidencia y fuentes adecuadas. Primero define qué se compara, después reúne información por dimensión y finalmente justifica una conclusión con límites, evitando estereotipos nacionales.\n\nCaso breve · simulación educativa\nUna cooperativa busca un mercado para artesanías. El equipo escoge un país porque le agradó un cliente y descarta otro por un comentario en redes. No revisó instituciones, requisitos ni comunicación. Debes transformar opiniones en preguntas comparables y explicar por qué una experiencia individual no representa todas las condiciones del país.\n\nQué debes hacer\nClasifica cada observación como política, económica, legal o cultural; distingue evidencia de opinión; ordena una comparación que defina preguntas antes de concluir. No uses matrices numéricas: justifica las categorías y los límites del caso.\n\nSecuencia indicada para este caso: Definir propósito y dimensiones → Buscar fuentes adecuadas por dimensión → Separar evidencias de opiniones → Justificar conclusión y límites.",
+        "references": [
+          {
+            "name": "Sílabo CEX-103-AC · ULEAM · 2026-2",
+            "url": "./documents/comercio-silabo.pdf",
+            "author": "ANDRADE ALVARADO SONIA PATRICIA · Universidad Laica Eloy Alfaro de Manabí",
+            "section": "Semana 5: 2.1. Diferencias políticas, económicas, legales, culturales entre países.",
+            "purpose": "Comprobar tema y ubicación semanal del contenido de la asignatura."
+          },
+          {
+            "name": "Informe sobre el Comercio Mundial 2008 · Globalización y comercio",
+            "url": "https://www.wto.org/spanish/res_s/booksp_s/anrep_s/world_trade_report08_s.pdf",
+            "author": "Organización Mundial del Comercio",
+            "section": "Sección B: globalización y comercio; conexiones y cambios que facilitan el intercambio",
+            "purpose": "Relacionar conexiones mundiales con decisiones concretas de internacionalización."
+          },
+          {
+            "name": "Comprender la OMC · Los principios del sistema de comercio",
+            "url": "https://www.wto.org/spanish/thewto_s/whatis_s/tif_s/fact2_s.htm",
+            "author": "Organización Mundial del Comercio",
+            "section": "No discriminación; previsibilidad mediante consolidaciones y transparencia",
+            "purpose": "Reconocer reglas y factores institucionales del comercio, sin inventar requisitos de una mercancía."
+          }
+        ],
+        "questions": [
+          {
+            "type": "choice",
+            "prompt": "¿Cuál es una diferencia legal?",
+            "options": [
+              "El idioma preferido por un cliente es una norma aplicable a toda mercancía.",
+              "Requisitos normativos aplicables a una mercancía.",
+              "La estructura productiva es un requisito contractual por el hecho de influir en costos.",
+              "La opinión comercial de un comprador equivale a legislación de su país."
+            ],
+            "correct": 1,
+            "explanation": "La dimensión legal se refiere a normas y obligaciones, no a todas las diferencias de comunicación.",
+            "id": "cex-w5-q1"
+          },
+          {
+            "type": "choice",
+            "prompt": "¿Cómo debería actuar la cooperativa?",
+            "options": [
+              "Mantener la selección por experiencia personal y añadir fuentes solo para describirla.",
+              "Tomar comentarios de redes como evidencia representativa de todas las dimensiones.",
+              "Definir dimensiones y buscar evidencia antes de seleccionar.",
+              "Comparar únicamente comunicación porque un cliente amable demuestra las demás condiciones."
+            ],
+            "correct": 2,
+            "explanation": "La comparación necesita información contextual y evita estereotipos.",
+            "id": "cex-w5-q2"
+          },
+          {
+            "type": "matching",
+            "prompt": "Relaciona dimensión y observación pertinente.",
+            "pairs": [
+              {
+                "left": "Política",
+                "right": "Instituciones y estabilidad de reglas"
+              },
+              {
+                "left": "Económica",
+                "right": "Estructura productiva y mercado"
+              },
+              {
+                "left": "Legal",
+                "right": "Normas aplicables y compromisos"
+              },
+              {
+                "left": "Cultural",
+                "right": "Comunicación y expectativas contextualizadas"
+              }
+            ],
+            "explanation": "Las categorías distinguen mecanismos sin reducir países a etiquetas.",
+            "id": "cex-w5-q3"
+          },
+          {
+            "type": "ordering",
+            "prompt": "Ordena una comparación conceptual responsable.",
+            "items": [
+              "Definir propósito y dimensiones",
+              "Buscar fuentes adecuadas por dimensión",
+              "Separar evidencias de opiniones",
+              "Justificar conclusión y límites"
+            ],
+            "explanation": "El propósito guía las preguntas antes de decidir.",
+            "id": "cex-w5-q4"
+          },
+          {
+            "type": "crossword",
+            "prompt": "Completa conceptos de la comparación.",
+            "entries": [
+              {
+                "word": "CULTURA",
+                "clue": "Prácticas y expectativas que deben contextualizarse."
+              },
+              {
+                "word": "NORMA",
+                "clue": "Regla aplicable que se consulta en fuente competente."
+              },
+              {
+                "word": "PAIS",
+                "clue": "Unidad territorial de la comparación, sin uniformar a sus personas."
+              }
+            ],
+            "explanation": "Las categorías ayudan a evitar generalizaciones injustificadas.",
+            "id": "cex-w5-q5"
+          }
+        ]
+      }
+    },
+    {
+      "weekNumber": 6,
+      "unit": "UNIDAD 2: TEORÍAS DEL COMERCIO INTERNACIONAL.",
+      "title": "2.2. Teorías clásicas del Comercio Internacional. 2.3. Teorías de los factores de la producción.",
+      "enterpriseCase": "Absoluta, comparativa y dotaciones",
+      "activity": {
+        "week": 6,
+        "name": "Absoluta, comparativa y dotaciones",
+        "objective": "Compara Smith, Ricardo y Heckscher–Ohlin. Distingue eficiencia, sacrificio relativo, dotación e intensidad; justifica modelo y supuestos, sin cálculos.",
+        "label": "Simulación educativa · práctica conceptual",
+        "context": "Conceptos clave\nAdam Smith se asocia a ventaja absoluta: eficiencia en uso de recursos. David Ricardo explica ventaja comparativa: menor costo de oportunidad relativo, la alternativa sacrificada al especializarse. Ser más eficiente en varios bienes no elimina necesariamente razones de intercambio. Heckscher–Ohlin relaciona dotaciones relativas de factores, como trabajo y capital, con la intensidad de uso en los bienes. Dotación e intensidad no son equivalentes. Los modelos explican mecanismos bajo supuestos y no predicen automáticamente toda exportación. Define la comparación del caso antes de elegir autor o modelo; no se pide calcular horas, precios ni costos.\n\nCaso breve · simulación educativa\nDos talleres producen tejidos y cerámica. Uno usa menos recursos en ambos. Un compañero usa a Smith para negar intercambio; otro examina sacrificios relativos y otro dotaciones. Debes distinguir aportes de Smith, Ricardo y Heckscher–Ohlin sin inventar horas o costos.\n\nQué debes hacer\nCompara Smith, Ricardo y Heckscher–Ohlin. Distingue eficiencia, sacrificio relativo, dotación e intensidad; justifica modelo y supuestos, sin cálculos.\n\nSecuencia indicada: Precisar bienes y alternativas → Distinguir eficiencia de sacrificio relativo → Identificar teoría pertinente → Explicar conclusión bajo supuestos.",
+        "references": [
+          {
+            "name": "Sílabo CEX-103-AC · ULEAM · 2026-2",
+            "url": "./documents/comercio-silabo.pdf",
+            "author": "ANDRADE ALVARADO SONIA PATRICIA · Universidad Laica Eloy Alfaro de Manabí",
+            "section": "Semana 6: 2.2. Teorías clásicas del Comercio Internacional. 2.3. Teorías de los factores de la producción.",
+            "purpose": "Comprobar tema y ubicación semanal del contenido de la asignatura."
+          },
+          {
+            "name": "Comprender la OMC · Argumentos a favor de un comercio abierto",
+            "url": "https://www.wto.org/spanish/thewto_s/whatis_s/tif_s/fact3_s.htm",
+            "author": "Organización Mundial del Comercio",
+            "section": "Ventaja comparativa: comparar alternativas y especialización",
+            "purpose": "Comprender ventaja absoluta y comparativa conceptualmente, sin ejercicios aritméticos."
+          },
+          {
+            "name": "Informe sobre el Comercio Mundial 2008 · El comercio en un mundo en proceso de globalización",
+            "url": "https://www.wto.org/spanish/res_s/booksp_s/anrep_s/world_trade_report08_s.pdf",
+            "author": "Organización Mundial del Comercio",
+            "section": "Sección C: causas del comercio; localizar ventajas comparativas, economías de escala y diferenciación",
+            "purpose": "Comparar explicaciones tradicionales y nuevas del intercambio, incluyendo factores y capacidades."
+          }
+        ],
+        "questions": [
+          {
+            "type": "choice",
+            "prompt": "¿Qué comparación corresponde a David Ricardo?",
+            "options": [
+              "Eficiencia absoluta aislada.",
+              "Costo de oportunidad relativo entre alternativas.",
+              "Abundancia aislada sin requerimientos.",
+              "Volumen de mercado como criterio único."
+            ],
+            "correct": 1,
+            "explanation": "Ricardo compara sacrificios relativos; Smith y Heckscher–Ohlin responden mecanismos diferentes.",
+            "id": "cex-w6-q1"
+          },
+          {
+            "type": "choice",
+            "prompt": "¿Qué responde al caso de talleres con distinta eficiencia?",
+            "options": [
+              "Negar intercambio usando solo ventaja absoluta.",
+              "Llamar dotación a rapidez sin definir factores.",
+              "Especializarse por el nombre del bien.",
+              "Examinar sacrificios relativos con Ricardo; absoluta en ambos no responde toda especialización."
+            ],
+            "correct": 3,
+            "explanation": "La comparativa distingue alternativa sacrificada y eficiencia productiva.",
+            "id": "cex-w6-q2"
+          },
+          {
+            "type": "matching",
+            "prompt": "Relaciona autor y mecanismo.",
+            "pairs": [
+              {
+                "left": "Adam Smith",
+                "right": "Ventaja absoluta y eficiencia"
+              },
+              {
+                "left": "David Ricardo",
+                "right": "Comparativa y costo de oportunidad"
+              },
+              {
+                "left": "Heckscher–Ohlin",
+                "right": "Dotaciones relativas e intensidad factorial"
+              },
+              {
+                "left": "Intensidad factorial",
+                "right": "Requerimientos de factores de un bien"
+              }
+            ],
+            "explanation": "Los modelos deben reconocerse por mecanismo y no solo nombre.",
+            "id": "cex-w6-q3"
+          },
+          {
+            "type": "ordering",
+            "prompt": "Ordena el análisis de especialización.",
+            "items": [
+              "Precisar bienes y alternativas",
+              "Distinguir eficiencia de sacrificio relativo",
+              "Identificar teoría pertinente",
+              "Explicar conclusión bajo supuestos"
+            ],
+            "explanation": "El razonamiento necesita definir comparaciones antes de aplicar teoría.",
+            "id": "cex-w6-q4"
+          },
+          {
+            "type": "crossword",
+            "prompt": "Completa autores y concepto.",
+            "entries": [
+              {
+                "word": "SMITH",
+                "clue": "Autor de ventaja absoluta."
+              },
+              {
+                "word": "RICARDO",
+                "clue": "Autor de ventaja comparativa."
+              },
+              {
+                "word": "FACTOR",
+                "clue": "Recurso productivo de modelos de dotación."
+              }
+            ],
+            "explanation": "Relaciona nombres con explicación conceptual pertinente.",
+            "id": "cex-w6-q5"
+          }
+        ]
+      }
+    },
+    {
+      "weekNumber": 7,
+      "unit": "UNIDAD 2: TEORÍAS DEL COMERCIO INTERNACIONAL.",
+      "title": "2.4. Nuevas teorías del comercio internacional. 2.5. Teorías de la Ventaja Competitiva.",
+      "enterpriseCase": "Escala, variedades y capacidades",
+      "activity": {
+        "week": 7,
+        "name": "Escala, variedades y capacidades",
+        "objective": "Compara Krugman y Porter. Reconoce variedades, escala y componentes del diamante; justifica mecanismos del caso sin garantías de ventas ni cálculos.",
+        "label": "Simulación educativa · práctica conceptual",
+        "context": "Conceptos clave\nLas nuevas teorías asociadas a Paul Krugman incorporan economías de escala y diferenciación; explican intercambio de variedades entre economías parecidas. No requieren que un país sea incapaz de producir toda la categoría. Michael Porter estudia ventaja competitiva mediante el diamante: condiciones de factores; condiciones de demanda; industrias relacionadas y de apoyo; estrategia, estructura y rivalidad de empresas. Factores incluyen capacidades; demanda se refiere a compradores; apoyo a proveedores; rivalidad a competencia y decisiones. El diamante relaciona condiciones, no solo tamaño. Comparativa de Ricardo y competitiva de Porter no son idénticas. Identifica mecanismo y evidencia sin convertir escala o novedad en garantía absoluta.\n\nCaso breve · simulación educativa\nDos mercados intercambian variedades de cuadernos. Un taller mejora con compradores exigentes y proveedores especializados. El equipo afirma que variedad es irrelevante y todo depende de tamaño. Debes distinguir escala y diferenciación de Krugman y condiciones del diamante de Porter.\n\nQué debes hacer\nCompara Krugman y Porter. Reconoce variedades, escala y componentes del diamante; justifica mecanismos del caso sin garantías de ventas ni cálculos.\n\nSecuencia indicada: Identificar variedades y propuesta → Distinguir Krugman y Porter → Ubicar evidencia en componentes del diamante → Justificar mecanismos y límites.",
+        "references": [
+          {
+            "name": "Sílabo CEX-103-AC · ULEAM · 2026-2",
+            "url": "./documents/comercio-silabo.pdf",
+            "author": "ANDRADE ALVARADO SONIA PATRICIA · Universidad Laica Eloy Alfaro de Manabí",
+            "section": "Semana 7: 2.4. Nuevas teorías del comercio internacional. 2.5. Teorías de la Ventaja Competitiva.",
+            "purpose": "Comprobar tema y ubicación semanal del contenido de la asignatura."
+          },
+          {
+            "name": "Informe sobre el Comercio Mundial 2008 · El comercio en un mundo en proceso de globalización",
+            "url": "https://www.wto.org/spanish/res_s/booksp_s/anrep_s/world_trade_report08_s.pdf",
+            "author": "Organización Mundial del Comercio",
+            "section": "Sección C: causas del comercio; localizar ventajas comparativas, economías de escala y diferenciación",
+            "purpose": "Comparar explicaciones tradicionales y nuevas del intercambio, incluyendo factores y capacidades."
+          },
+          {
+            "name": "Harvard Business School · The Diamond",
+            "url": "https://www.isc.hbs.edu/competitiveness-economic-development/frameworks-and-key-concepts/Pages/the-diamond.aspx",
+            "author": "Michael E. Porter · Institute for Strategy and Competitiveness, Harvard Business School",
+            "section": "Cuatro atributos: factores; demanda; industrias relacionadas y de apoyo; contexto de estrategia y rivalidad.",
+            "purpose": "Aplicar diamante competitivo y distinguirlo de escala y diferenciación en teoría del comercio."
+          }
+        ],
+        "questions": [
+          {
+            "type": "choice",
+            "prompt": "¿Qué diferencia Krugman y Porter?",
+            "options": [
+              "Krugman solo dotaciones; Porter solo costo de oportunidad.",
+              "Ambos solo eficiencia absoluta.",
+              "Krugman explica escala y variedades; Porter condiciones del entorno competitivo.",
+              "Porter convierte tamaño en ventaja permanente."
+            ],
+            "correct": 2,
+            "explanation": "Teorías del intercambio y diamante competitivo son explicaciones diferentes y complementarias.",
+            "id": "cex-w7-q1"
+          },
+          {
+            "type": "choice",
+            "prompt": "¿Qué interpretación corresponde al taller de cuadernos?",
+            "options": [
+              "Variedades explican intercambio; demanda exigente y proveedores son condiciones del diamante.",
+              "Mercados parecidos no pueden intercambiar.",
+              "Tamaño basta para todo sin distinguir compradores.",
+              "Toda exigencia del cliente es dotación física."
+            ],
+            "correct": 0,
+            "explanation": "El caso combina diferenciación y condiciones específicas de competitividad.",
+            "id": "cex-w7-q2"
+          },
+          {
+            "type": "matching",
+            "prompt": "Relaciona componente del diamante y ejemplo.",
+            "pairs": [
+              {
+                "left": "Factores",
+                "right": "Personal especializado"
+              },
+              {
+                "left": "Demanda",
+                "right": "Compradores que exigen calidad"
+              },
+              {
+                "left": "Industrias de apoyo",
+                "right": "Proveedores especializados"
+              },
+              {
+                "left": "Estrategia y rivalidad",
+                "right": "Decisiones y competencia entre empresas"
+              }
+            ],
+            "explanation": "Cada componente describe una condición del entorno diferente.",
+            "id": "cex-w7-q3"
+          },
+          {
+            "type": "ordering",
+            "prompt": "Ordena aplicación de modelos al taller.",
+            "items": [
+              "Identificar variedades y propuesta",
+              "Distinguir Krugman y Porter",
+              "Ubicar evidencia en componentes del diamante",
+              "Justificar mecanismos y límites"
+            ],
+            "explanation": "Primero reconoce hechos y después selecciona modelos y componentes.",
+            "id": "cex-w7-q4"
+          },
+          {
+            "type": "crossword",
+            "prompt": "Completa autores y componente.",
+            "entries": [
+              {
+                "word": "KRUGMAN",
+                "clue": "Autor de teoría con escala y diferenciación."
+              },
+              {
+                "word": "PORTER",
+                "clue": "Autor del diamante competitivo."
+              },
+              {
+                "word": "DEMANDA",
+                "clue": "Condición ligada a compradores."
+              }
+            ],
+            "explanation": "Autores y condiciones deben reconocerse por su función conceptual.",
+            "id": "cex-w7-q5"
+          }
+        ]
+      }
+    },
+    {
+      "weekNumber": 8,
+      "unit": "UNIDAD 2: TEORÍAS DEL COMERCIO INTERNACIONAL.",
+      "title": "2.6 Ética y responsabilidad en el comercio internacional.",
+      "enterpriseCase": "Responsabilidad y afirmaciones verificables",
+      "activity": {
+        "week": 8,
+        "name": "Responsabilidad y afirmaciones verificables",
+        "objective": "Reconoce quién puede verse afectado; distingue afirmaciones respaldadas de intenciones; decide cómo comunicar límites. Ordena una revisión ética que identifique problema, contraste evidencia, corrija y comunique. No liquides salarios ni supongas normas no documentadas.",
+        "label": "Simulación educativa · práctica conceptual",
+        "context": "Conceptos clave\nÉtica y responsabilidad comercial consideran consecuencias para personas, comunidades y entorno, además de obligaciones aplicables. Una afirmación debe corresponder a evidencia: intención de mejora, registro interno y certificación externa no son equivalentes. Cumplir un pedido no justifica engañar ni omitir compromisos. La lectura distingue comercio y normas del trabajo y reconoce la competencia de la OIT; no convierte a la OMC en empleador o autoridad que resuelva cualquier contrato. Analiza derechos, actores y transparencia sin inventar reglas laborales ni porcentajes de pago.\n\nCaso breve · simulación educativa\nUna asociación quiere llamar «certificada sostenible» a su artesanía porque piensa mejorar materiales. Todavía no cuenta con evaluación externa. Un comprador pide información sobre procedencia y condiciones. Debes proponer comunicación honesta que describa evidencia existente y pendientes, sin abandonar el objetivo de mejorar ni fabricar un certificado.\n\nQué debes hacer\nReconoce quién puede verse afectado; distingue afirmaciones respaldadas de intenciones; decide cómo comunicar límites. Ordena una revisión ética que identifique problema, contraste evidencia, corrija y comunique. No liquides salarios ni supongas normas no documentadas.\n\nSecuencia indicada para este caso: Identificar la afirmación y afectados → Contrastar evidencia disponible → Corregir afirmaciones no sustentadas → Comunicar atributos y pendientes.",
+        "references": [
+          {
+            "name": "Sílabo CEX-103-AC · ULEAM · 2026-2",
+            "url": "./documents/comercio-silabo.pdf",
+            "author": "ANDRADE ALVARADO SONIA PATRICIA · Universidad Laica Eloy Alfaro de Manabí",
+            "section": "Semana 8: 2.6 Ética y responsabilidad en el comercio internacional.",
+            "purpose": "Comprobar tema y ubicación semanal del contenido de la asignatura."
+          },
+          {
+            "name": "Comprender la OMC · Comercio y normas del trabajo",
+            "url": "https://www.wto.org/spanish/thewto_s/whatis_s/tif_s/bey5_s.htm",
+            "author": "Organización Mundial del Comercio",
+            "section": "Normas del trabajo y papel de la Organización Internacional del Trabajo",
+            "purpose": "Distinguir responsabilidad ética, reglas laborales y afirmaciones comerciales sustentadas."
+          }
+        ],
+        "questions": [
+          {
+            "type": "choice",
+            "prompt": "¿Qué distingue certificación de intención?",
+            "options": [
+              "Una intención no demuestra una evaluación externa ya obtenida.",
+              "La intención basta como certificación si la mejora es importante para el comprador.",
+              "El registro interno se presenta siempre como evaluación externa independiente.",
+              "Una afirmación comercial demuestra cumplimiento solo por haber sido publicada."
+            ],
+            "correct": 0,
+            "explanation": "Las evidencias tienen alcance distinto y deben nombrarse con precisión.",
+            "id": "cex-w8-q1"
+          },
+          {
+            "type": "choice",
+            "prompt": "¿Qué debería comunicar la asociación?",
+            "options": [
+              "Anunciar certificación como meta y omitir que todavía no se obtuvo.",
+              "Atributos demostrables y mejoras pendientes, sin anunciar una certificación que no tiene.",
+              "Describir evaluación interna como externa para simplificar el lenguaje del comprador.",
+              "Dejar la procedencia sin explicar porque el objetivo ambiental parece suficiente."
+            ],
+            "correct": 1,
+            "explanation": "La transparencia reconoce evidencia y pendientes sin inventar avales.",
+            "id": "cex-w8-q2"
+          },
+          {
+            "type": "matching",
+            "prompt": "Relaciona elemento y alcance.",
+            "pairs": [
+              {
+                "left": "Intención",
+                "right": "Compromiso futuro todavía no demostrado"
+              },
+              {
+                "left": "Registro interno",
+                "right": "Evidencia propia dentro de su alcance"
+              },
+              {
+                "left": "Certificación",
+                "right": "Evaluación externa según condiciones"
+              },
+              {
+                "left": "Responsabilidad",
+                "right": "Consideración de efectos y compromisos"
+              }
+            ],
+            "explanation": "Cada concepto aporta un alcance distinto de respaldo.",
+            "id": "cex-w8-q3"
+          },
+          {
+            "type": "ordering",
+            "prompt": "Ordena una revisión ética del mensaje.",
+            "items": [
+              "Identificar la afirmación y afectados",
+              "Contrastar evidencia disponible",
+              "Corregir afirmaciones no sustentadas",
+              "Comunicar atributos y pendientes"
+            ],
+            "explanation": "La revisión actúa sobre hechos y mensaje antes de prometer.",
+            "id": "cex-w8-q4"
+          },
+          {
+            "type": "crossword",
+            "prompt": "Completa conceptos de responsabilidad.",
+            "entries": [
+              {
+                "word": "ETICA",
+                "clue": "Reflexión sobre deberes y consecuencias."
+              },
+              {
+                "word": "RESPETO",
+                "clue": "Consideración debida a personas y compromisos."
+              },
+              {
+                "word": "EVIDENCIA",
+                "clue": "Respaldo de una afirmación comercial."
+              }
+            ],
+            "explanation": "La ética comercial incluye efectos y transparencia.",
+            "id": "cex-w8-q5"
+          }
+        ]
+      }
+    },
+    {
+      "weekNumber": 9,
+      "unit": "UNIDAD 3: EL ESCENARIO INTERNACIONAL.",
+      "title": "3.1. Globalización, Mundialización e internacionalización.",
+      "enterpriseCase": "Conexiones mundiales y decisiones empresariales",
+      "activity": {
+        "week": 9,
+        "name": "Conexiones mundiales y decisiones empresariales",
+        "objective": "Identifica actividades y actores; separa decisiones de internacionalización y conexiones amplias; reconoce bienes y servicios. Ordena un mapa conceptual que muestre relaciones y límites. Consulta el apartado sobre globalización y explica el uso de cada término en el caso.",
+        "label": "Simulación educativa · práctica conceptual",
+        "context": "Conceptos clave\nGlobalización describe conexiones e interdependencias que abarcan distintas economías y ámbitos. Mundialización suele utilizarse con sentido próximo, aunque el enfoque depende del autor: no hay una separación rígida universal que memorizar. Internacionalización empresarial se refiere a decisiones concretas de comprar, vender o establecer vínculos fuera del mercado doméstico. Una cadena puede incluir bienes y servicios de distintos territorios aunque una fase sea local. Distingue tendencia amplia, acción empresarial y eslabón de la cadena para explicar conexiones sin afirmar que todas tienen idénticos efectos.\n\nCaso breve · simulación educativa\nUn taller fabrica localmente, compra diseño exterior y vende mediante una tienda extranjera. El grupo cree que fabricación local elimina conexiones internacionales. Debes mapear producción, servicio y comercialización y distinguir esas decisiones concretas de una tendencia mundial más amplia. No se solicitan costos ni porcentajes de insumos.\n\nQué debes hacer\nIdentifica actividades y actores; separa decisiones de internacionalización y conexiones amplias; reconoce bienes y servicios. Ordena un mapa conceptual que muestre relaciones y límites. Consulta el apartado sobre globalización y explica el uso de cada término en el caso.\n\nSecuencia indicada para este caso: Identificar actividades del taller → Ubicar actores y territorios → Distinguir acciones y tendencia amplia → Explicar conexiones sin borrar la fase local.",
+        "references": [
+          {
+            "name": "Sílabo CEX-103-AC · ULEAM · 2026-2",
+            "url": "./documents/comercio-silabo.pdf",
+            "author": "ANDRADE ALVARADO SONIA PATRICIA · Universidad Laica Eloy Alfaro de Manabí",
+            "section": "Semana 9: 3.1. Globalización, Mundialización e internacionalización.",
+            "purpose": "Comprobar tema y ubicación semanal del contenido de la asignatura."
+          },
+          {
+            "name": "Informe sobre el Comercio Mundial 2008 · Globalización y comercio",
+            "url": "https://www.wto.org/spanish/res_s/booksp_s/anrep_s/world_trade_report08_s.pdf",
+            "author": "Organización Mundial del Comercio",
+            "section": "Sección B: globalización y comercio; conexiones y cambios que facilitan el intercambio",
+            "purpose": "Relacionar conexiones mundiales con decisiones concretas de internacionalización."
+          }
+        ],
+        "questions": [
+          {
+            "type": "choice",
+            "prompt": "¿Qué define mejor internacionalización empresarial?",
+            "options": [
+              "Una tendencia mundial amplia, sin referirse a decisiones concretas de empresa.",
+              "Decisiones concretas de operar con mercados o actores exteriores.",
+              "El uso de medios digitales aunque no exista vínculo con otros mercados.",
+              "La nacionalidad de un producto como único criterio de toda actividad empresarial."
+            ],
+            "correct": 1,
+            "explanation": "La internacionalización describe acciones de una empresa en relación con mercados exteriores.",
+            "id": "cex-w9-q1"
+          },
+          {
+            "type": "choice",
+            "prompt": "¿Qué corrige la lectura del taller?",
+            "options": [
+              "Clasificar la cadena como totalmente local porque una fase física ocurre en el país.",
+              "Identificar diseño como mercancía solo por contratarlo con un proveedor exterior.",
+              "Producción local puede formar parte de una cadena con servicios y ventas exteriores.",
+              "Considerar únicamente traslado y omitir las decisiones de servicio y venta."
+            ],
+            "correct": 2,
+            "explanation": "Una cadena integra distintas naturalezas y territorios.",
+            "id": "cex-w9-q2"
+          },
+          {
+            "type": "matching",
+            "prompt": "Relaciona concepto y nivel.",
+            "pairs": [
+              {
+                "left": "Globalización",
+                "right": "Conexiones e interdependencias amplias"
+              },
+              {
+                "left": "Internacionalización",
+                "right": "Acciones empresariales exteriores"
+              },
+              {
+                "left": "Bien",
+                "right": "Mercancía física de una operación"
+              },
+              {
+                "left": "Servicio",
+                "right": "Prestación que puede cruzar vínculos internacionales"
+              }
+            ],
+            "explanation": "Los niveles y naturaleza de actividad son diferentes.",
+            "id": "cex-w9-q3"
+          },
+          {
+            "type": "ordering",
+            "prompt": "Ordena el mapa del caso.",
+            "items": [
+              "Identificar actividades del taller",
+              "Ubicar actores y territorios",
+              "Distinguir acciones y tendencia amplia",
+              "Explicar conexiones sin borrar la fase local"
+            ],
+            "explanation": "El mapa se construye de actividades concretas a interpretación.",
+            "id": "cex-w9-q4"
+          },
+          {
+            "type": "crossword",
+            "prompt": "Completa términos de conexión.",
+            "entries": [
+              {
+                "word": "CADENA",
+                "clue": "Conjunto de actividades relacionadas."
+              },
+              {
+                "word": "SERVICIO",
+                "clue": "Prestación diferente de mercancía física."
+              },
+              {
+                "word": "RED",
+                "clue": "Vínculos entre actores y territorios."
+              }
+            ],
+            "explanation": "Los conceptos describen interdependencias y naturaleza de actividades.",
+            "id": "cex-w9-q5"
+          }
+        ]
+      }
+    },
+    {
+      "weekNumber": 10,
+      "unit": "UNIDAD 3: EL ESCENARIO INTERNACIONAL.",
+      "title": "3.2. Instituciones que regulan y facilitan el comercio internacional.",
+      "enterpriseCase": "Instituciones: reconocer funciones y límites",
+      "activity": {
+        "week": 10,
+        "name": "Instituciones: reconocer funciones y límites",
+        "objective": "Identifica la necesidad del caso; vincula cada actor con su función; señala atribuciones incorrectas y límites. Ordena una consulta conceptual que elija fuente competente y revise alcance antes de concluir que algo está autorizado.",
+        "label": "Simulación educativa · práctica conceptual",
+        "context": "Conceptos clave\nLas instituciones del comercio internacional tienen funciones diferentes. La OMC administra un marco de acuerdos entre miembros con negociación, seguimiento y solución de diferencias dentro de su sistema. No aprueba facturas privadas ni reserva transporte. ITC ofrece recursos y asistencia de desarrollo comercial. ICC publica reglas Incoterms y otros instrumentos de práctica comercial; no es autoridad aduanera estatal. SENAE cumple funciones aduaneras ecuatorianas. Una empresa de transporte presta un servicio privado. Relaciona necesidad con competencia antes de asignar una consulta o asumir que información general equivale a autorización.\n\nCaso breve · simulación educativa\nUn estudiante redacta un correo a la OMC para que reserve un barco y apruebe su factura. Al mismo tiempo necesita comprender reglas comerciales y obligaciones de entrega. Debes separar consulta institucional de servicio privado y reconocer qué función corresponde a cada actor, sin crear un directorio numérico.\n\nQué debes hacer\nIdentifica la necesidad del caso; vincula cada actor con su función; señala atribuciones incorrectas y límites. Ordena una consulta conceptual que elija fuente competente y revise alcance antes de concluir que algo está autorizado.\n\nSecuencia indicada para este caso: Precisar la necesidad → Identificar actor competente → Consultar el recurso específico → Revisar alcance antes de concluir.",
+        "references": [
+          {
+            "name": "Sílabo CEX-103-AC · ULEAM · 2026-2",
+            "url": "./documents/comercio-silabo.pdf",
+            "author": "ANDRADE ALVARADO SONIA PATRICIA · Universidad Laica Eloy Alfaro de Manabí",
+            "section": "Semana 10: 3.2. Instituciones que regulan y facilitan el comercio internacional.",
+            "purpose": "Comprobar tema y ubicación semanal del contenido de la asignatura."
+          },
+          {
+            "name": "Comprender la OMC · ¿Qué es la OMC?",
+            "url": "https://www.wto.org/spanish/thewto_s/whatis_s/tif_s/fact1_s.htm",
+            "author": "Organización Mundial del Comercio",
+            "section": "Apartados «¿Qué es la OMC?» y funciones del sistema de comercio",
+            "purpose": "Distinguir intercambio internacional, reglas y actores; no confundir organización con operador privado."
+          },
+          {
+            "name": "ICC · Incoterms® 2020",
+            "url": "https://iccwbo.org/business-solutions/incoterms-rules/incoterms-2020/",
+            "author": "International Chamber of Commerce",
+            "section": "Funciones de las reglas y diferencia entre obligaciones, gastos y riesgos; reglas para cualquier transporte y para mar/vías interiores",
+            "purpose": "Comprender qué distribuyen los Incoterms y por qué deben precisarse lugar y versión."
+          }
+        ],
+        "questions": [
+          {
+            "type": "choice",
+            "prompt": "¿Qué describe una función de OMC?",
+            "options": [
+              "Aprobar documentación de cada empresa como servicio obligatorio del sistema multilateral.",
+              "Contratar transporte privado porque facilita intercambio entre miembros.",
+              "Marco de acuerdos y seguimiento entre miembros.",
+              "Emitir reglas Incoterms como su función exclusiva frente a contratos privados."
+            ],
+            "correct": 2,
+            "explanation": "El marco multilateral no equivale a ejecutar operaciones privadas.",
+            "id": "cex-w10-q1"
+          },
+          {
+            "type": "choice",
+            "prompt": "¿Cómo debe corregirse el correo?",
+            "options": [
+              "Mantener todas las peticiones en OMC por ser el marco más amplio.",
+              "Usar una guía multilateral como prueba de factura aprobada.",
+              "Asignar al proveedor logístico negociación de acuerdos entre miembros.",
+              "Separar reglas e instituciones del servicio de transporte y la documentación privada."
+            ],
+            "correct": 3,
+            "explanation": "La competencia se selecciona según necesidad concreta.",
+            "id": "cex-w10-q2"
+          },
+          {
+            "type": "matching",
+            "prompt": "Relaciona actor y función.",
+            "pairs": [
+              {
+                "left": "OMC",
+                "right": "Marco multilateral comercial"
+              },
+              {
+                "left": "ICC",
+                "right": "Reglas de práctica comercial como Incoterms"
+              },
+              {
+                "left": "SENAE",
+                "right": "Función aduanera ecuatoriana"
+              },
+              {
+                "left": "Transportista",
+                "right": "Servicio privado de traslado"
+              }
+            ],
+            "explanation": "Las funciones son complementarias pero no intercambiables.",
+            "id": "cex-w10-q3"
+          },
+          {
+            "type": "ordering",
+            "prompt": "Ordena una consulta bien dirigida.",
+            "items": [
+              "Precisar la necesidad",
+              "Identificar actor competente",
+              "Consultar el recurso específico",
+              "Revisar alcance antes de concluir"
+            ],
+            "explanation": "Una fuente se elige según pregunta y límites de competencia.",
+            "id": "cex-w10-q4"
+          },
+          {
+            "type": "crossword",
+            "prompt": "Completa siglas y conceptos.",
+            "entries": [
+              {
+                "word": "OMC",
+                "clue": "Organización del marco multilateral comercial."
+              },
+              {
+                "word": "ICC",
+                "clue": "Entidad que publica reglas Incoterms."
+              },
+              {
+                "word": "COMPETENCIA",
+                "clue": "Ámbito de funciones de una institución."
+              }
+            ],
+            "explanation": "Identificar siglas exige asociarlas con funciones y límites.",
+            "id": "cex-w10-q5"
+          }
+        ]
+      }
+    },
+    {
+      "weekNumber": 11,
+      "unit": "UNIDAD 3: EL ESCENARIO INTERNACIONAL.",
+      "title": "3.3. Factores que afectan el comercio internacional.",
+      "enterpriseCase": "Factores que condicionan el intercambio",
+      "activity": {
+        "week": 11,
+        "name": "Factores que condicionan el intercambio",
+        "objective": "Clasifica factores y diferencia hechos de señales. Explica el mecanismo que podría intervenir, consulta la fuente pertinente y ordena una revisión antes de concluir. No conviertas incertidumbre en norma vigente ni atribuyas causalidad con evidencia insuficiente.",
+        "label": "Simulación educativa · práctica conceptual",
+        "context": "Conceptos clave\nEl comercio depende de factores económicos, políticos, legales, tecnológicos y logísticos. Una condición puede facilitar conexiones o generar barreras, sin explicar por sí sola todo resultado. La previsibilidad de reglas y transparencia institucional ayudan a comprender decisiones; infraestructura y comunicación influyen en coordinación; condiciones económicas afectan posibilidades de intercambio. Distingue hecho confirmado, señal por verificar y explicación causal. Un caso con un solo dato no demuestra que ese factor causó todo cambio. Identifica mecanismo, fuente y límites antes de recomendar una respuesta.\n\nCaso breve · simulación educativa\nUna cooperativa recibe un mensaje informal sobre un posible cambio de etiqueta y una noticia sobre interrupción de transporte. El grupo los llama la misma barrera y da por vigente una regla no publicada. Debes distinguir factor legal, logístico y estado de evidencia, sin calcular riesgo o pérdidas.\n\nQué debes hacer\nClasifica factores y diferencia hechos de señales. Explica el mecanismo que podría intervenir, consulta la fuente pertinente y ordena una revisión antes de concluir. No conviertas incertidumbre en norma vigente ni atribuyas causalidad con evidencia insuficiente.\n\nSecuencia indicada para este caso: Identificar lo que afirma la señal → Clasificar factor y fuente → Confirmar estado y alcance → Explicar respuesta y límites.",
+        "references": [
+          {
+            "name": "Sílabo CEX-103-AC · ULEAM · 2026-2",
+            "url": "./documents/comercio-silabo.pdf",
+            "author": "ANDRADE ALVARADO SONIA PATRICIA · Universidad Laica Eloy Alfaro de Manabí",
+            "section": "Semana 11: 3.3. Factores que afectan el comercio internacional.",
+            "purpose": "Comprobar tema y ubicación semanal del contenido de la asignatura."
+          },
+          {
+            "name": "Comprender la OMC · Los principios del sistema de comercio",
+            "url": "https://www.wto.org/spanish/thewto_s/whatis_s/tif_s/fact2_s.htm",
+            "author": "Organización Mundial del Comercio",
+            "section": "No discriminación; previsibilidad mediante consolidaciones y transparencia",
+            "purpose": "Reconocer reglas y factores institucionales del comercio, sin inventar requisitos de una mercancía."
+          },
+          {
+            "name": "Informe sobre el Comercio Mundial 2008 · Globalización y comercio",
+            "url": "https://www.wto.org/spanish/res_s/booksp_s/anrep_s/world_trade_report08_s.pdf",
+            "author": "Organización Mundial del Comercio",
+            "section": "Sección B: globalización y comercio; conexiones y cambios que facilitan el intercambio",
+            "purpose": "Relacionar conexiones mundiales con decisiones concretas de internacionalización."
+          }
+        ],
+        "questions": [
+          {
+            "type": "choice",
+            "prompt": "¿Qué aporta previsibilidad de reglas?",
+            "options": [
+              "Garantizar resultado comercial por estar publicada una regla transparente.",
+              "Sustituir toda condición logística con información institucional.",
+              "Hacer innecesario revisar cambios posteriores y su aplicabilidad.",
+              "Un contexto más claro para decisiones, sin eliminar todos los factores."
+            ],
+            "correct": 3,
+            "explanation": "La previsibilidad es un factor institucional y no una garantía universal.",
+            "id": "cex-w11-q1"
+          },
+          {
+            "type": "choice",
+            "prompt": "¿Qué revisión corresponde a la cooperativa?",
+            "options": [
+              "Separar factores y confirmar la posible norma en fuente competente.",
+              "Dar por vigente el mensaje porque el cliente conoce su mercado.",
+              "Tratar transporte y etiqueta como un mismo factor sin revisar mecanismos.",
+              "Actuar sobre ambos como hechos confirmados sin distinguir fuentes."
+            ],
+            "correct": 0,
+            "explanation": "Naturaleza y estado de evidencia requieren clasificación diferente.",
+            "id": "cex-w11-q2"
+          },
+          {
+            "type": "matching",
+            "prompt": "Relaciona factor y ejemplo.",
+            "pairs": [
+              {
+                "left": "Legal",
+                "right": "Requisito normativo aplicable"
+              },
+              {
+                "left": "Logístico",
+                "right": "Disponibilidad de transporte"
+              },
+              {
+                "left": "Tecnológico",
+                "right": "Herramientas de coordinación"
+              },
+              {
+                "left": "Institucional",
+                "right": "Transparencia de reglas"
+              }
+            ],
+            "explanation": "Los factores actúan mediante mecanismos distintos.",
+            "id": "cex-w11-q3"
+          },
+          {
+            "type": "ordering",
+            "prompt": "Ordena la revisión de una señal comercial.",
+            "items": [
+              "Identificar lo que afirma la señal",
+              "Clasificar factor y fuente",
+              "Confirmar estado y alcance",
+              "Explicar respuesta y límites"
+            ],
+            "explanation": "El alcance se verifica antes de actuar como si fuera un hecho.",
+            "id": "cex-w11-q4"
+          },
+          {
+            "type": "crossword",
+            "prompt": "Completa términos de factores.",
+            "entries": [
+              {
+                "word": "BARRERA",
+                "clue": "Condición que dificulta intercambio."
+              },
+              {
+                "word": "NORMA",
+                "clue": "Regla cuya vigencia debe confirmarse."
+              },
+              {
+                "word": "FUENTE",
+                "clue": "Origen de información que se revisa."
+              }
+            ],
+            "explanation": "Una señal no es automáticamente una barrera confirmada.",
+            "id": "cex-w11-q5"
+          }
+        ]
+      }
+    },
+    {
+      "weekNumber": 12,
+      "unit": "UNIDAD 3: EL ESCENARIO INTERNACIONAL.",
+      "title": "3.4. Medios y rutas de transporte internacional. 3.5. Introducción a los Incoterms y su aplicación básica en el comercio internacional.",
+      "enterpriseCase": "Transporte e Incoterms: cosas distintas",
+      "activity": {
+        "week": 12,
+        "name": "Transporte e Incoterms: cosas distintas",
+        "objective": "Identifica medio, ruta y punto de entrega; distingue gastos y riesgo; relaciona regla con operación y precisa lugar y versión. Lee el recurso ICC sobre Incoterms 2020 y explica qué asuntos todavía requieren acuerdos separados.",
+        "label": "Simulación educativa · práctica conceptual",
+        "context": "Conceptos clave\nMedio de transporte indica cómo se mueve la mercancía; ruta conecta lugares; Incoterms distribuyen ciertas obligaciones, gastos y riesgo de entrega entre comprador y vendedor. No resuelven por sí solos propiedad, pago o todos los incumplimientos. Lugar y versión deben precisarse. Hay reglas para cualquier modo y otras para mar o vías navegables interiores. En CIF, pagar transporte y seguro no significa conservar riesgo hasta destino: la entrega básica se ubica a bordo en origen. Para contenedor entregado antes de embarcar conviene examinar el punto real y una regla como FCA.\n\nCaso breve · simulación educativa\nEl grupo elige transporte marítimo y escribe solo «CIF» en una propuesta. Cree que eso define pago, propiedad y todo riesgo hasta la llegada. Debes explicar límites, necesidad de lugar y versión y por qué pagar transporte no equivale a soportar riesgo durante todo el trayecto. No se calculan cotizaciones.\n\nQué debes hacer\nIdentifica medio, ruta y punto de entrega; distingue gastos y riesgo; relaciona regla con operación y precisa lugar y versión. Lee el recurso ICC sobre Incoterms 2020 y explica qué asuntos todavía requieren acuerdos separados.\n\nSecuencia indicada para este caso: Identificar operación y punto real → Distinguir gastos y riesgo → Seleccionar regla acorde con modalidad → Precisar lugar, versión y acuerdos restantes.",
+        "references": [
+          {
+            "name": "Sílabo CEX-103-AC · ULEAM · 2026-2",
+            "url": "./documents/comercio-silabo.pdf",
+            "author": "ANDRADE ALVARADO SONIA PATRICIA · Universidad Laica Eloy Alfaro de Manabí",
+            "section": "Semana 12: 3.4. Medios y rutas de transporte internacional. 3.5. Introducción a los Incoterms y su aplicación básica en el comercio internacional.",
+            "purpose": "Comprobar tema y ubicación semanal del contenido de la asignatura."
+          },
+          {
+            "name": "ICC · Incoterms® 2020",
+            "url": "https://iccwbo.org/business-solutions/incoterms-rules/incoterms-2020/",
+            "author": "International Chamber of Commerce",
+            "section": "Funciones de las reglas y diferencia entre obligaciones, gastos y riesgos; reglas para cualquier transporte y para mar/vías interiores",
+            "purpose": "Comprender qué distribuyen los Incoterms y por qué deben precisarse lugar y versión."
+          }
+        ],
+        "questions": [
+          {
+            "type": "choice",
+            "prompt": "¿Qué distribuyen los Incoterms?",
+            "options": [
+              "Ciertas obligaciones, gastos y riesgo de entrega.",
+              "Todo el contrato, incluida propiedad y pago, sin otros acuerdos.",
+              "La ruta geográfica, dejando entrega y responsabilidades sin efecto.",
+              "El tipo de transporte como única condición, sin obligaciones contractuales."
+            ],
+            "correct": 0,
+            "explanation": "Las reglas tienen alcance específico y no sustituyen todo el contrato.",
+            "id": "cex-w12-q1"
+          },
+          {
+            "type": "choice",
+            "prompt": "¿Qué error contiene la propuesta CIF?",
+            "options": [
+              "CIF conserva riesgo hasta llegada únicamente porque vendedor paga flete y seguro.",
+              "Pagar flete y seguro no conserva por sí solo riesgo hasta destino; faltan lugar y versión.",
+              "Nombrar CIF basta para definir punto, versión, propiedad y pago.",
+              "Si hay seguro, riesgo y gastos se transfieren siempre en el mismo momento."
+            ],
+            "correct": 1,
+            "explanation": "En CIF, gastos y transferencia básica de riesgo no ocurren necesariamente en el mismo punto.",
+            "id": "cex-w12-q2"
+          },
+          {
+            "type": "matching",
+            "prompt": "Relaciona concepto y función.",
+            "pairs": [
+              {
+                "left": "Medio",
+                "right": "Modo físico de transporte"
+              },
+              {
+                "left": "Ruta",
+                "right": "Trayecto entre lugares"
+              },
+              {
+                "left": "Incoterm",
+                "right": "Distribución de obligaciones de entrega"
+              },
+              {
+                "left": "Lugar designado",
+                "right": "Punto que debe precisarse contractualmente"
+              }
+            ],
+            "explanation": "Modalidad y contrato son aspectos conectados pero distintos.",
+            "id": "cex-w12-q3"
+          },
+          {
+            "type": "ordering",
+            "prompt": "Ordena la revisión de una condición de entrega.",
+            "items": [
+              "Identificar operación y punto real",
+              "Distinguir gastos y riesgo",
+              "Seleccionar regla acorde con modalidad",
+              "Precisar lugar, versión y acuerdos restantes"
+            ],
+            "explanation": "La regla describe el caso concreto, no se elige solo por nombre conocido.",
+            "id": "cex-w12-q4"
+          },
+          {
+            "type": "crossword",
+            "prompt": "Completa términos de entrega.",
+            "entries": [
+              {
+                "word": "RUTA",
+                "clue": "Trayecto entre puntos de traslado."
+              },
+              {
+                "word": "RIESGO",
+                "clue": "Posibilidad de pérdida o daño que se distribuye."
+              },
+              {
+                "word": "ENTREGA",
+                "clue": "Hecho cuyo punto debe definirse."
+              }
+            ],
+            "explanation": "Un viaje y una distribución contractual no son la misma cosa.",
+            "id": "cex-w12-q5"
+          }
+        ]
+      }
+    },
+    {
+      "weekNumber": 13,
+      "unit": "UNIDAD 4: EL ROL DEL ESTADO.",
+      "title": "4.1. Normativa y Política Comercial del Ecuador. 4.2. Instituciones del Comercio Exterior en el Ecuador",
+      "enterpriseCase": "Estado, política y autoridad competente",
+      "activity": {
+        "week": 13,
+        "name": "Estado, política y autoridad competente",
+        "objective": "Reconoce instrumento público, obligación y función institucional; compara atribución con competencia y fuente. Ordena una verificación que identifique producto y operación antes de aplicar una regla. No inventes aranceles, permisos ni condiciones legales del caso.",
+        "label": "Simulación educativa · práctica conceptual",
+        "context": "Conceptos clave\nPolítica comercial comprende objetivos e instrumentos con que el Estado organiza relaciones comerciales. Normativa establece obligaciones y condiciones aplicables; una institución actúa dentro de competencia, no por similitud de nombre. SENAE cumple funciones aduaneras; promoción exportadora y control público no son lo mismo. Las condiciones concretas dependen de producto, régimen y normativa vigente y deben verificarse: no existe una lista universal válida por cualquier captura. Distingue orientación, regla y autorización antes de afirmar cumplimiento. Los principios multilaterales ayudan a comprender el marco, sin sustituir requisitos específicos.\n\nCaso breve · simulación educativa\nUna presentación llama permiso a una guía promocional y asigna todos los controles a la misma entidad. Incluye una captura antigua sin producto ni fecha. Debes diferenciar política, norma y función institucional y explicar por qué una fuente de orientación no acredita automáticamente una operación autorizada.\n\nQué debes hacer\nReconoce instrumento público, obligación y función institucional; compara atribución con competencia y fuente. Ordena una verificación que identifique producto y operación antes de aplicar una regla. No inventes aranceles, permisos ni condiciones legales del caso.\n\nSecuencia indicada para este caso: Identificar producto y operación → Ubicar autoridad y fuente competente → Comprobar vigencia y alcance → Distinguir confirmado y pendiente.",
+        "references": [
+          {
+            "name": "Sílabo CEX-103-AC · ULEAM · 2026-2",
+            "url": "./documents/comercio-silabo.pdf",
+            "author": "ANDRADE ALVARADO SONIA PATRICIA · Universidad Laica Eloy Alfaro de Manabí",
+            "section": "Semana 13: 4.1. Normativa y Política Comercial del Ecuador. 4.2. Instituciones del Comercio Exterior en el Ecuador",
+            "purpose": "Comprobar tema y ubicación semanal del contenido de la asignatura."
+          },
+          {
+            "name": "SENAE · Para exportar",
+            "url": "https://www.aduana.gob.ec/servicio-al-ciudadano/para-exportar/",
+            "author": "Servicio Nacional de Aduana del Ecuador",
+            "section": "Qué es una exportación; actores y orientación de procedimientos",
+            "purpose": "Distinguir movimiento de mercancías y funciones documentales; consultar condiciones vigentes para casos reales."
+          },
+          {
+            "name": "SENAE · Para importar",
+            "url": "https://www.aduana.gob.ec/servicio-al-ciudadano/para-importar/",
+            "author": "Servicio Nacional de Aduana del Ecuador",
+            "section": "Qué es una importación y orientación al importador",
+            "purpose": "Reconocer operación de entrada y autoridad competente, sin fijar tasas ni listas universales."
+          },
+          {
+            "name": "Comprender la OMC · Los principios del sistema de comercio",
+            "url": "https://www.wto.org/spanish/thewto_s/whatis_s/tif_s/fact2_s.htm",
+            "author": "Organización Mundial del Comercio",
+            "section": "No discriminación; previsibilidad mediante consolidaciones y transparencia",
+            "purpose": "Reconocer reglas y factores institucionales del comercio, sin inventar requisitos de una mercancía."
+          }
+        ],
+        "questions": [
+          {
+            "type": "choice",
+            "prompt": "¿Qué distingue política comercial de una decisión privada?",
+            "options": [
+              "Cada decisión privada de transporte por influir en comercio del país.",
+              "La política expresa objetivos e instrumentos del Estado en relaciones comerciales.",
+              "Todo recurso de promoción como obligación universal de mercancías.",
+              "Una lista contractual de empresa como norma pública para terceros."
+            ],
+            "correct": 1,
+            "explanation": "Decisiones públicas y privadas tienen naturaleza diferente.",
+            "id": "cex-w13-q1"
+          },
+          {
+            "type": "choice",
+            "prompt": "¿Qué corrección requiere la presentación?",
+            "options": [
+              "Tratar orientación promocional como autorización por provenir de una institución.",
+              "Aplicar captura a toda mercancía sin examinar fecha o régimen.",
+              "Separar orientación, norma y autoridad y verificar vigencia y alcance.",
+              "Concentrar funciones en una entidad por semejanza de nombres."
+            ],
+            "correct": 2,
+            "explanation": "Orientación general no prueba cumplimiento ni autorización concreta.",
+            "id": "cex-w13-q2"
+          },
+          {
+            "type": "matching",
+            "prompt": "Relaciona concepto y función.",
+            "pairs": [
+              {
+                "left": "Política comercial",
+                "right": "Objetivos e instrumentos públicos"
+              },
+              {
+                "left": "Normativa",
+                "right": "Obligaciones aplicables"
+              },
+              {
+                "left": "Competencia",
+                "right": "Ámbito de actuación institucional"
+              },
+              {
+                "left": "Orientación",
+                "right": "Información que ayuda sin autorizar por sí sola"
+              }
+            ],
+            "explanation": "La clasificación evita convertir todo recurso informativo en permiso.",
+            "id": "cex-w13-q3"
+          },
+          {
+            "type": "ordering",
+            "prompt": "Ordena verificación conceptual de una regla.",
+            "items": [
+              "Identificar producto y operación",
+              "Ubicar autoridad y fuente competente",
+              "Comprobar vigencia y alcance",
+              "Distinguir confirmado y pendiente"
+            ],
+            "explanation": "La aplicabilidad se revisa antes de asumir cumplimiento.",
+            "id": "cex-w13-q4"
+          },
+          {
+            "type": "crossword",
+            "prompt": "Completa vocabulario del Estado.",
+            "entries": [
+              {
+                "word": "POLITICA",
+                "clue": "Objetivos e instrumentos de actuación pública."
+              },
+              {
+                "word": "NORMA",
+                "clue": "Regla aplicable que debe comprobarse."
+              },
+              {
+                "word": "ESTADO",
+                "clue": "Actor público del marco comercial."
+              }
+            ],
+            "explanation": "Las funciones deben reconocerse según naturaleza y competencia.",
+            "id": "cex-w13-q5"
+          }
+        ]
+      }
+    },
+    {
+      "weekNumber": 14,
+      "unit": "UNIDAD 4: EL ROL DEL ESTADO.",
+      "title": "4.3. Operaciones de Exportación, importación e intercambio compensado.",
+      "enterpriseCase": "Exportar, importar y compensar",
+      "activity": {
+        "week": 14,
+        "name": "Exportar, importar y compensar",
+        "objective": "Fija la perspectiva territorial; reconoce salida y entrada; distingue vínculo contractual y pago; identifica evidencia que comprobaría cada prestación. Ordena el análisis sin calcular saldos ni concluir exenciones: se evalúan los conceptos y su relación.",
+        "label": "Simulación educativa · práctica conceptual",
+        "context": "Conceptos clave\nExportación e importación describen salida y entrada comerciales desde una perspectiva territorial. Intercambio compensado vincula prestaciones o compras; puede combinar mercancía y dinero, sin borrar naturaleza de los movimientos. La forma de pago no elimina por sí sola obligaciones documentales ni convierte el bien recibido en gratuito. Cada prestación debe describirse y acordarse, junto con responsabilidades y evidencia de cumplimiento. La guía CNUDMI explica estructura jurídica de operaciones compensatorias; un caso didáctico permite distinguir conceptos, no determinar permisos o costos reales.\n\nCaso breve · simulación educativa\nUna cooperativa acuerda entregar artesanías y recibir equipamiento desde otro territorio. Un estudiante dice que, al pagar en parte con bienes, desaparecen exportación e importación. El grupo debe reconocer movimientos, vínculo entre prestaciones y responsabilidades, sin valorar cantidades ni calcular un saldo monetario.\n\nQué debes hacer\nFija la perspectiva territorial; reconoce salida y entrada; distingue vínculo contractual y pago; identifica evidencia que comprobaría cada prestación. Ordena el análisis sin calcular saldos ni concluir exenciones: se evalúan los conceptos y su relación.\n\nSecuencia indicada para este caso: Fijar perspectiva y movimientos → Describir cada prestación → Reconocer vínculo y responsabilidades → Identificar pruebas de cumplimiento.",
+        "references": [
+          {
+            "name": "Sílabo CEX-103-AC · ULEAM · 2026-2",
+            "url": "./documents/comercio-silabo.pdf",
+            "author": "ANDRADE ALVARADO SONIA PATRICIA · Universidad Laica Eloy Alfaro de Manabí",
+            "section": "Semana 14: 4.3. Operaciones de Exportación, importación e intercambio compensado.",
+            "purpose": "Comprobar tema y ubicación semanal del contenido de la asignatura."
+          },
+          {
+            "name": "CNUDMI · Guía jurídica sobre operaciones de comercio compensatorio internacional",
+            "url": "https://uncitral.un.org/en/texts/salegoods/contractualtexts/countertrade",
+            "author": "Comisión de las Naciones Unidas para el Derecho Mercantil Internacional",
+            "section": "Descripción y acceso a la Guía jurídica; definición y estructura de operaciones compensatorias",
+            "purpose": "Reconocer prestaciones vinculadas y distinguir forma de pago de exportación e importación."
+          },
+          {
+            "name": "SENAE · Para exportar",
+            "url": "https://www.aduana.gob.ec/servicio-al-ciudadano/para-exportar/",
+            "author": "Servicio Nacional de Aduana del Ecuador",
+            "section": "Qué es una exportación; actores y orientación de procedimientos",
+            "purpose": "Distinguir movimiento de mercancías y funciones documentales; consultar condiciones vigentes para casos reales."
+          },
+          {
+            "name": "SENAE · Para importar",
+            "url": "https://www.aduana.gob.ec/servicio-al-ciudadano/para-importar/",
+            "author": "Servicio Nacional de Aduana del Ecuador",
+            "section": "Qué es una importación y orientación al importador",
+            "purpose": "Reconocer operación de entrada y autoridad competente, sin fijar tasas ni listas universales."
+          }
+        ],
+        "questions": [
+          {
+            "type": "choice",
+            "prompt": "¿Qué describe intercambio compensado?",
+            "options": [
+              "Una operación que deja de ser comercio porque no usa solo dinero.",
+              "Un regalo cuyo valor no necesita condiciones ni prueba.",
+              "Vincular prestaciones o compras, con posible componente monetario.",
+              "La fusión de salida y entrada en un único movimiento sin perspectivas."
+            ],
+            "correct": 2,
+            "explanation": "Compensación vincula operaciones sin eliminar su naturaleza comercial.",
+            "id": "cex-w14-q1"
+          },
+          {
+            "type": "choice",
+            "prompt": "¿Qué explicación corrige al estudiante?",
+            "options": [
+              "Nombrar pago en bienes elimina la naturaleza de los movimientos.",
+              "Considerar equipo gratuito porque no todo se paga monetariamente.",
+              "Tomar el acuerdo vinculado como prueba automática de recepción.",
+              "Salida de artesanías y entrada de equipo mantienen naturaleza; la compensación es una condición diferente."
+            ],
+            "correct": 3,
+            "explanation": "Dirección de movimientos y forma de pago son aspectos distintos.",
+            "id": "cex-w14-q2"
+          },
+          {
+            "type": "matching",
+            "prompt": "Relaciona elemento y concepto.",
+            "pairs": [
+              {
+                "left": "Salida comercial",
+                "right": "Exportación"
+              },
+              {
+                "left": "Entrada comercial",
+                "right": "Importación"
+              },
+              {
+                "left": "Prestaciones vinculadas",
+                "right": "Compensación"
+              },
+              {
+                "left": "Recepción documentada",
+                "right": "Evidencia de cumplimiento"
+              }
+            ],
+            "explanation": "El vínculo entre operaciones no sustituye prueba de cada entrega.",
+            "id": "cex-w14-q3"
+          },
+          {
+            "type": "ordering",
+            "prompt": "Ordena análisis de un acuerdo compensado.",
+            "items": [
+              "Fijar perspectiva y movimientos",
+              "Describir cada prestación",
+              "Reconocer vínculo y responsabilidades",
+              "Identificar pruebas de cumplimiento"
+            ],
+            "explanation": "La compensación se analiza después de reconocer prestaciones y dirección.",
+            "id": "cex-w14-q4"
+          },
+          {
+            "type": "crossword",
+            "prompt": "Completa vocabulario de operaciones.",
+            "entries": [
+              {
+                "word": "EXPORTAR",
+                "clue": "Realizar una salida comercial desde la perspectiva observada."
+              },
+              {
+                "word": "IMPORTAR",
+                "clue": "Realizar una entrada comercial desde esa perspectiva."
+              },
+              {
+                "word": "ACUERDO",
+                "clue": "Compromisos que vinculan las prestaciones."
+              }
+            ],
+            "explanation": "Dirección y compromiso deben diferenciarse.",
+            "id": "cex-w14-q5"
+          }
+        ]
+      }
+    },
+    {
+      "weekNumber": 15,
+      "unit": "UNIDAD 4: EL ROL DEL ESTADO.",
+      "title": "4.4. Balanza de pagos: Estructura, importancia e interpretación básica.",
+      "enterpriseCase": "Balanza de pagos: estructura antes de cifras",
+      "activity": {
+        "week": 15,
+        "name": "Balanza de pagos: estructura antes de cifras",
+        "objective": "Determina residencia de los actores y naturaleza de la transacción; relaciónala con la cuenta pertinente y explica el alcance. Usa la lectura FMI sobre estructura y cuenta corriente. No calcules saldos, porcentajes ni necesidad de financiación.",
+        "label": "Simulación educativa · práctica conceptual",
+        "context": "Conceptos clave\nLa balanza de pagos registra transacciones entre residentes y no residentes durante un período. Residencia económica no equivale simplemente a nacionalidad. Cuenta corriente reúne bienes, servicios, ingreso primario e ingreso secundario. Primario incluye ingresos vinculados al trabajo o inversión según naturaleza; secundario incluye transferencias corrientes sin contraprestación. Capital y financiera son cuentas distintas: recibir un préstamo no vuelve ese flujo una exportación. La balanza comercial de mercancías es una parte y no toda balanza de pagos. Clasifica por naturaleza económica, no solo por canal bancario.\n\nCaso breve · simulación educativa\nUn grupo reúne venta de mercancía, asesoría prestada a un no residente, renta de inversión y transferencia personal. Un compañero las llama todas exportaciones porque llegó dinero al banco. Debes distinguir componentes y explicar por qué un préstamo adicional es una transacción financiera, sin sumar valores.\n\nQué debes hacer\nDetermina residencia de los actores y naturaleza de la transacción; relaciónala con la cuenta pertinente y explica el alcance. Usa la lectura FMI sobre estructura y cuenta corriente. No calcules saldos, porcentajes ni necesidad de financiación.\n\nSecuencia indicada para este caso: Identificar residencia económica → Reconocer naturaleza de transacción → Seleccionar cuenta o componente → Explicar alcance sin confundir canal bancario.",
+        "references": [
+          {
+            "name": "Sílabo CEX-103-AC · ULEAM · 2026-2",
+            "url": "./documents/comercio-silabo.pdf",
+            "author": "ANDRADE ALVARADO SONIA PATRICIA · Universidad Laica Eloy Alfaro de Manabí",
+            "section": "Semana 15: 4.4. Balanza de pagos: Estructura, importancia e interpretación básica.",
+            "purpose": "Comprobar tema y ubicación semanal del contenido de la asignatura."
+          },
+          {
+            "name": "FMI · Manual de Balanza de Pagos y Posición de Inversión Internacional, sexta edición",
+            "url": "https://www.imf.org/external/pubs/ft/bop/2007/pdf/bpm6.pdf",
+            "author": "Fondo Monetario Internacional",
+            "section": "Capítulos 2 y 4: marco y residencia; capítulo 8: financiera; capítulo 10: bienes y servicios; capítulos 11–12: ingresos primario y secundario; capítulo 13: capital.",
+            "purpose": "Clasificar transacciones por naturaleza y residencia y distinguir cuenta corriente, capital y financiera."
+          }
+        ],
+        "questions": [
+          {
+            "type": "choice",
+            "prompt": "¿Qué criterio guía clasificación en balanza de pagos?",
+            "options": [
+              "El canal de pago bancario y la moneda, sin examinar naturaleza.",
+              "La nacionalidad como único criterio del vínculo económico.",
+              "La entrada de dinero como prueba suficiente de exportación.",
+              "Residencia económica y naturaleza de transacción."
+            ],
+            "correct": 3,
+            "explanation": "La metodología distingue residentes/no residentes y naturaleza económica de flujos.",
+            "id": "cex-w15-q1"
+          },
+          {
+            "type": "choice",
+            "prompt": "¿Qué debe corregirse en el grupo?",
+            "options": [
+              "Bienes, servicios, rentas, transferencias y préstamos no pertenecen necesariamente a una misma cuenta.",
+              "Agrupar todo abono en bienes porque representa un valor recibido.",
+              "Clasificar préstamo como ingreso secundario solo por transferencia bancaria.",
+              "Omitir servicios porque no se desplazan como mercancía física."
+            ],
+            "correct": 0,
+            "explanation": "El canal de pago no elimina diferencias económicas entre transacciones.",
+            "id": "cex-w15-q2"
+          },
+          {
+            "type": "matching",
+            "prompt": "Relaciona transacción y componente corriente.",
+            "pairs": [
+              {
+                "left": "Mercancía",
+                "right": "Bienes"
+              },
+              {
+                "left": "Asesoría internacional",
+                "right": "Servicios"
+              },
+              {
+                "left": "Renta de inversión",
+                "right": "Ingreso primario"
+              },
+              {
+                "left": "Transferencia corriente sin contraprestación",
+                "right": "Ingreso secundario"
+              }
+            ],
+            "explanation": "Cuenta corriente integra componentes distintos por naturaleza.",
+            "id": "cex-w15-q3"
+          },
+          {
+            "type": "ordering",
+            "prompt": "Ordena clasificación conceptual de un flujo.",
+            "items": [
+              "Identificar residencia económica",
+              "Reconocer naturaleza de transacción",
+              "Seleccionar cuenta o componente",
+              "Explicar alcance sin confundir canal bancario"
+            ],
+            "explanation": "Clasificar exige residencia y naturaleza antes del nombre de la cuenta.",
+            "id": "cex-w15-q4"
+          },
+          {
+            "type": "crossword",
+            "prompt": "Completa conceptos de la balanza.",
+            "entries": [
+              {
+                "word": "CORRIENTE",
+                "clue": "Cuenta con bienes, servicios e ingresos."
+              },
+              {
+                "word": "PRIMARIO",
+                "clue": "Ingreso asociado a trabajo o inversión según naturaleza."
+              },
+              {
+                "word": "SECUNDARIO",
+                "clue": "Ingreso de transferencias corrientes sin contraprestación."
+              }
+            ],
+            "explanation": "La estructura ayuda a comprender antes de interpretar resultados.",
+            "id": "cex-w15-q5"
+          }
+        ]
+      }
+    },
+    {
+      "weekNumber": 16,
+      "unit": "UNIDAD 4: EL ROL DEL ESTADO.",
+      "title": "4.4. Balanza de pagos: Estructura, importancia e interpretación básica. EXAMEN FINAL",
+      "enterpriseCase": "Examen: interpretar sin mezclar cuentas",
+      "activity": {
+        "week": 16,
+        "name": "Examen: interpretar sin mezclar cuentas",
+        "objective": "Clasifica por residencia y naturaleza; distingue corriente y financiera; explica límites de las conclusiones y relación con balanza comercial. Ordena una revisión del argumento antes de aceptarlo. Esta evaluación final conserva el tema semanal y no solicita cálculos.",
+        "label": "Simulación educativa · práctica conceptual",
+        "context": "Conceptos clave\nInterpretar balanza de pagos exige comprender estructura, residencia y naturaleza de transacciones. Cuenta corriente no se limita a mercancías y no equivale a utilidad de una empresa. Capital y financiera tienen funciones diferentes; un préstamo genera una obligación financiera y no es ingreso secundario por llegar como transferencia bancaria. Un saldo, por sí solo, no demuestra bienestar de toda persona ni explica causas. El examen integra conceptos para reconocer una lectura válida y los límites de un argumento, sin ejercicios de cálculo ni conclusiones macroeconómicas basadas en una noticia aislada.\n\nCaso breve · simulación educativa\nUn panel estudiantil afirma que toda entrada de dinero es ingreso corriente y que la balanza comercial describe todos los vínculos de la economía. Tiene ejemplos de mercancías, servicio, renta, transferencia personal y préstamo. Debes reorganizar conceptualmente el panel y explicar por qué una cuenta nacional no es ganancia individual.\n\nQué debes hacer\nClasifica por residencia y naturaleza; distingue corriente y financiera; explica límites de las conclusiones y relación con balanza comercial. Ordena una revisión del argumento antes de aceptarlo. Esta evaluación final conserva el tema semanal y no solicita cálculos.\n\nSecuencia indicada para este caso: Identificar afirmaciones y ejemplos → Comprobar residencia y naturaleza → Relacionar componentes con metodología → Corregir alcance y conclusiones.",
+        "references": [
+          {
+            "name": "Sílabo CEX-103-AC · ULEAM · 2026-2",
+            "url": "./documents/comercio-silabo.pdf",
+            "author": "ANDRADE ALVARADO SONIA PATRICIA · Universidad Laica Eloy Alfaro de Manabí",
+            "section": "Semana 16: 4.4. Balanza de pagos: Estructura, importancia e interpretación básica. EXAMEN FINAL",
+            "purpose": "Comprobar tema y ubicación semanal del contenido de la asignatura."
+          },
+          {
+            "name": "FMI · Manual de Balanza de Pagos y Posición de Inversión Internacional, sexta edición",
+            "url": "https://www.imf.org/external/pubs/ft/bop/2007/pdf/bpm6.pdf",
+            "author": "Fondo Monetario Internacional",
+            "section": "Capítulos 2 y 4: marco y residencia; capítulo 8: financiera; capítulo 10: bienes y servicios; capítulos 11–12: ingresos primario y secundario; capítulo 13: capital.",
+            "purpose": "Clasificar transacciones por naturaleza y residencia y distinguir cuenta corriente, capital y financiera."
+          }
+        ],
+        "questions": [
+          {
+            "type": "choice",
+            "prompt": "¿Qué afirmación interpreta correctamente la estructura?",
+            "options": [
+              "La balanza comercial de mercancías no cubre todas las transacciones de balanza de pagos.",
+              "La cuenta de mercancías describe todo flujo exterior porque las demás son formas de pago.",
+              "El canal bancario hace equivalentes renta, transferencia y préstamo.",
+              "Un saldo nacional corresponde siempre al margen del vendedor individual."
+            ],
+            "correct": 0,
+            "explanation": "La cobertura de pagos es mayor y naturaleza de flujos difiere de resultado empresarial.",
+            "id": "cex-w16-q1"
+          },
+          {
+            "type": "choice",
+            "prompt": "¿Cómo debe corregirse el panel?",
+            "options": [
+              "Agrupar entradas y separar únicamente pagos salientes.",
+              "Separar bienes, servicios, ingresos y operaciones financieras según naturaleza y residencia.",
+              "Usar transferencia bancaria como criterio para ingreso secundario en todos los ejemplos.",
+              "Eliminar financiera porque se confunde con forma de pago del contrato."
+            ],
+            "correct": 1,
+            "explanation": "La estructura metodológica permite distinguir transacciones de naturaleza diferente.",
+            "id": "cex-w16-q2"
+          },
+          {
+            "type": "matching",
+            "prompt": "Relaciona ejemplo y categoría metodológica.",
+            "pairs": [
+              {
+                "left": "Venta de mercancía a no residente",
+                "right": "Bienes de corriente"
+              },
+              {
+                "left": "Prestación a no residente",
+                "right": "Servicios de corriente"
+              },
+              {
+                "left": "Ingreso de inversión",
+                "right": "Primario de corriente"
+              },
+              {
+                "left": "Préstamo de acreedor no residente",
+                "right": "Cuenta financiera"
+              }
+            ],
+            "explanation": "Un préstamo genera obligación y no se transforma en ingreso corriente.",
+            "id": "cex-w16-q3"
+          },
+          {
+            "type": "ordering",
+            "prompt": "Ordena revisión del panel final.",
+            "items": [
+              "Identificar afirmaciones y ejemplos",
+              "Comprobar residencia y naturaleza",
+              "Relacionar componentes con metodología",
+              "Corregir alcance y conclusiones"
+            ],
+            "explanation": "La revisión fundamenta categorías antes de aceptar interpretación.",
+            "id": "cex-w16-q4"
+          },
+          {
+            "type": "crossword",
+            "prompt": "Completa claves del examen.",
+            "entries": [
+              {
+                "word": "CUENTA",
+                "clue": "Agrupación metodológica de transacciones."
+              },
+              {
+                "word": "ACTIVO",
+                "clue": "Recurso financiero distinto de mercancía."
+              },
+              {
+                "word": "PASIVO",
+                "clue": "Obligación financiera como deuda."
+              }
+            ],
+            "explanation": "Activos y pasivos no se confunden con categorías de mercancías.",
+            "id": "cex-w16-q5"
+          }
+        ]
+      }
+    }
+  ],
+  "activities": [
+    {
+      "week": 1,
+      "name": "¿Qué cambia al comerciar con otro país?",
+      "objective": "Identifica país y actores; distingue venta local, exportación e importación; señala qué evidencia permite hablar de una operación ejecutada. Revisa el sílabo y ubica este fundamento dentro del recorrido de la materia.",
+      "label": "Simulación educativa · práctica conceptual",
+      "context": "Conceptos clave\nComercio exterior observa las operaciones de un país con otros territorios; comercio internacional analiza el intercambio y sus relaciones más amplias. Exportar e importar describen direcciones distintas de una operación: un mismo bien puede ser exportación para el país vendedor e importación para el comprador. Importan actores, reglas y condiciones, no solo idioma o moneda. El sílabo organiza un recorrido desde estos fundamentos hasta teorías, instituciones y balanza de pagos. Aprender el concepto exige reconocer perspectiva y evidencia, antes de afirmar que una consulta ya es una transacción completada.\n\nCaso breve · simulación educativa\nUna asociación artesanal de Manabí recibe una consulta de una tienda extranjera y vende también a un local cercano. Un compañero llama «importación» a todo porque el comprador usa otro idioma. La consulta todavía no tiene aceptación ni entrega. Debes explicar las dos perspectivas sin confundir interés con ejecución.\n\nQué debes hacer\nIdentifica país y actores; distingue venta local, exportación e importación; señala qué evidencia permite hablar de una operación ejecutada. Revisa el sílabo y ubica este fundamento dentro del recorrido de la materia.\n\nSecuencia indicada para este caso: Identificar país desde el que se analiza → Ubicar origen y destino de la mercancía → Reconocer salida o entrada para ese país → Verificar evidencia antes de afirmar ejecución.",
+      "references": [
+        {
+          "name": "Sílabo CEX-103-AC · ULEAM · 2026-2",
+          "url": "./documents/comercio-silabo.pdf",
+          "author": "ANDRADE ALVARADO SONIA PATRICIA · Universidad Laica Eloy Alfaro de Manabí",
+          "section": "Semana 1: Encuadre y socialización del sílabo. 1.1. Conceptos, diferencias e importancia del comercio exterior y comercio Internacional.",
+          "purpose": "Comprobar tema y ubicación semanal del contenido de la asignatura."
+        },
+        {
+          "name": "Comprender la OMC · ¿Qué es la OMC?",
+          "url": "https://www.wto.org/spanish/thewto_s/whatis_s/tif_s/fact1_s.htm",
+          "author": "Organización Mundial del Comercio",
+          "section": "Apartados «¿Qué es la OMC?» y funciones del sistema de comercio",
+          "purpose": "Distinguir intercambio internacional, reglas y actores; no confundir organización con operador privado."
+        },
+        {
+          "name": "SENAE · Para exportar",
+          "url": "https://www.aduana.gob.ec/servicio-al-ciudadano/para-exportar/",
+          "author": "Servicio Nacional de Aduana del Ecuador",
+          "section": "Qué es una exportación; actores y orientación de procedimientos",
+          "purpose": "Distinguir movimiento de mercancías y funciones documentales; consultar condiciones vigentes para casos reales."
+        }
+      ],
+      "questions": [
+        {
+          "type": "choice",
+          "prompt": "¿Qué distingue mejor comercio exterior de comercio internacional?",
+          "options": [
+            "Exterior estudia solo mercancías; internacional estudia solo servicios.",
+            "El primero mira operaciones de un país con otros; el segundo estudia relaciones de intercambio más amplias.",
+            "Exterior se limita a actividades de empresas grandes; internacional incluye pequeñas.",
+            "Exterior describe destino del bien; internacional describe exclusivamente su medio de pago."
+          ],
+          "correct": 1,
+          "explanation": "La perspectiva del país distingue el enfoque; moneda y canal no definen por sí solos el intercambio.",
+          "id": "cex-w1-q1"
+        },
+        {
+          "type": "choice",
+          "prompt": "¿Cómo debe describirse la consulta artesanal?",
+          "options": [
+            "La consulta prueba salida comercial porque ya identifica un cliente exterior.",
+            "Debe llamarse importación desde Ecuador porque quien inicia el contacto es extranjero.",
+            "Es una oportunidad de venta exterior; para Ecuador sería exportación al ejecutarse, y entrada para el destino.",
+            "La venta local y la propuesta exterior tienen igual clasificación porque el producto es idéntico."
+          ],
+          "correct": 2,
+          "explanation": "Dirección y perspectiva importan. La consulta no prueba aceptación, despacho ni recepción.",
+          "id": "cex-w1-q2"
+        },
+        {
+          "type": "matching",
+          "prompt": "Relaciona cada concepto con su perspectiva.",
+          "pairs": [
+            {
+              "left": "Exportación",
+              "right": "Salida comercial hacia otro territorio"
+            },
+            {
+              "left": "Importación",
+              "right": "Entrada comercial desde otro territorio"
+            },
+            {
+              "left": "Comercio exterior",
+              "right": "Operaciones de un país con otros"
+            },
+            {
+              "left": "Comercio internacional",
+              "right": "Relaciones de intercambio entre países"
+            }
+          ],
+          "explanation": "Los conceptos describen enfoque y dirección, no tamaño de una venta.",
+          "id": "cex-w1-q3"
+        },
+        {
+          "type": "ordering",
+          "prompt": "Ordena el análisis conceptual antes de nombrar la operación.",
+          "items": [
+            "Identificar país desde el que se analiza",
+            "Ubicar origen y destino de la mercancía",
+            "Reconocer salida o entrada para ese país",
+            "Verificar evidencia antes de afirmar ejecución"
+          ],
+          "explanation": "Primero fija perspectiva; después determina dirección y alcance de evidencia.",
+          "id": "cex-w1-q4"
+        },
+        {
+          "type": "crossword",
+          "prompt": "Completa vocabulario del fundamento comercial.",
+          "entries": [
+            {
+              "word": "COMERCIO",
+              "clue": "Intercambio de bienes y servicios."
+            },
+            {
+              "word": "ORIGEN",
+              "clue": "Procedencia que debe examinarse, sin confundirla con destino."
+            },
+            {
+              "word": "DESTINO",
+              "clue": "Territorio o mercado hacia el que se dirige una operación."
+            }
+          ],
+          "explanation": "La orientación del intercambio ayuda a nombrar la operación correctamente.",
+          "id": "cex-w1-q5"
+        }
+      ]
+    },
+    {
+      "week": 2,
+      "name": "Los elementos que conectan una operación",
+      "objective": "Reconoce producto y actores; relaciona cada documento con su función; compara lo acordado con la evidencia disponible y señala los vacíos. No calcules precios ni supongas permisos: explica qué información hace falta.",
+      "label": "Simulación educativa · práctica conceptual",
+      "context": "Conceptos clave\nLos elementos básicos incluyen producto, vendedor, comprador, mercado, condiciones de entrega, pago, transporte y documentación. Sus funciones se complementan. La factura describe transacción y condiciones comerciales; la lista de empaque caracteriza distribución física; el documento de transporte identifica traslado. Un contrato debe hacer explícitos compromisos y no sustituye controles públicos aplicables. La aduana y un transportista tampoco son el mismo actor. Antes de usar un documento, identifica qué pregunta responde y qué información no aporta. Para casos reales consulta procedimientos vigentes y características específicas de la mercancía.\n\nCaso breve · simulación educativa\nUn equipo prepara una propuesta de artesanías. Tiene fotos y una lista de cajas, pero no especifica comprador, condición de entrega ni pago. El estudiante cree que la lista de empaque reemplaza la factura y que la empresa de transporte puede aprobar cualquier requisito aduanero. Debes revisar funciones y vacíos.\n\nQué debes hacer\nReconoce producto y actores; relaciona cada documento con su función; compara lo acordado con la evidencia disponible y señala los vacíos. No calcules precios ni supongas permisos: explica qué información hace falta.\n\nSecuencia indicada para este caso: Identificar producto y partes → Reconocer condiciones acordadas → Relacionar documentos con sus funciones → Señalar información faltante antes de ejecutar.",
+      "references": [
+        {
+          "name": "Sílabo CEX-103-AC · ULEAM · 2026-2",
+          "url": "./documents/comercio-silabo.pdf",
+          "author": "ANDRADE ALVARADO SONIA PATRICIA · Universidad Laica Eloy Alfaro de Manabí",
+          "section": "Semana 2: 1.2. Elementos básicos del comercio exterior.",
+          "purpose": "Comprobar tema y ubicación semanal del contenido de la asignatura."
+        },
+        {
+          "name": "SENAE · Para exportar",
+          "url": "https://www.aduana.gob.ec/servicio-al-ciudadano/para-exportar/",
+          "author": "Servicio Nacional de Aduana del Ecuador",
+          "section": "Qué es una exportación; actores y orientación de procedimientos",
+          "purpose": "Distinguir movimiento de mercancías y funciones documentales; consultar condiciones vigentes para casos reales."
+        },
+        {
+          "name": "SENAE · Para importar",
+          "url": "https://www.aduana.gob.ec/servicio-al-ciudadano/para-importar/",
+          "author": "Servicio Nacional de Aduana del Ecuador",
+          "section": "Qué es una importación y orientación al importador",
+          "purpose": "Reconocer operación de entrada y autoridad competente, sin fijar tasas ni listas universales."
+        }
+      ],
+      "questions": [
+        {
+          "type": "choice",
+          "prompt": "¿Qué relación entre documentos es correcta?",
+          "options": [
+            "Factura y empaque tienen igual alcance porque ambas mencionan el producto.",
+            "El documento de transporte determina condiciones económicas que faltan en el contrato.",
+            "Factura, empaque y transporte tienen funciones complementarias.",
+            "La fotografía basta para identificar aceptación comercial y distribución de obligaciones."
+          ],
+          "correct": 2,
+          "explanation": "Documentos diferentes responden preguntas comerciales, físicas y de traslado.",
+          "id": "cex-w2-q1"
+        },
+        {
+          "type": "choice",
+          "prompt": "¿Qué debe corregir el equipo artesanal?",
+          "options": [
+            "Tomar la lista de cajas como acuerdo comercial y completar condiciones después del despacho.",
+            "Solicitar al transportista que confirme pago, aunque no sea parte del acuerdo comercial.",
+            "Usar fotos para sustituir documentación, ya que permiten reconocer el producto.",
+            "Añadir actores y condiciones pendientes y distinguir factura de empaque y control público."
+          ],
+          "correct": 3,
+          "explanation": "El expediente debe expresar compromisos y respetar funciones de actores y documentos.",
+          "id": "cex-w2-q2"
+        },
+        {
+          "type": "matching",
+          "prompt": "Relaciona elemento y función.",
+          "pairs": [
+            {
+              "left": "Factura",
+              "right": "Descripción comercial de la transacción"
+            },
+            {
+              "left": "Lista de empaque",
+              "right": "Organización física de la carga"
+            },
+            {
+              "left": "Transportista",
+              "right": "Servicio de traslado"
+            },
+            {
+              "left": "Aduana",
+              "right": "Control público dentro de su competencia"
+            }
+          ],
+          "explanation": "Servicios logísticos y control regulador son funciones distintas.",
+          "id": "cex-w2-q3"
+        },
+        {
+          "type": "ordering",
+          "prompt": "Ordena una revisión básica de coherencia.",
+          "items": [
+            "Identificar producto y partes",
+            "Reconocer condiciones acordadas",
+            "Relacionar documentos con sus funciones",
+            "Señalar información faltante antes de ejecutar"
+          ],
+          "explanation": "Los documentos se evalúan según operación y compromisos identificados.",
+          "id": "cex-w2-q4"
+        },
+        {
+          "type": "crossword",
+          "prompt": "Completa los elementos comerciales.",
+          "entries": [
+            {
+              "word": "FACTURA",
+              "clue": "Documento que describe la transacción comercial."
+            },
+            {
+              "word": "EMPAQUE",
+              "clue": "Organización y protección física del bien."
+            },
+            {
+              "word": "CONTRATO",
+              "clue": "Acuerdo que establece compromisos entre partes."
+            }
+          ],
+          "explanation": "Cada término cubre un aspecto distinto del expediente.",
+          "id": "cex-w2-q5"
+        }
+      ]
+    },
+    {
+      "week": 3,
+      "name": "Una historia con distintos caminos",
+      "objective": "Distingue práctica de intercambio, medio que la facilita e institución que la organiza. Ordena primero las categorías y después interpreta relaciones, separando descripción histórica de causalidad no demostrada. Consulta la lectura sobre antecedentes del GATT.",
+      "label": "Simulación educativa · práctica conceptual",
+      "context": "Conceptos clave\nEl intercambio entre comunidades antecede a empresas y redes digitales. Trueque, medios monetarios, rutas e intermediación ayudan a comprender cómo se facilitaron transacciones en diferentes épocas. No todas las sociedades siguieron una secuencia única. Más adelante, acuerdos e instituciones multilaterales organizaron parte del comercio contemporáneo: el GATT y la OMC son antecedentes institucionales, no el origen de todo intercambio humano. Una cronología ordena hechos; demostrar causas necesita evidencia adicional. Distingue prácticas históricas, tecnologías y reglas antes de explicar su relación.\n\nCaso breve · simulación educativa\nUna exposición universitaria muestra rutas antiguas, uso de moneda y acuerdos multilaterales. Su título afirma que el comercio nació con internet. El grupo necesita corregirlo y explicar por qué una herramienta reciente puede facilitar conexiones sin originar toda la actividad comercial. No se pide memorizar fechas ni inventar una ruta universal.\n\nQué debes hacer\nDistingue práctica de intercambio, medio que la facilita e institución que la organiza. Ordena primero las categorías y después interpreta relaciones, separando descripción histórica de causalidad no demostrada. Consulta la lectura sobre antecedentes del GATT.\n\nSecuencia indicada para este caso: Identificar lo que la afirmación sostiene → Ubicar prácticas y períodos relevantes → Distinguir medios de instituciones → Redactar relación con límites de evidencia.",
+      "references": [
+        {
+          "name": "Sílabo CEX-103-AC · ULEAM · 2026-2",
+          "url": "./documents/comercio-silabo.pdf",
+          "author": "ANDRADE ALVARADO SONIA PATRICIA · Universidad Laica Eloy Alfaro de Manabí",
+          "section": "Semana 3: 1.3. Origen e Historia del Comercio Internacional.",
+          "purpose": "Comprobar tema y ubicación semanal del contenido de la asignatura."
+        },
+        {
+          "name": "Comprender la OMC · Los años del GATT: de La Habana a Marrakech",
+          "url": "https://www.wto.org/spanish/thewto_s/whatis_s/tif_s/fact4_s.htm",
+          "author": "Organización Mundial del Comercio",
+          "section": "Evolución del GATT y creación de la OMC",
+          "purpose": "Relacionar antecedentes del intercambio con la construcción posterior de instituciones multilaterales."
+        }
+      ],
+      "questions": [
+        {
+          "type": "choice",
+          "prompt": "¿Cuál es un antecedente institucional del comercio contemporáneo?",
+          "options": [
+            "El trueque es una institución multilateral que administra tratados comerciales.",
+            "El uso de moneda equivale a un acuerdo entre Estados sobre reglas comerciales.",
+            "Las rutas constituyen siempre organizaciones jurídicas formales del intercambio.",
+            "GATT, dentro de la construcción de acuerdos multilaterales."
+          ],
+          "correct": 3,
+          "explanation": "GATT organiza acuerdos posteriores a prácticas de intercambio mucho más antiguas.",
+          "id": "cex-w3-q1"
+        },
+        {
+          "type": "choice",
+          "prompt": "¿Qué título corrige mejor la exposición?",
+          "options": [
+            "Cómo cambiaron medios, rutas y reglas del intercambio.",
+            "Cómo internet reemplazó todos los mecanismos previos y explica cada intercambio actual.",
+            "Una ruta histórica única seguida por todas las sociedades para llegar al comercio digital.",
+            "La fecha de la OMC como inicio de toda transacción entre comunidades."
+          ],
+          "correct": 0,
+          "explanation": "Una historia puede explicar cambios sin reducirlos a una tecnología reciente.",
+          "id": "cex-w3-q2"
+        },
+        {
+          "type": "matching",
+          "prompt": "Relaciona concepto y categoría histórica.",
+          "pairs": [
+            {
+              "left": "Trueque",
+              "right": "Intercambio directo sin moneda como medio de pago"
+            },
+            {
+              "left": "Moneda",
+              "right": "Medio que facilita valorar e intercambiar"
+            },
+            {
+              "left": "Ruta",
+              "right": "Conexión física entre lugares"
+            },
+            {
+              "left": "GATT",
+              "right": "Acuerdos multilaterales del comercio contemporáneo"
+            }
+          ],
+          "explanation": "Práctica, medio, conexión e institución representan categorías diferentes.",
+          "id": "cex-w3-q3"
+        },
+        {
+          "type": "ordering",
+          "prompt": "Ordena el análisis de una afirmación histórica.",
+          "items": [
+            "Identificar lo que la afirmación sostiene",
+            "Ubicar prácticas y períodos relevantes",
+            "Distinguir medios de instituciones",
+            "Redactar relación con límites de evidencia"
+          ],
+          "explanation": "La interpretación se apoya en categorías y no en una cronología inventada.",
+          "id": "cex-w3-q4"
+        },
+        {
+          "type": "crossword",
+          "prompt": "Completa términos históricos.",
+          "entries": [
+            {
+              "word": "TRUEQUE",
+              "clue": "Intercambio directo sin moneda."
+            },
+            {
+              "word": "MONEDA",
+              "clue": "Medio de valoración y pago."
+            },
+            {
+              "word": "RUTA",
+              "clue": "Trayecto de conexión comercial."
+            }
+          ],
+          "explanation": "Estos términos describen mecanismos históricos distintos.",
+          "id": "cex-w3-q5"
+        }
+      ]
+    },
+    {
+      "week": 4,
+      "name": "Leer la evolución comercial de Ecuador",
+      "objective": "Reconoce etapas y productos; compara patrón primario y diversificación; explica coexistencia y distingue antecedentes de un perfil de período. Consulta entorno económico del examen OMC de Ecuador, sin cálculos.",
+      "label": "Simulación educativa · práctica conceptual",
+      "context": "Conceptos clave\nLa evolución ecuatoriana incluye especializaciones que pueden coexistir. El auge cacaotero de fines del siglo XIX e inicios del XX consolidó un patrón agroexportador. La expansión bananera de posguerra amplió esa trayectoria. Las exportaciones petroleras desde 1972 incorporaron un producto energético importante. Posteriormente camarón, flores y elaborados contribuyeron a diversificar oferta, sin eliminar productos anteriores. Exportador primario describe predominio de bienes con transformación limitada; diversificación amplía productos o destinos y no implica industrialización completa. Un perfil de período muestra composición; explicar evolución exige relacionar etapas y contexto. Estas referencias no se usan para calcular intervalos ni atribuir todo cambio a una sola causa.\n\nCaso breve · simulación educativa\nUn grupo expone cacao, banano, petróleo y nuevos productos ecuatorianos. Afirma que la etapa petrolera borró agricultura y que diversificar equivale a exportar solo manufacturas. Debes corregir esas ideas y distinguir coexistencia, incorporación de productos y transformación comercial, sin calcular indicadores.\n\nQué debes hacer\nReconoce etapas y productos; compara patrón primario y diversificación; explica coexistencia y distingue antecedentes de un perfil de período. Consulta entorno económico del examen OMC de Ecuador, sin cálculos.\n\nSecuencia indicada: Auge cacaotero → Expansión bananera de posguerra → Incorporación petrolera exportadora → Ampliación con camarón, flores y elaborados.",
+      "references": [
+        {
+          "name": "Sílabo CEX-103-AC · ULEAM · 2026-2",
+          "url": "./documents/comercio-silabo.pdf",
+          "author": "ANDRADE ALVARADO SONIA PATRICIA · Universidad Laica Eloy Alfaro de Manabí",
+          "section": "Semana 4: 1.4. Evolución del comercio exterior en Ecuador.",
+          "purpose": "Comprobar tema y ubicación semanal del contenido de la asignatura."
+        },
+        {
+          "name": "Comprender la OMC · Los años del GATT: de La Habana a Marrakech",
+          "url": "https://www.wto.org/spanish/thewto_s/whatis_s/tif_s/fact4_s.htm",
+          "author": "Organización Mundial del Comercio",
+          "section": "Evolución del GATT y creación de la OMC",
+          "purpose": "Relacionar antecedentes del intercambio con la construcción posterior de instituciones multilaterales."
+        },
+        {
+          "name": "OMC · Examen de las Políticas Comerciales: Ecuador WT/TPR/S/383 (2019)",
+          "url": "https://www.wto.org/spanish/tratop_s/tpr_s/s383_s.pdf",
+          "author": "Organización Mundial del Comercio · Secretaría",
+          "section": "Capítulo 1: entorno económico; estructura y evolución del comercio de mercancías.",
+          "purpose": "Situar composición y diversificación ecuatorianas, distinguiendo período del informe y antecedentes históricos."
+        }
+      ],
+      "questions": [
+        {
+          "type": "choice",
+          "prompt": "¿Qué describe diversificación exportadora posterior?",
+          "options": [
+            "Sustituir necesariamente todos los productos anteriores.",
+            "Exportar solo petróleo porque es etapa posterior.",
+            "Incorporar productos o mercados sin exigir desaparición de cacao, banano o petróleo.",
+            "Cambiar todo destino sin conservar categorías."
+          ],
+          "correct": 2,
+          "explanation": "Diversificación amplía oferta o destinos; no implica sustitución total ni industrialización completa.",
+          "id": "cex-w4-q1"
+        },
+        {
+          "type": "choice",
+          "prompt": "¿Cómo debe corregirse la exposición sobre etapas ecuatorianas?",
+          "options": [
+            "Reconocer agroexportación, incorporación petrolera y diversificación con coexistencia.",
+            "Mantener desaparición agrícola como consecuencia automática del petróleo.",
+            "Ordenar productos sin diferenciar etapas.",
+            "Usar un perfil como causa de toda historia."
+          ],
+          "correct": 0,
+          "explanation": "Las etapas describen cambios y coexistencia, no desaparición automática de actividades.",
+          "id": "cex-w4-q2"
+        },
+        {
+          "type": "matching",
+          "prompt": "Relaciona producto con etapa o aporte.",
+          "pairs": [
+            {
+              "left": "Cacao",
+              "right": "Auge agroexportador de fines del XIX e inicios del XX"
+            },
+            {
+              "left": "Banano",
+              "right": "Expansión agrícola de posguerra"
+            },
+            {
+              "left": "Petróleo",
+              "right": "Incorporación energética desde 1972"
+            },
+            {
+              "left": "Camarón y flores",
+              "right": "Ampliación posterior de oferta"
+            }
+          ],
+          "explanation": "La trayectoria combina antecedentes y coexistencia, sin pedir cantidades.",
+          "id": "cex-w4-q3"
+        },
+        {
+          "type": "ordering",
+          "prompt": "Ordena estas referencias históricas ecuatorianas.",
+          "items": [
+            "Auge cacaotero",
+            "Expansión bananera de posguerra",
+            "Incorporación petrolera exportadora",
+            "Ampliación con camarón, flores y elaborados"
+          ],
+          "explanation": "La secuencia sigue historia cualitativa enseñada, no importancia actual.",
+          "id": "cex-w4-q4"
+        },
+        {
+          "type": "crossword",
+          "prompt": "Completa productos de la trayectoria.",
+          "entries": [
+            {
+              "word": "CACAO",
+              "clue": "Producto del auge agroexportador temprano."
+            },
+            {
+              "word": "BANANO",
+              "clue": "Producto de expansión agrícola de posguerra."
+            },
+            {
+              "word": "CAMARON",
+              "clue": "Producto de diversificación posterior."
+            }
+          ],
+          "explanation": "Reconocer productos ayuda a interpretar etapas y coexistencia.",
+          "id": "cex-w4-q5"
+        }
+      ]
+    },
+    {
+      "week": 5,
+      "name": "Países distintos, preguntas comparables",
+      "objective": "Clasifica cada observación como política, económica, legal o cultural; distingue evidencia de opinión; ordena una comparación que defina preguntas antes de concluir. No uses matrices numéricas: justifica las categorías y los límites del caso.",
+      "label": "Simulación educativa · práctica conceptual",
+      "context": "Conceptos clave\nComparar países requiere reconocer dimensiones políticas, económicas, legales y culturales. Lo político incluye instituciones y estabilidad de reglas; lo económico, estructura productiva y condiciones de mercado; lo legal, normas y compromisos aplicables; lo cultural, comunicación y expectativas contextualizadas. Una diferencia no significa superioridad automática. Tampoco un solo comprador representa a toda una población. Las teorías explican mecanismos; los casos necesitan evidencia y fuentes adecuadas. Primero define qué se compara, después reúne información por dimensión y finalmente justifica una conclusión con límites, evitando estereotipos nacionales.\n\nCaso breve · simulación educativa\nUna cooperativa busca un mercado para artesanías. El equipo escoge un país porque le agradó un cliente y descarta otro por un comentario en redes. No revisó instituciones, requisitos ni comunicación. Debes transformar opiniones en preguntas comparables y explicar por qué una experiencia individual no representa todas las condiciones del país.\n\nQué debes hacer\nClasifica cada observación como política, económica, legal o cultural; distingue evidencia de opinión; ordena una comparación que defina preguntas antes de concluir. No uses matrices numéricas: justifica las categorías y los límites del caso.\n\nSecuencia indicada para este caso: Definir propósito y dimensiones → Buscar fuentes adecuadas por dimensión → Separar evidencias de opiniones → Justificar conclusión y límites.",
+      "references": [
+        {
+          "name": "Sílabo CEX-103-AC · ULEAM · 2026-2",
+          "url": "./documents/comercio-silabo.pdf",
+          "author": "ANDRADE ALVARADO SONIA PATRICIA · Universidad Laica Eloy Alfaro de Manabí",
+          "section": "Semana 5: 2.1. Diferencias políticas, económicas, legales, culturales entre países.",
+          "purpose": "Comprobar tema y ubicación semanal del contenido de la asignatura."
+        },
+        {
+          "name": "Informe sobre el Comercio Mundial 2008 · Globalización y comercio",
+          "url": "https://www.wto.org/spanish/res_s/booksp_s/anrep_s/world_trade_report08_s.pdf",
+          "author": "Organización Mundial del Comercio",
+          "section": "Sección B: globalización y comercio; conexiones y cambios que facilitan el intercambio",
+          "purpose": "Relacionar conexiones mundiales con decisiones concretas de internacionalización."
+        },
+        {
+          "name": "Comprender la OMC · Los principios del sistema de comercio",
+          "url": "https://www.wto.org/spanish/thewto_s/whatis_s/tif_s/fact2_s.htm",
+          "author": "Organización Mundial del Comercio",
+          "section": "No discriminación; previsibilidad mediante consolidaciones y transparencia",
+          "purpose": "Reconocer reglas y factores institucionales del comercio, sin inventar requisitos de una mercancía."
+        }
+      ],
+      "questions": [
+        {
+          "type": "choice",
+          "prompt": "¿Cuál es una diferencia legal?",
+          "options": [
+            "El idioma preferido por un cliente es una norma aplicable a toda mercancía.",
+            "Requisitos normativos aplicables a una mercancía.",
+            "La estructura productiva es un requisito contractual por el hecho de influir en costos.",
+            "La opinión comercial de un comprador equivale a legislación de su país."
+          ],
+          "correct": 1,
+          "explanation": "La dimensión legal se refiere a normas y obligaciones, no a todas las diferencias de comunicación.",
+          "id": "cex-w5-q1"
+        },
+        {
+          "type": "choice",
+          "prompt": "¿Cómo debería actuar la cooperativa?",
+          "options": [
+            "Mantener la selección por experiencia personal y añadir fuentes solo para describirla.",
+            "Tomar comentarios de redes como evidencia representativa de todas las dimensiones.",
+            "Definir dimensiones y buscar evidencia antes de seleccionar.",
+            "Comparar únicamente comunicación porque un cliente amable demuestra las demás condiciones."
+          ],
+          "correct": 2,
+          "explanation": "La comparación necesita información contextual y evita estereotipos.",
+          "id": "cex-w5-q2"
+        },
+        {
+          "type": "matching",
+          "prompt": "Relaciona dimensión y observación pertinente.",
+          "pairs": [
+            {
+              "left": "Política",
+              "right": "Instituciones y estabilidad de reglas"
+            },
+            {
+              "left": "Económica",
+              "right": "Estructura productiva y mercado"
+            },
+            {
+              "left": "Legal",
+              "right": "Normas aplicables y compromisos"
+            },
+            {
+              "left": "Cultural",
+              "right": "Comunicación y expectativas contextualizadas"
+            }
+          ],
+          "explanation": "Las categorías distinguen mecanismos sin reducir países a etiquetas.",
+          "id": "cex-w5-q3"
+        },
+        {
+          "type": "ordering",
+          "prompt": "Ordena una comparación conceptual responsable.",
+          "items": [
+            "Definir propósito y dimensiones",
+            "Buscar fuentes adecuadas por dimensión",
+            "Separar evidencias de opiniones",
+            "Justificar conclusión y límites"
+          ],
+          "explanation": "El propósito guía las preguntas antes de decidir.",
+          "id": "cex-w5-q4"
+        },
+        {
+          "type": "crossword",
+          "prompt": "Completa conceptos de la comparación.",
+          "entries": [
+            {
+              "word": "CULTURA",
+              "clue": "Prácticas y expectativas que deben contextualizarse."
+            },
+            {
+              "word": "NORMA",
+              "clue": "Regla aplicable que se consulta en fuente competente."
+            },
+            {
+              "word": "PAIS",
+              "clue": "Unidad territorial de la comparación, sin uniformar a sus personas."
+            }
+          ],
+          "explanation": "Las categorías ayudan a evitar generalizaciones injustificadas.",
+          "id": "cex-w5-q5"
+        }
+      ]
+    },
+    {
+      "week": 6,
+      "name": "Absoluta, comparativa y dotaciones",
+      "objective": "Compara Smith, Ricardo y Heckscher–Ohlin. Distingue eficiencia, sacrificio relativo, dotación e intensidad; justifica modelo y supuestos, sin cálculos.",
+      "label": "Simulación educativa · práctica conceptual",
+      "context": "Conceptos clave\nAdam Smith se asocia a ventaja absoluta: eficiencia en uso de recursos. David Ricardo explica ventaja comparativa: menor costo de oportunidad relativo, la alternativa sacrificada al especializarse. Ser más eficiente en varios bienes no elimina necesariamente razones de intercambio. Heckscher–Ohlin relaciona dotaciones relativas de factores, como trabajo y capital, con la intensidad de uso en los bienes. Dotación e intensidad no son equivalentes. Los modelos explican mecanismos bajo supuestos y no predicen automáticamente toda exportación. Define la comparación del caso antes de elegir autor o modelo; no se pide calcular horas, precios ni costos.\n\nCaso breve · simulación educativa\nDos talleres producen tejidos y cerámica. Uno usa menos recursos en ambos. Un compañero usa a Smith para negar intercambio; otro examina sacrificios relativos y otro dotaciones. Debes distinguir aportes de Smith, Ricardo y Heckscher–Ohlin sin inventar horas o costos.\n\nQué debes hacer\nCompara Smith, Ricardo y Heckscher–Ohlin. Distingue eficiencia, sacrificio relativo, dotación e intensidad; justifica modelo y supuestos, sin cálculos.\n\nSecuencia indicada: Precisar bienes y alternativas → Distinguir eficiencia de sacrificio relativo → Identificar teoría pertinente → Explicar conclusión bajo supuestos.",
+      "references": [
+        {
+          "name": "Sílabo CEX-103-AC · ULEAM · 2026-2",
+          "url": "./documents/comercio-silabo.pdf",
+          "author": "ANDRADE ALVARADO SONIA PATRICIA · Universidad Laica Eloy Alfaro de Manabí",
+          "section": "Semana 6: 2.2. Teorías clásicas del Comercio Internacional. 2.3. Teorías de los factores de la producción.",
+          "purpose": "Comprobar tema y ubicación semanal del contenido de la asignatura."
+        },
+        {
+          "name": "Comprender la OMC · Argumentos a favor de un comercio abierto",
+          "url": "https://www.wto.org/spanish/thewto_s/whatis_s/tif_s/fact3_s.htm",
+          "author": "Organización Mundial del Comercio",
+          "section": "Ventaja comparativa: comparar alternativas y especialización",
+          "purpose": "Comprender ventaja absoluta y comparativa conceptualmente, sin ejercicios aritméticos."
+        },
+        {
+          "name": "Informe sobre el Comercio Mundial 2008 · El comercio en un mundo en proceso de globalización",
+          "url": "https://www.wto.org/spanish/res_s/booksp_s/anrep_s/world_trade_report08_s.pdf",
+          "author": "Organización Mundial del Comercio",
+          "section": "Sección C: causas del comercio; localizar ventajas comparativas, economías de escala y diferenciación",
+          "purpose": "Comparar explicaciones tradicionales y nuevas del intercambio, incluyendo factores y capacidades."
+        }
+      ],
+      "questions": [
+        {
+          "type": "choice",
+          "prompt": "¿Qué comparación corresponde a David Ricardo?",
+          "options": [
+            "Eficiencia absoluta aislada.",
+            "Costo de oportunidad relativo entre alternativas.",
+            "Abundancia aislada sin requerimientos.",
+            "Volumen de mercado como criterio único."
+          ],
+          "correct": 1,
+          "explanation": "Ricardo compara sacrificios relativos; Smith y Heckscher–Ohlin responden mecanismos diferentes.",
+          "id": "cex-w6-q1"
+        },
+        {
+          "type": "choice",
+          "prompt": "¿Qué responde al caso de talleres con distinta eficiencia?",
+          "options": [
+            "Negar intercambio usando solo ventaja absoluta.",
+            "Llamar dotación a rapidez sin definir factores.",
+            "Especializarse por el nombre del bien.",
+            "Examinar sacrificios relativos con Ricardo; absoluta en ambos no responde toda especialización."
+          ],
+          "correct": 3,
+          "explanation": "La comparativa distingue alternativa sacrificada y eficiencia productiva.",
+          "id": "cex-w6-q2"
+        },
+        {
+          "type": "matching",
+          "prompt": "Relaciona autor y mecanismo.",
+          "pairs": [
+            {
+              "left": "Adam Smith",
+              "right": "Ventaja absoluta y eficiencia"
+            },
+            {
+              "left": "David Ricardo",
+              "right": "Comparativa y costo de oportunidad"
+            },
+            {
+              "left": "Heckscher–Ohlin",
+              "right": "Dotaciones relativas e intensidad factorial"
+            },
+            {
+              "left": "Intensidad factorial",
+              "right": "Requerimientos de factores de un bien"
+            }
+          ],
+          "explanation": "Los modelos deben reconocerse por mecanismo y no solo nombre.",
+          "id": "cex-w6-q3"
+        },
+        {
+          "type": "ordering",
+          "prompt": "Ordena el análisis de especialización.",
+          "items": [
+            "Precisar bienes y alternativas",
+            "Distinguir eficiencia de sacrificio relativo",
+            "Identificar teoría pertinente",
+            "Explicar conclusión bajo supuestos"
+          ],
+          "explanation": "El razonamiento necesita definir comparaciones antes de aplicar teoría.",
+          "id": "cex-w6-q4"
+        },
+        {
+          "type": "crossword",
+          "prompt": "Completa autores y concepto.",
+          "entries": [
+            {
+              "word": "SMITH",
+              "clue": "Autor de ventaja absoluta."
+            },
+            {
+              "word": "RICARDO",
+              "clue": "Autor de ventaja comparativa."
+            },
+            {
+              "word": "FACTOR",
+              "clue": "Recurso productivo de modelos de dotación."
+            }
+          ],
+          "explanation": "Relaciona nombres con explicación conceptual pertinente.",
+          "id": "cex-w6-q5"
+        }
+      ]
+    },
+    {
+      "week": 7,
+      "name": "Escala, variedades y capacidades",
+      "objective": "Compara Krugman y Porter. Reconoce variedades, escala y componentes del diamante; justifica mecanismos del caso sin garantías de ventas ni cálculos.",
+      "label": "Simulación educativa · práctica conceptual",
+      "context": "Conceptos clave\nLas nuevas teorías asociadas a Paul Krugman incorporan economías de escala y diferenciación; explican intercambio de variedades entre economías parecidas. No requieren que un país sea incapaz de producir toda la categoría. Michael Porter estudia ventaja competitiva mediante el diamante: condiciones de factores; condiciones de demanda; industrias relacionadas y de apoyo; estrategia, estructura y rivalidad de empresas. Factores incluyen capacidades; demanda se refiere a compradores; apoyo a proveedores; rivalidad a competencia y decisiones. El diamante relaciona condiciones, no solo tamaño. Comparativa de Ricardo y competitiva de Porter no son idénticas. Identifica mecanismo y evidencia sin convertir escala o novedad en garantía absoluta.\n\nCaso breve · simulación educativa\nDos mercados intercambian variedades de cuadernos. Un taller mejora con compradores exigentes y proveedores especializados. El equipo afirma que variedad es irrelevante y todo depende de tamaño. Debes distinguir escala y diferenciación de Krugman y condiciones del diamante de Porter.\n\nQué debes hacer\nCompara Krugman y Porter. Reconoce variedades, escala y componentes del diamante; justifica mecanismos del caso sin garantías de ventas ni cálculos.\n\nSecuencia indicada: Identificar variedades y propuesta → Distinguir Krugman y Porter → Ubicar evidencia en componentes del diamante → Justificar mecanismos y límites.",
+      "references": [
+        {
+          "name": "Sílabo CEX-103-AC · ULEAM · 2026-2",
+          "url": "./documents/comercio-silabo.pdf",
+          "author": "ANDRADE ALVARADO SONIA PATRICIA · Universidad Laica Eloy Alfaro de Manabí",
+          "section": "Semana 7: 2.4. Nuevas teorías del comercio internacional. 2.5. Teorías de la Ventaja Competitiva.",
+          "purpose": "Comprobar tema y ubicación semanal del contenido de la asignatura."
+        },
+        {
+          "name": "Informe sobre el Comercio Mundial 2008 · El comercio en un mundo en proceso de globalización",
+          "url": "https://www.wto.org/spanish/res_s/booksp_s/anrep_s/world_trade_report08_s.pdf",
+          "author": "Organización Mundial del Comercio",
+          "section": "Sección C: causas del comercio; localizar ventajas comparativas, economías de escala y diferenciación",
+          "purpose": "Comparar explicaciones tradicionales y nuevas del intercambio, incluyendo factores y capacidades."
+        },
+        {
+          "name": "Harvard Business School · The Diamond",
+          "url": "https://www.isc.hbs.edu/competitiveness-economic-development/frameworks-and-key-concepts/Pages/the-diamond.aspx",
+          "author": "Michael E. Porter · Institute for Strategy and Competitiveness, Harvard Business School",
+          "section": "Cuatro atributos: factores; demanda; industrias relacionadas y de apoyo; contexto de estrategia y rivalidad.",
+          "purpose": "Aplicar diamante competitivo y distinguirlo de escala y diferenciación en teoría del comercio."
+        }
+      ],
+      "questions": [
+        {
+          "type": "choice",
+          "prompt": "¿Qué diferencia Krugman y Porter?",
+          "options": [
+            "Krugman solo dotaciones; Porter solo costo de oportunidad.",
+            "Ambos solo eficiencia absoluta.",
+            "Krugman explica escala y variedades; Porter condiciones del entorno competitivo.",
+            "Porter convierte tamaño en ventaja permanente."
+          ],
+          "correct": 2,
+          "explanation": "Teorías del intercambio y diamante competitivo son explicaciones diferentes y complementarias.",
+          "id": "cex-w7-q1"
+        },
+        {
+          "type": "choice",
+          "prompt": "¿Qué interpretación corresponde al taller de cuadernos?",
+          "options": [
+            "Variedades explican intercambio; demanda exigente y proveedores son condiciones del diamante.",
+            "Mercados parecidos no pueden intercambiar.",
+            "Tamaño basta para todo sin distinguir compradores.",
+            "Toda exigencia del cliente es dotación física."
+          ],
+          "correct": 0,
+          "explanation": "El caso combina diferenciación y condiciones específicas de competitividad.",
+          "id": "cex-w7-q2"
+        },
+        {
+          "type": "matching",
+          "prompt": "Relaciona componente del diamante y ejemplo.",
+          "pairs": [
+            {
+              "left": "Factores",
+              "right": "Personal especializado"
+            },
+            {
+              "left": "Demanda",
+              "right": "Compradores que exigen calidad"
+            },
+            {
+              "left": "Industrias de apoyo",
+              "right": "Proveedores especializados"
+            },
+            {
+              "left": "Estrategia y rivalidad",
+              "right": "Decisiones y competencia entre empresas"
+            }
+          ],
+          "explanation": "Cada componente describe una condición del entorno diferente.",
+          "id": "cex-w7-q3"
+        },
+        {
+          "type": "ordering",
+          "prompt": "Ordena aplicación de modelos al taller.",
+          "items": [
+            "Identificar variedades y propuesta",
+            "Distinguir Krugman y Porter",
+            "Ubicar evidencia en componentes del diamante",
+            "Justificar mecanismos y límites"
+          ],
+          "explanation": "Primero reconoce hechos y después selecciona modelos y componentes.",
+          "id": "cex-w7-q4"
+        },
+        {
+          "type": "crossword",
+          "prompt": "Completa autores y componente.",
+          "entries": [
+            {
+              "word": "KRUGMAN",
+              "clue": "Autor de teoría con escala y diferenciación."
+            },
+            {
+              "word": "PORTER",
+              "clue": "Autor del diamante competitivo."
+            },
+            {
+              "word": "DEMANDA",
+              "clue": "Condición ligada a compradores."
+            }
+          ],
+          "explanation": "Autores y condiciones deben reconocerse por su función conceptual.",
+          "id": "cex-w7-q5"
+        }
+      ]
+    },
+    {
+      "week": 8,
+      "name": "Responsabilidad y afirmaciones verificables",
+      "objective": "Reconoce quién puede verse afectado; distingue afirmaciones respaldadas de intenciones; decide cómo comunicar límites. Ordena una revisión ética que identifique problema, contraste evidencia, corrija y comunique. No liquides salarios ni supongas normas no documentadas.",
+      "label": "Simulación educativa · práctica conceptual",
+      "context": "Conceptos clave\nÉtica y responsabilidad comercial consideran consecuencias para personas, comunidades y entorno, además de obligaciones aplicables. Una afirmación debe corresponder a evidencia: intención de mejora, registro interno y certificación externa no son equivalentes. Cumplir un pedido no justifica engañar ni omitir compromisos. La lectura distingue comercio y normas del trabajo y reconoce la competencia de la OIT; no convierte a la OMC en empleador o autoridad que resuelva cualquier contrato. Analiza derechos, actores y transparencia sin inventar reglas laborales ni porcentajes de pago.\n\nCaso breve · simulación educativa\nUna asociación quiere llamar «certificada sostenible» a su artesanía porque piensa mejorar materiales. Todavía no cuenta con evaluación externa. Un comprador pide información sobre procedencia y condiciones. Debes proponer comunicación honesta que describa evidencia existente y pendientes, sin abandonar el objetivo de mejorar ni fabricar un certificado.\n\nQué debes hacer\nReconoce quién puede verse afectado; distingue afirmaciones respaldadas de intenciones; decide cómo comunicar límites. Ordena una revisión ética que identifique problema, contraste evidencia, corrija y comunique. No liquides salarios ni supongas normas no documentadas.\n\nSecuencia indicada para este caso: Identificar la afirmación y afectados → Contrastar evidencia disponible → Corregir afirmaciones no sustentadas → Comunicar atributos y pendientes.",
+      "references": [
+        {
+          "name": "Sílabo CEX-103-AC · ULEAM · 2026-2",
+          "url": "./documents/comercio-silabo.pdf",
+          "author": "ANDRADE ALVARADO SONIA PATRICIA · Universidad Laica Eloy Alfaro de Manabí",
+          "section": "Semana 8: 2.6 Ética y responsabilidad en el comercio internacional.",
+          "purpose": "Comprobar tema y ubicación semanal del contenido de la asignatura."
+        },
+        {
+          "name": "Comprender la OMC · Comercio y normas del trabajo",
+          "url": "https://www.wto.org/spanish/thewto_s/whatis_s/tif_s/bey5_s.htm",
+          "author": "Organización Mundial del Comercio",
+          "section": "Normas del trabajo y papel de la Organización Internacional del Trabajo",
+          "purpose": "Distinguir responsabilidad ética, reglas laborales y afirmaciones comerciales sustentadas."
+        }
+      ],
+      "questions": [
+        {
+          "type": "choice",
+          "prompt": "¿Qué distingue certificación de intención?",
+          "options": [
+            "Una intención no demuestra una evaluación externa ya obtenida.",
+            "La intención basta como certificación si la mejora es importante para el comprador.",
+            "El registro interno se presenta siempre como evaluación externa independiente.",
+            "Una afirmación comercial demuestra cumplimiento solo por haber sido publicada."
+          ],
+          "correct": 0,
+          "explanation": "Las evidencias tienen alcance distinto y deben nombrarse con precisión.",
+          "id": "cex-w8-q1"
+        },
+        {
+          "type": "choice",
+          "prompt": "¿Qué debería comunicar la asociación?",
+          "options": [
+            "Anunciar certificación como meta y omitir que todavía no se obtuvo.",
+            "Atributos demostrables y mejoras pendientes, sin anunciar una certificación que no tiene.",
+            "Describir evaluación interna como externa para simplificar el lenguaje del comprador.",
+            "Dejar la procedencia sin explicar porque el objetivo ambiental parece suficiente."
+          ],
+          "correct": 1,
+          "explanation": "La transparencia reconoce evidencia y pendientes sin inventar avales.",
+          "id": "cex-w8-q2"
+        },
+        {
+          "type": "matching",
+          "prompt": "Relaciona elemento y alcance.",
+          "pairs": [
+            {
+              "left": "Intención",
+              "right": "Compromiso futuro todavía no demostrado"
+            },
+            {
+              "left": "Registro interno",
+              "right": "Evidencia propia dentro de su alcance"
+            },
+            {
+              "left": "Certificación",
+              "right": "Evaluación externa según condiciones"
+            },
+            {
+              "left": "Responsabilidad",
+              "right": "Consideración de efectos y compromisos"
+            }
+          ],
+          "explanation": "Cada concepto aporta un alcance distinto de respaldo.",
+          "id": "cex-w8-q3"
+        },
+        {
+          "type": "ordering",
+          "prompt": "Ordena una revisión ética del mensaje.",
+          "items": [
+            "Identificar la afirmación y afectados",
+            "Contrastar evidencia disponible",
+            "Corregir afirmaciones no sustentadas",
+            "Comunicar atributos y pendientes"
+          ],
+          "explanation": "La revisión actúa sobre hechos y mensaje antes de prometer.",
+          "id": "cex-w8-q4"
+        },
+        {
+          "type": "crossword",
+          "prompt": "Completa conceptos de responsabilidad.",
+          "entries": [
+            {
+              "word": "ETICA",
+              "clue": "Reflexión sobre deberes y consecuencias."
+            },
+            {
+              "word": "RESPETO",
+              "clue": "Consideración debida a personas y compromisos."
+            },
+            {
+              "word": "EVIDENCIA",
+              "clue": "Respaldo de una afirmación comercial."
+            }
+          ],
+          "explanation": "La ética comercial incluye efectos y transparencia.",
+          "id": "cex-w8-q5"
+        }
+      ]
+    },
+    {
+      "week": 9,
+      "name": "Conexiones mundiales y decisiones empresariales",
+      "objective": "Identifica actividades y actores; separa decisiones de internacionalización y conexiones amplias; reconoce bienes y servicios. Ordena un mapa conceptual que muestre relaciones y límites. Consulta el apartado sobre globalización y explica el uso de cada término en el caso.",
+      "label": "Simulación educativa · práctica conceptual",
+      "context": "Conceptos clave\nGlobalización describe conexiones e interdependencias que abarcan distintas economías y ámbitos. Mundialización suele utilizarse con sentido próximo, aunque el enfoque depende del autor: no hay una separación rígida universal que memorizar. Internacionalización empresarial se refiere a decisiones concretas de comprar, vender o establecer vínculos fuera del mercado doméstico. Una cadena puede incluir bienes y servicios de distintos territorios aunque una fase sea local. Distingue tendencia amplia, acción empresarial y eslabón de la cadena para explicar conexiones sin afirmar que todas tienen idénticos efectos.\n\nCaso breve · simulación educativa\nUn taller fabrica localmente, compra diseño exterior y vende mediante una tienda extranjera. El grupo cree que fabricación local elimina conexiones internacionales. Debes mapear producción, servicio y comercialización y distinguir esas decisiones concretas de una tendencia mundial más amplia. No se solicitan costos ni porcentajes de insumos.\n\nQué debes hacer\nIdentifica actividades y actores; separa decisiones de internacionalización y conexiones amplias; reconoce bienes y servicios. Ordena un mapa conceptual que muestre relaciones y límites. Consulta el apartado sobre globalización y explica el uso de cada término en el caso.\n\nSecuencia indicada para este caso: Identificar actividades del taller → Ubicar actores y territorios → Distinguir acciones y tendencia amplia → Explicar conexiones sin borrar la fase local.",
+      "references": [
+        {
+          "name": "Sílabo CEX-103-AC · ULEAM · 2026-2",
+          "url": "./documents/comercio-silabo.pdf",
+          "author": "ANDRADE ALVARADO SONIA PATRICIA · Universidad Laica Eloy Alfaro de Manabí",
+          "section": "Semana 9: 3.1. Globalización, Mundialización e internacionalización.",
+          "purpose": "Comprobar tema y ubicación semanal del contenido de la asignatura."
+        },
+        {
+          "name": "Informe sobre el Comercio Mundial 2008 · Globalización y comercio",
+          "url": "https://www.wto.org/spanish/res_s/booksp_s/anrep_s/world_trade_report08_s.pdf",
+          "author": "Organización Mundial del Comercio",
+          "section": "Sección B: globalización y comercio; conexiones y cambios que facilitan el intercambio",
+          "purpose": "Relacionar conexiones mundiales con decisiones concretas de internacionalización."
+        }
+      ],
+      "questions": [
+        {
+          "type": "choice",
+          "prompt": "¿Qué define mejor internacionalización empresarial?",
+          "options": [
+            "Una tendencia mundial amplia, sin referirse a decisiones concretas de empresa.",
+            "Decisiones concretas de operar con mercados o actores exteriores.",
+            "El uso de medios digitales aunque no exista vínculo con otros mercados.",
+            "La nacionalidad de un producto como único criterio de toda actividad empresarial."
+          ],
+          "correct": 1,
+          "explanation": "La internacionalización describe acciones de una empresa en relación con mercados exteriores.",
+          "id": "cex-w9-q1"
+        },
+        {
+          "type": "choice",
+          "prompt": "¿Qué corrige la lectura del taller?",
+          "options": [
+            "Clasificar la cadena como totalmente local porque una fase física ocurre en el país.",
+            "Identificar diseño como mercancía solo por contratarlo con un proveedor exterior.",
+            "Producción local puede formar parte de una cadena con servicios y ventas exteriores.",
+            "Considerar únicamente traslado y omitir las decisiones de servicio y venta."
+          ],
+          "correct": 2,
+          "explanation": "Una cadena integra distintas naturalezas y territorios.",
+          "id": "cex-w9-q2"
+        },
+        {
+          "type": "matching",
+          "prompt": "Relaciona concepto y nivel.",
+          "pairs": [
+            {
+              "left": "Globalización",
+              "right": "Conexiones e interdependencias amplias"
+            },
+            {
+              "left": "Internacionalización",
+              "right": "Acciones empresariales exteriores"
+            },
+            {
+              "left": "Bien",
+              "right": "Mercancía física de una operación"
+            },
+            {
+              "left": "Servicio",
+              "right": "Prestación que puede cruzar vínculos internacionales"
+            }
+          ],
+          "explanation": "Los niveles y naturaleza de actividad son diferentes.",
+          "id": "cex-w9-q3"
+        },
+        {
+          "type": "ordering",
+          "prompt": "Ordena el mapa del caso.",
+          "items": [
+            "Identificar actividades del taller",
+            "Ubicar actores y territorios",
+            "Distinguir acciones y tendencia amplia",
+            "Explicar conexiones sin borrar la fase local"
+          ],
+          "explanation": "El mapa se construye de actividades concretas a interpretación.",
+          "id": "cex-w9-q4"
+        },
+        {
+          "type": "crossword",
+          "prompt": "Completa términos de conexión.",
+          "entries": [
+            {
+              "word": "CADENA",
+              "clue": "Conjunto de actividades relacionadas."
+            },
+            {
+              "word": "SERVICIO",
+              "clue": "Prestación diferente de mercancía física."
+            },
+            {
+              "word": "RED",
+              "clue": "Vínculos entre actores y territorios."
+            }
+          ],
+          "explanation": "Los conceptos describen interdependencias y naturaleza de actividades.",
+          "id": "cex-w9-q5"
+        }
+      ]
+    },
+    {
+      "week": 10,
+      "name": "Instituciones: reconocer funciones y límites",
+      "objective": "Identifica la necesidad del caso; vincula cada actor con su función; señala atribuciones incorrectas y límites. Ordena una consulta conceptual que elija fuente competente y revise alcance antes de concluir que algo está autorizado.",
+      "label": "Simulación educativa · práctica conceptual",
+      "context": "Conceptos clave\nLas instituciones del comercio internacional tienen funciones diferentes. La OMC administra un marco de acuerdos entre miembros con negociación, seguimiento y solución de diferencias dentro de su sistema. No aprueba facturas privadas ni reserva transporte. ITC ofrece recursos y asistencia de desarrollo comercial. ICC publica reglas Incoterms y otros instrumentos de práctica comercial; no es autoridad aduanera estatal. SENAE cumple funciones aduaneras ecuatorianas. Una empresa de transporte presta un servicio privado. Relaciona necesidad con competencia antes de asignar una consulta o asumir que información general equivale a autorización.\n\nCaso breve · simulación educativa\nUn estudiante redacta un correo a la OMC para que reserve un barco y apruebe su factura. Al mismo tiempo necesita comprender reglas comerciales y obligaciones de entrega. Debes separar consulta institucional de servicio privado y reconocer qué función corresponde a cada actor, sin crear un directorio numérico.\n\nQué debes hacer\nIdentifica la necesidad del caso; vincula cada actor con su función; señala atribuciones incorrectas y límites. Ordena una consulta conceptual que elija fuente competente y revise alcance antes de concluir que algo está autorizado.\n\nSecuencia indicada para este caso: Precisar la necesidad → Identificar actor competente → Consultar el recurso específico → Revisar alcance antes de concluir.",
+      "references": [
+        {
+          "name": "Sílabo CEX-103-AC · ULEAM · 2026-2",
+          "url": "./documents/comercio-silabo.pdf",
+          "author": "ANDRADE ALVARADO SONIA PATRICIA · Universidad Laica Eloy Alfaro de Manabí",
+          "section": "Semana 10: 3.2. Instituciones que regulan y facilitan el comercio internacional.",
+          "purpose": "Comprobar tema y ubicación semanal del contenido de la asignatura."
+        },
+        {
+          "name": "Comprender la OMC · ¿Qué es la OMC?",
+          "url": "https://www.wto.org/spanish/thewto_s/whatis_s/tif_s/fact1_s.htm",
+          "author": "Organización Mundial del Comercio",
+          "section": "Apartados «¿Qué es la OMC?» y funciones del sistema de comercio",
+          "purpose": "Distinguir intercambio internacional, reglas y actores; no confundir organización con operador privado."
+        },
+        {
+          "name": "ICC · Incoterms® 2020",
+          "url": "https://iccwbo.org/business-solutions/incoterms-rules/incoterms-2020/",
+          "author": "International Chamber of Commerce",
+          "section": "Funciones de las reglas y diferencia entre obligaciones, gastos y riesgos; reglas para cualquier transporte y para mar/vías interiores",
+          "purpose": "Comprender qué distribuyen los Incoterms y por qué deben precisarse lugar y versión."
+        }
+      ],
+      "questions": [
+        {
+          "type": "choice",
+          "prompt": "¿Qué describe una función de OMC?",
+          "options": [
+            "Aprobar documentación de cada empresa como servicio obligatorio del sistema multilateral.",
+            "Contratar transporte privado porque facilita intercambio entre miembros.",
+            "Marco de acuerdos y seguimiento entre miembros.",
+            "Emitir reglas Incoterms como su función exclusiva frente a contratos privados."
+          ],
+          "correct": 2,
+          "explanation": "El marco multilateral no equivale a ejecutar operaciones privadas.",
+          "id": "cex-w10-q1"
+        },
+        {
+          "type": "choice",
+          "prompt": "¿Cómo debe corregirse el correo?",
+          "options": [
+            "Mantener todas las peticiones en OMC por ser el marco más amplio.",
+            "Usar una guía multilateral como prueba de factura aprobada.",
+            "Asignar al proveedor logístico negociación de acuerdos entre miembros.",
+            "Separar reglas e instituciones del servicio de transporte y la documentación privada."
+          ],
+          "correct": 3,
+          "explanation": "La competencia se selecciona según necesidad concreta.",
+          "id": "cex-w10-q2"
+        },
+        {
+          "type": "matching",
+          "prompt": "Relaciona actor y función.",
+          "pairs": [
+            {
+              "left": "OMC",
+              "right": "Marco multilateral comercial"
+            },
+            {
+              "left": "ICC",
+              "right": "Reglas de práctica comercial como Incoterms"
+            },
+            {
+              "left": "SENAE",
+              "right": "Función aduanera ecuatoriana"
+            },
+            {
+              "left": "Transportista",
+              "right": "Servicio privado de traslado"
+            }
+          ],
+          "explanation": "Las funciones son complementarias pero no intercambiables.",
+          "id": "cex-w10-q3"
+        },
+        {
+          "type": "ordering",
+          "prompt": "Ordena una consulta bien dirigida.",
+          "items": [
+            "Precisar la necesidad",
+            "Identificar actor competente",
+            "Consultar el recurso específico",
+            "Revisar alcance antes de concluir"
+          ],
+          "explanation": "Una fuente se elige según pregunta y límites de competencia.",
+          "id": "cex-w10-q4"
+        },
+        {
+          "type": "crossword",
+          "prompt": "Completa siglas y conceptos.",
+          "entries": [
+            {
+              "word": "OMC",
+              "clue": "Organización del marco multilateral comercial."
+            },
+            {
+              "word": "ICC",
+              "clue": "Entidad que publica reglas Incoterms."
+            },
+            {
+              "word": "COMPETENCIA",
+              "clue": "Ámbito de funciones de una institución."
+            }
+          ],
+          "explanation": "Identificar siglas exige asociarlas con funciones y límites.",
+          "id": "cex-w10-q5"
+        }
+      ]
+    },
+    {
+      "week": 11,
+      "name": "Factores que condicionan el intercambio",
+      "objective": "Clasifica factores y diferencia hechos de señales. Explica el mecanismo que podría intervenir, consulta la fuente pertinente y ordena una revisión antes de concluir. No conviertas incertidumbre en norma vigente ni atribuyas causalidad con evidencia insuficiente.",
+      "label": "Simulación educativa · práctica conceptual",
+      "context": "Conceptos clave\nEl comercio depende de factores económicos, políticos, legales, tecnológicos y logísticos. Una condición puede facilitar conexiones o generar barreras, sin explicar por sí sola todo resultado. La previsibilidad de reglas y transparencia institucional ayudan a comprender decisiones; infraestructura y comunicación influyen en coordinación; condiciones económicas afectan posibilidades de intercambio. Distingue hecho confirmado, señal por verificar y explicación causal. Un caso con un solo dato no demuestra que ese factor causó todo cambio. Identifica mecanismo, fuente y límites antes de recomendar una respuesta.\n\nCaso breve · simulación educativa\nUna cooperativa recibe un mensaje informal sobre un posible cambio de etiqueta y una noticia sobre interrupción de transporte. El grupo los llama la misma barrera y da por vigente una regla no publicada. Debes distinguir factor legal, logístico y estado de evidencia, sin calcular riesgo o pérdidas.\n\nQué debes hacer\nClasifica factores y diferencia hechos de señales. Explica el mecanismo que podría intervenir, consulta la fuente pertinente y ordena una revisión antes de concluir. No conviertas incertidumbre en norma vigente ni atribuyas causalidad con evidencia insuficiente.\n\nSecuencia indicada para este caso: Identificar lo que afirma la señal → Clasificar factor y fuente → Confirmar estado y alcance → Explicar respuesta y límites.",
+      "references": [
+        {
+          "name": "Sílabo CEX-103-AC · ULEAM · 2026-2",
+          "url": "./documents/comercio-silabo.pdf",
+          "author": "ANDRADE ALVARADO SONIA PATRICIA · Universidad Laica Eloy Alfaro de Manabí",
+          "section": "Semana 11: 3.3. Factores que afectan el comercio internacional.",
+          "purpose": "Comprobar tema y ubicación semanal del contenido de la asignatura."
+        },
+        {
+          "name": "Comprender la OMC · Los principios del sistema de comercio",
+          "url": "https://www.wto.org/spanish/thewto_s/whatis_s/tif_s/fact2_s.htm",
+          "author": "Organización Mundial del Comercio",
+          "section": "No discriminación; previsibilidad mediante consolidaciones y transparencia",
+          "purpose": "Reconocer reglas y factores institucionales del comercio, sin inventar requisitos de una mercancía."
+        },
+        {
+          "name": "Informe sobre el Comercio Mundial 2008 · Globalización y comercio",
+          "url": "https://www.wto.org/spanish/res_s/booksp_s/anrep_s/world_trade_report08_s.pdf",
+          "author": "Organización Mundial del Comercio",
+          "section": "Sección B: globalización y comercio; conexiones y cambios que facilitan el intercambio",
+          "purpose": "Relacionar conexiones mundiales con decisiones concretas de internacionalización."
+        }
+      ],
+      "questions": [
+        {
+          "type": "choice",
+          "prompt": "¿Qué aporta previsibilidad de reglas?",
+          "options": [
+            "Garantizar resultado comercial por estar publicada una regla transparente.",
+            "Sustituir toda condición logística con información institucional.",
+            "Hacer innecesario revisar cambios posteriores y su aplicabilidad.",
+            "Un contexto más claro para decisiones, sin eliminar todos los factores."
+          ],
+          "correct": 3,
+          "explanation": "La previsibilidad es un factor institucional y no una garantía universal.",
+          "id": "cex-w11-q1"
+        },
+        {
+          "type": "choice",
+          "prompt": "¿Qué revisión corresponde a la cooperativa?",
+          "options": [
+            "Separar factores y confirmar la posible norma en fuente competente.",
+            "Dar por vigente el mensaje porque el cliente conoce su mercado.",
+            "Tratar transporte y etiqueta como un mismo factor sin revisar mecanismos.",
+            "Actuar sobre ambos como hechos confirmados sin distinguir fuentes."
+          ],
+          "correct": 0,
+          "explanation": "Naturaleza y estado de evidencia requieren clasificación diferente.",
+          "id": "cex-w11-q2"
+        },
+        {
+          "type": "matching",
+          "prompt": "Relaciona factor y ejemplo.",
+          "pairs": [
+            {
+              "left": "Legal",
+              "right": "Requisito normativo aplicable"
+            },
+            {
+              "left": "Logístico",
+              "right": "Disponibilidad de transporte"
+            },
+            {
+              "left": "Tecnológico",
+              "right": "Herramientas de coordinación"
+            },
+            {
+              "left": "Institucional",
+              "right": "Transparencia de reglas"
+            }
+          ],
+          "explanation": "Los factores actúan mediante mecanismos distintos.",
+          "id": "cex-w11-q3"
+        },
+        {
+          "type": "ordering",
+          "prompt": "Ordena la revisión de una señal comercial.",
+          "items": [
+            "Identificar lo que afirma la señal",
+            "Clasificar factor y fuente",
+            "Confirmar estado y alcance",
+            "Explicar respuesta y límites"
+          ],
+          "explanation": "El alcance se verifica antes de actuar como si fuera un hecho.",
+          "id": "cex-w11-q4"
+        },
+        {
+          "type": "crossword",
+          "prompt": "Completa términos de factores.",
+          "entries": [
+            {
+              "word": "BARRERA",
+              "clue": "Condición que dificulta intercambio."
+            },
+            {
+              "word": "NORMA",
+              "clue": "Regla cuya vigencia debe confirmarse."
+            },
+            {
+              "word": "FUENTE",
+              "clue": "Origen de información que se revisa."
+            }
+          ],
+          "explanation": "Una señal no es automáticamente una barrera confirmada.",
+          "id": "cex-w11-q5"
+        }
+      ]
+    },
+    {
+      "week": 12,
+      "name": "Transporte e Incoterms: cosas distintas",
+      "objective": "Identifica medio, ruta y punto de entrega; distingue gastos y riesgo; relaciona regla con operación y precisa lugar y versión. Lee el recurso ICC sobre Incoterms 2020 y explica qué asuntos todavía requieren acuerdos separados.",
+      "label": "Simulación educativa · práctica conceptual",
+      "context": "Conceptos clave\nMedio de transporte indica cómo se mueve la mercancía; ruta conecta lugares; Incoterms distribuyen ciertas obligaciones, gastos y riesgo de entrega entre comprador y vendedor. No resuelven por sí solos propiedad, pago o todos los incumplimientos. Lugar y versión deben precisarse. Hay reglas para cualquier modo y otras para mar o vías navegables interiores. En CIF, pagar transporte y seguro no significa conservar riesgo hasta destino: la entrega básica se ubica a bordo en origen. Para contenedor entregado antes de embarcar conviene examinar el punto real y una regla como FCA.\n\nCaso breve · simulación educativa\nEl grupo elige transporte marítimo y escribe solo «CIF» en una propuesta. Cree que eso define pago, propiedad y todo riesgo hasta la llegada. Debes explicar límites, necesidad de lugar y versión y por qué pagar transporte no equivale a soportar riesgo durante todo el trayecto. No se calculan cotizaciones.\n\nQué debes hacer\nIdentifica medio, ruta y punto de entrega; distingue gastos y riesgo; relaciona regla con operación y precisa lugar y versión. Lee el recurso ICC sobre Incoterms 2020 y explica qué asuntos todavía requieren acuerdos separados.\n\nSecuencia indicada para este caso: Identificar operación y punto real → Distinguir gastos y riesgo → Seleccionar regla acorde con modalidad → Precisar lugar, versión y acuerdos restantes.",
+      "references": [
+        {
+          "name": "Sílabo CEX-103-AC · ULEAM · 2026-2",
+          "url": "./documents/comercio-silabo.pdf",
+          "author": "ANDRADE ALVARADO SONIA PATRICIA · Universidad Laica Eloy Alfaro de Manabí",
+          "section": "Semana 12: 3.4. Medios y rutas de transporte internacional. 3.5. Introducción a los Incoterms y su aplicación básica en el comercio internacional.",
+          "purpose": "Comprobar tema y ubicación semanal del contenido de la asignatura."
+        },
+        {
+          "name": "ICC · Incoterms® 2020",
+          "url": "https://iccwbo.org/business-solutions/incoterms-rules/incoterms-2020/",
+          "author": "International Chamber of Commerce",
+          "section": "Funciones de las reglas y diferencia entre obligaciones, gastos y riesgos; reglas para cualquier transporte y para mar/vías interiores",
+          "purpose": "Comprender qué distribuyen los Incoterms y por qué deben precisarse lugar y versión."
+        }
+      ],
+      "questions": [
+        {
+          "type": "choice",
+          "prompt": "¿Qué distribuyen los Incoterms?",
+          "options": [
+            "Ciertas obligaciones, gastos y riesgo de entrega.",
+            "Todo el contrato, incluida propiedad y pago, sin otros acuerdos.",
+            "La ruta geográfica, dejando entrega y responsabilidades sin efecto.",
+            "El tipo de transporte como única condición, sin obligaciones contractuales."
+          ],
+          "correct": 0,
+          "explanation": "Las reglas tienen alcance específico y no sustituyen todo el contrato.",
+          "id": "cex-w12-q1"
+        },
+        {
+          "type": "choice",
+          "prompt": "¿Qué error contiene la propuesta CIF?",
+          "options": [
+            "CIF conserva riesgo hasta llegada únicamente porque vendedor paga flete y seguro.",
+            "Pagar flete y seguro no conserva por sí solo riesgo hasta destino; faltan lugar y versión.",
+            "Nombrar CIF basta para definir punto, versión, propiedad y pago.",
+            "Si hay seguro, riesgo y gastos se transfieren siempre en el mismo momento."
+          ],
+          "correct": 1,
+          "explanation": "En CIF, gastos y transferencia básica de riesgo no ocurren necesariamente en el mismo punto.",
+          "id": "cex-w12-q2"
+        },
+        {
+          "type": "matching",
+          "prompt": "Relaciona concepto y función.",
+          "pairs": [
+            {
+              "left": "Medio",
+              "right": "Modo físico de transporte"
+            },
+            {
+              "left": "Ruta",
+              "right": "Trayecto entre lugares"
+            },
+            {
+              "left": "Incoterm",
+              "right": "Distribución de obligaciones de entrega"
+            },
+            {
+              "left": "Lugar designado",
+              "right": "Punto que debe precisarse contractualmente"
+            }
+          ],
+          "explanation": "Modalidad y contrato son aspectos conectados pero distintos.",
+          "id": "cex-w12-q3"
+        },
+        {
+          "type": "ordering",
+          "prompt": "Ordena la revisión de una condición de entrega.",
+          "items": [
+            "Identificar operación y punto real",
+            "Distinguir gastos y riesgo",
+            "Seleccionar regla acorde con modalidad",
+            "Precisar lugar, versión y acuerdos restantes"
+          ],
+          "explanation": "La regla describe el caso concreto, no se elige solo por nombre conocido.",
+          "id": "cex-w12-q4"
+        },
+        {
+          "type": "crossword",
+          "prompt": "Completa términos de entrega.",
+          "entries": [
+            {
+              "word": "RUTA",
+              "clue": "Trayecto entre puntos de traslado."
+            },
+            {
+              "word": "RIESGO",
+              "clue": "Posibilidad de pérdida o daño que se distribuye."
+            },
+            {
+              "word": "ENTREGA",
+              "clue": "Hecho cuyo punto debe definirse."
+            }
+          ],
+          "explanation": "Un viaje y una distribución contractual no son la misma cosa.",
+          "id": "cex-w12-q5"
+        }
+      ]
+    },
+    {
+      "week": 13,
+      "name": "Estado, política y autoridad competente",
+      "objective": "Reconoce instrumento público, obligación y función institucional; compara atribución con competencia y fuente. Ordena una verificación que identifique producto y operación antes de aplicar una regla. No inventes aranceles, permisos ni condiciones legales del caso.",
+      "label": "Simulación educativa · práctica conceptual",
+      "context": "Conceptos clave\nPolítica comercial comprende objetivos e instrumentos con que el Estado organiza relaciones comerciales. Normativa establece obligaciones y condiciones aplicables; una institución actúa dentro de competencia, no por similitud de nombre. SENAE cumple funciones aduaneras; promoción exportadora y control público no son lo mismo. Las condiciones concretas dependen de producto, régimen y normativa vigente y deben verificarse: no existe una lista universal válida por cualquier captura. Distingue orientación, regla y autorización antes de afirmar cumplimiento. Los principios multilaterales ayudan a comprender el marco, sin sustituir requisitos específicos.\n\nCaso breve · simulación educativa\nUna presentación llama permiso a una guía promocional y asigna todos los controles a la misma entidad. Incluye una captura antigua sin producto ni fecha. Debes diferenciar política, norma y función institucional y explicar por qué una fuente de orientación no acredita automáticamente una operación autorizada.\n\nQué debes hacer\nReconoce instrumento público, obligación y función institucional; compara atribución con competencia y fuente. Ordena una verificación que identifique producto y operación antes de aplicar una regla. No inventes aranceles, permisos ni condiciones legales del caso.\n\nSecuencia indicada para este caso: Identificar producto y operación → Ubicar autoridad y fuente competente → Comprobar vigencia y alcance → Distinguir confirmado y pendiente.",
+      "references": [
+        {
+          "name": "Sílabo CEX-103-AC · ULEAM · 2026-2",
+          "url": "./documents/comercio-silabo.pdf",
+          "author": "ANDRADE ALVARADO SONIA PATRICIA · Universidad Laica Eloy Alfaro de Manabí",
+          "section": "Semana 13: 4.1. Normativa y Política Comercial del Ecuador. 4.2. Instituciones del Comercio Exterior en el Ecuador",
+          "purpose": "Comprobar tema y ubicación semanal del contenido de la asignatura."
+        },
+        {
+          "name": "SENAE · Para exportar",
+          "url": "https://www.aduana.gob.ec/servicio-al-ciudadano/para-exportar/",
+          "author": "Servicio Nacional de Aduana del Ecuador",
+          "section": "Qué es una exportación; actores y orientación de procedimientos",
+          "purpose": "Distinguir movimiento de mercancías y funciones documentales; consultar condiciones vigentes para casos reales."
+        },
+        {
+          "name": "SENAE · Para importar",
+          "url": "https://www.aduana.gob.ec/servicio-al-ciudadano/para-importar/",
+          "author": "Servicio Nacional de Aduana del Ecuador",
+          "section": "Qué es una importación y orientación al importador",
+          "purpose": "Reconocer operación de entrada y autoridad competente, sin fijar tasas ni listas universales."
+        },
+        {
+          "name": "Comprender la OMC · Los principios del sistema de comercio",
+          "url": "https://www.wto.org/spanish/thewto_s/whatis_s/tif_s/fact2_s.htm",
+          "author": "Organización Mundial del Comercio",
+          "section": "No discriminación; previsibilidad mediante consolidaciones y transparencia",
+          "purpose": "Reconocer reglas y factores institucionales del comercio, sin inventar requisitos de una mercancía."
+        }
+      ],
+      "questions": [
+        {
+          "type": "choice",
+          "prompt": "¿Qué distingue política comercial de una decisión privada?",
+          "options": [
+            "Cada decisión privada de transporte por influir en comercio del país.",
+            "La política expresa objetivos e instrumentos del Estado en relaciones comerciales.",
+            "Todo recurso de promoción como obligación universal de mercancías.",
+            "Una lista contractual de empresa como norma pública para terceros."
+          ],
+          "correct": 1,
+          "explanation": "Decisiones públicas y privadas tienen naturaleza diferente.",
+          "id": "cex-w13-q1"
+        },
+        {
+          "type": "choice",
+          "prompt": "¿Qué corrección requiere la presentación?",
+          "options": [
+            "Tratar orientación promocional como autorización por provenir de una institución.",
+            "Aplicar captura a toda mercancía sin examinar fecha o régimen.",
+            "Separar orientación, norma y autoridad y verificar vigencia y alcance.",
+            "Concentrar funciones en una entidad por semejanza de nombres."
+          ],
+          "correct": 2,
+          "explanation": "Orientación general no prueba cumplimiento ni autorización concreta.",
+          "id": "cex-w13-q2"
+        },
+        {
+          "type": "matching",
+          "prompt": "Relaciona concepto y función.",
+          "pairs": [
+            {
+              "left": "Política comercial",
+              "right": "Objetivos e instrumentos públicos"
+            },
+            {
+              "left": "Normativa",
+              "right": "Obligaciones aplicables"
+            },
+            {
+              "left": "Competencia",
+              "right": "Ámbito de actuación institucional"
+            },
+            {
+              "left": "Orientación",
+              "right": "Información que ayuda sin autorizar por sí sola"
+            }
+          ],
+          "explanation": "La clasificación evita convertir todo recurso informativo en permiso.",
+          "id": "cex-w13-q3"
+        },
+        {
+          "type": "ordering",
+          "prompt": "Ordena verificación conceptual de una regla.",
+          "items": [
+            "Identificar producto y operación",
+            "Ubicar autoridad y fuente competente",
+            "Comprobar vigencia y alcance",
+            "Distinguir confirmado y pendiente"
+          ],
+          "explanation": "La aplicabilidad se revisa antes de asumir cumplimiento.",
+          "id": "cex-w13-q4"
+        },
+        {
+          "type": "crossword",
+          "prompt": "Completa vocabulario del Estado.",
+          "entries": [
+            {
+              "word": "POLITICA",
+              "clue": "Objetivos e instrumentos de actuación pública."
+            },
+            {
+              "word": "NORMA",
+              "clue": "Regla aplicable que debe comprobarse."
+            },
+            {
+              "word": "ESTADO",
+              "clue": "Actor público del marco comercial."
+            }
+          ],
+          "explanation": "Las funciones deben reconocerse según naturaleza y competencia.",
+          "id": "cex-w13-q5"
+        }
+      ]
+    },
+    {
+      "week": 14,
+      "name": "Exportar, importar y compensar",
+      "objective": "Fija la perspectiva territorial; reconoce salida y entrada; distingue vínculo contractual y pago; identifica evidencia que comprobaría cada prestación. Ordena el análisis sin calcular saldos ni concluir exenciones: se evalúan los conceptos y su relación.",
+      "label": "Simulación educativa · práctica conceptual",
+      "context": "Conceptos clave\nExportación e importación describen salida y entrada comerciales desde una perspectiva territorial. Intercambio compensado vincula prestaciones o compras; puede combinar mercancía y dinero, sin borrar naturaleza de los movimientos. La forma de pago no elimina por sí sola obligaciones documentales ni convierte el bien recibido en gratuito. Cada prestación debe describirse y acordarse, junto con responsabilidades y evidencia de cumplimiento. La guía CNUDMI explica estructura jurídica de operaciones compensatorias; un caso didáctico permite distinguir conceptos, no determinar permisos o costos reales.\n\nCaso breve · simulación educativa\nUna cooperativa acuerda entregar artesanías y recibir equipamiento desde otro territorio. Un estudiante dice que, al pagar en parte con bienes, desaparecen exportación e importación. El grupo debe reconocer movimientos, vínculo entre prestaciones y responsabilidades, sin valorar cantidades ni calcular un saldo monetario.\n\nQué debes hacer\nFija la perspectiva territorial; reconoce salida y entrada; distingue vínculo contractual y pago; identifica evidencia que comprobaría cada prestación. Ordena el análisis sin calcular saldos ni concluir exenciones: se evalúan los conceptos y su relación.\n\nSecuencia indicada para este caso: Fijar perspectiva y movimientos → Describir cada prestación → Reconocer vínculo y responsabilidades → Identificar pruebas de cumplimiento.",
+      "references": [
+        {
+          "name": "Sílabo CEX-103-AC · ULEAM · 2026-2",
+          "url": "./documents/comercio-silabo.pdf",
+          "author": "ANDRADE ALVARADO SONIA PATRICIA · Universidad Laica Eloy Alfaro de Manabí",
+          "section": "Semana 14: 4.3. Operaciones de Exportación, importación e intercambio compensado.",
+          "purpose": "Comprobar tema y ubicación semanal del contenido de la asignatura."
+        },
+        {
+          "name": "CNUDMI · Guía jurídica sobre operaciones de comercio compensatorio internacional",
+          "url": "https://uncitral.un.org/en/texts/salegoods/contractualtexts/countertrade",
+          "author": "Comisión de las Naciones Unidas para el Derecho Mercantil Internacional",
+          "section": "Descripción y acceso a la Guía jurídica; definición y estructura de operaciones compensatorias",
+          "purpose": "Reconocer prestaciones vinculadas y distinguir forma de pago de exportación e importación."
+        },
+        {
+          "name": "SENAE · Para exportar",
+          "url": "https://www.aduana.gob.ec/servicio-al-ciudadano/para-exportar/",
+          "author": "Servicio Nacional de Aduana del Ecuador",
+          "section": "Qué es una exportación; actores y orientación de procedimientos",
+          "purpose": "Distinguir movimiento de mercancías y funciones documentales; consultar condiciones vigentes para casos reales."
+        },
+        {
+          "name": "SENAE · Para importar",
+          "url": "https://www.aduana.gob.ec/servicio-al-ciudadano/para-importar/",
+          "author": "Servicio Nacional de Aduana del Ecuador",
+          "section": "Qué es una importación y orientación al importador",
+          "purpose": "Reconocer operación de entrada y autoridad competente, sin fijar tasas ni listas universales."
+        }
+      ],
+      "questions": [
+        {
+          "type": "choice",
+          "prompt": "¿Qué describe intercambio compensado?",
+          "options": [
+            "Una operación que deja de ser comercio porque no usa solo dinero.",
+            "Un regalo cuyo valor no necesita condiciones ni prueba.",
+            "Vincular prestaciones o compras, con posible componente monetario.",
+            "La fusión de salida y entrada en un único movimiento sin perspectivas."
+          ],
+          "correct": 2,
+          "explanation": "Compensación vincula operaciones sin eliminar su naturaleza comercial.",
+          "id": "cex-w14-q1"
+        },
+        {
+          "type": "choice",
+          "prompt": "¿Qué explicación corrige al estudiante?",
+          "options": [
+            "Nombrar pago en bienes elimina la naturaleza de los movimientos.",
+            "Considerar equipo gratuito porque no todo se paga monetariamente.",
+            "Tomar el acuerdo vinculado como prueba automática de recepción.",
+            "Salida de artesanías y entrada de equipo mantienen naturaleza; la compensación es una condición diferente."
+          ],
+          "correct": 3,
+          "explanation": "Dirección de movimientos y forma de pago son aspectos distintos.",
+          "id": "cex-w14-q2"
+        },
+        {
+          "type": "matching",
+          "prompt": "Relaciona elemento y concepto.",
+          "pairs": [
+            {
+              "left": "Salida comercial",
+              "right": "Exportación"
+            },
+            {
+              "left": "Entrada comercial",
+              "right": "Importación"
+            },
+            {
+              "left": "Prestaciones vinculadas",
+              "right": "Compensación"
+            },
+            {
+              "left": "Recepción documentada",
+              "right": "Evidencia de cumplimiento"
+            }
+          ],
+          "explanation": "El vínculo entre operaciones no sustituye prueba de cada entrega.",
+          "id": "cex-w14-q3"
+        },
+        {
+          "type": "ordering",
+          "prompt": "Ordena análisis de un acuerdo compensado.",
+          "items": [
+            "Fijar perspectiva y movimientos",
+            "Describir cada prestación",
+            "Reconocer vínculo y responsabilidades",
+            "Identificar pruebas de cumplimiento"
+          ],
+          "explanation": "La compensación se analiza después de reconocer prestaciones y dirección.",
+          "id": "cex-w14-q4"
+        },
+        {
+          "type": "crossword",
+          "prompt": "Completa vocabulario de operaciones.",
+          "entries": [
+            {
+              "word": "EXPORTAR",
+              "clue": "Realizar una salida comercial desde la perspectiva observada."
+            },
+            {
+              "word": "IMPORTAR",
+              "clue": "Realizar una entrada comercial desde esa perspectiva."
+            },
+            {
+              "word": "ACUERDO",
+              "clue": "Compromisos que vinculan las prestaciones."
+            }
+          ],
+          "explanation": "Dirección y compromiso deben diferenciarse.",
+          "id": "cex-w14-q5"
+        }
+      ]
+    },
+    {
+      "week": 15,
+      "name": "Balanza de pagos: estructura antes de cifras",
+      "objective": "Determina residencia de los actores y naturaleza de la transacción; relaciónala con la cuenta pertinente y explica el alcance. Usa la lectura FMI sobre estructura y cuenta corriente. No calcules saldos, porcentajes ni necesidad de financiación.",
+      "label": "Simulación educativa · práctica conceptual",
+      "context": "Conceptos clave\nLa balanza de pagos registra transacciones entre residentes y no residentes durante un período. Residencia económica no equivale simplemente a nacionalidad. Cuenta corriente reúne bienes, servicios, ingreso primario e ingreso secundario. Primario incluye ingresos vinculados al trabajo o inversión según naturaleza; secundario incluye transferencias corrientes sin contraprestación. Capital y financiera son cuentas distintas: recibir un préstamo no vuelve ese flujo una exportación. La balanza comercial de mercancías es una parte y no toda balanza de pagos. Clasifica por naturaleza económica, no solo por canal bancario.\n\nCaso breve · simulación educativa\nUn grupo reúne venta de mercancía, asesoría prestada a un no residente, renta de inversión y transferencia personal. Un compañero las llama todas exportaciones porque llegó dinero al banco. Debes distinguir componentes y explicar por qué un préstamo adicional es una transacción financiera, sin sumar valores.\n\nQué debes hacer\nDetermina residencia de los actores y naturaleza de la transacción; relaciónala con la cuenta pertinente y explica el alcance. Usa la lectura FMI sobre estructura y cuenta corriente. No calcules saldos, porcentajes ni necesidad de financiación.\n\nSecuencia indicada para este caso: Identificar residencia económica → Reconocer naturaleza de transacción → Seleccionar cuenta o componente → Explicar alcance sin confundir canal bancario.",
+      "references": [
+        {
+          "name": "Sílabo CEX-103-AC · ULEAM · 2026-2",
+          "url": "./documents/comercio-silabo.pdf",
+          "author": "ANDRADE ALVARADO SONIA PATRICIA · Universidad Laica Eloy Alfaro de Manabí",
+          "section": "Semana 15: 4.4. Balanza de pagos: Estructura, importancia e interpretación básica.",
+          "purpose": "Comprobar tema y ubicación semanal del contenido de la asignatura."
+        },
+        {
+          "name": "FMI · Manual de Balanza de Pagos y Posición de Inversión Internacional, sexta edición",
+          "url": "https://www.imf.org/external/pubs/ft/bop/2007/pdf/bpm6.pdf",
+          "author": "Fondo Monetario Internacional",
+          "section": "Capítulos 2 y 4: marco y residencia; capítulo 8: financiera; capítulo 10: bienes y servicios; capítulos 11–12: ingresos primario y secundario; capítulo 13: capital.",
+          "purpose": "Clasificar transacciones por naturaleza y residencia y distinguir cuenta corriente, capital y financiera."
+        }
+      ],
+      "questions": [
+        {
+          "type": "choice",
+          "prompt": "¿Qué criterio guía clasificación en balanza de pagos?",
+          "options": [
+            "El canal de pago bancario y la moneda, sin examinar naturaleza.",
+            "La nacionalidad como único criterio del vínculo económico.",
+            "La entrada de dinero como prueba suficiente de exportación.",
+            "Residencia económica y naturaleza de transacción."
+          ],
+          "correct": 3,
+          "explanation": "La metodología distingue residentes/no residentes y naturaleza económica de flujos.",
+          "id": "cex-w15-q1"
+        },
+        {
+          "type": "choice",
+          "prompt": "¿Qué debe corregirse en el grupo?",
+          "options": [
+            "Bienes, servicios, rentas, transferencias y préstamos no pertenecen necesariamente a una misma cuenta.",
+            "Agrupar todo abono en bienes porque representa un valor recibido.",
+            "Clasificar préstamo como ingreso secundario solo por transferencia bancaria.",
+            "Omitir servicios porque no se desplazan como mercancía física."
+          ],
+          "correct": 0,
+          "explanation": "El canal de pago no elimina diferencias económicas entre transacciones.",
+          "id": "cex-w15-q2"
+        },
+        {
+          "type": "matching",
+          "prompt": "Relaciona transacción y componente corriente.",
+          "pairs": [
+            {
+              "left": "Mercancía",
+              "right": "Bienes"
+            },
+            {
+              "left": "Asesoría internacional",
+              "right": "Servicios"
+            },
+            {
+              "left": "Renta de inversión",
+              "right": "Ingreso primario"
+            },
+            {
+              "left": "Transferencia corriente sin contraprestación",
+              "right": "Ingreso secundario"
+            }
+          ],
+          "explanation": "Cuenta corriente integra componentes distintos por naturaleza.",
+          "id": "cex-w15-q3"
+        },
+        {
+          "type": "ordering",
+          "prompt": "Ordena clasificación conceptual de un flujo.",
+          "items": [
+            "Identificar residencia económica",
+            "Reconocer naturaleza de transacción",
+            "Seleccionar cuenta o componente",
+            "Explicar alcance sin confundir canal bancario"
+          ],
+          "explanation": "Clasificar exige residencia y naturaleza antes del nombre de la cuenta.",
+          "id": "cex-w15-q4"
+        },
+        {
+          "type": "crossword",
+          "prompt": "Completa conceptos de la balanza.",
+          "entries": [
+            {
+              "word": "CORRIENTE",
+              "clue": "Cuenta con bienes, servicios e ingresos."
+            },
+            {
+              "word": "PRIMARIO",
+              "clue": "Ingreso asociado a trabajo o inversión según naturaleza."
+            },
+            {
+              "word": "SECUNDARIO",
+              "clue": "Ingreso de transferencias corrientes sin contraprestación."
+            }
+          ],
+          "explanation": "La estructura ayuda a comprender antes de interpretar resultados.",
+          "id": "cex-w15-q5"
+        }
+      ]
+    },
+    {
+      "week": 16,
+      "name": "Examen: interpretar sin mezclar cuentas",
+      "objective": "Clasifica por residencia y naturaleza; distingue corriente y financiera; explica límites de las conclusiones y relación con balanza comercial. Ordena una revisión del argumento antes de aceptarlo. Esta evaluación final conserva el tema semanal y no solicita cálculos.",
+      "label": "Simulación educativa · práctica conceptual",
+      "context": "Conceptos clave\nInterpretar balanza de pagos exige comprender estructura, residencia y naturaleza de transacciones. Cuenta corriente no se limita a mercancías y no equivale a utilidad de una empresa. Capital y financiera tienen funciones diferentes; un préstamo genera una obligación financiera y no es ingreso secundario por llegar como transferencia bancaria. Un saldo, por sí solo, no demuestra bienestar de toda persona ni explica causas. El examen integra conceptos para reconocer una lectura válida y los límites de un argumento, sin ejercicios de cálculo ni conclusiones macroeconómicas basadas en una noticia aislada.\n\nCaso breve · simulación educativa\nUn panel estudiantil afirma que toda entrada de dinero es ingreso corriente y que la balanza comercial describe todos los vínculos de la economía. Tiene ejemplos de mercancías, servicio, renta, transferencia personal y préstamo. Debes reorganizar conceptualmente el panel y explicar por qué una cuenta nacional no es ganancia individual.\n\nQué debes hacer\nClasifica por residencia y naturaleza; distingue corriente y financiera; explica límites de las conclusiones y relación con balanza comercial. Ordena una revisión del argumento antes de aceptarlo. Esta evaluación final conserva el tema semanal y no solicita cálculos.\n\nSecuencia indicada para este caso: Identificar afirmaciones y ejemplos → Comprobar residencia y naturaleza → Relacionar componentes con metodología → Corregir alcance y conclusiones.",
+      "references": [
+        {
+          "name": "Sílabo CEX-103-AC · ULEAM · 2026-2",
+          "url": "./documents/comercio-silabo.pdf",
+          "author": "ANDRADE ALVARADO SONIA PATRICIA · Universidad Laica Eloy Alfaro de Manabí",
+          "section": "Semana 16: 4.4. Balanza de pagos: Estructura, importancia e interpretación básica. EXAMEN FINAL",
+          "purpose": "Comprobar tema y ubicación semanal del contenido de la asignatura."
+        },
+        {
+          "name": "FMI · Manual de Balanza de Pagos y Posición de Inversión Internacional, sexta edición",
+          "url": "https://www.imf.org/external/pubs/ft/bop/2007/pdf/bpm6.pdf",
+          "author": "Fondo Monetario Internacional",
+          "section": "Capítulos 2 y 4: marco y residencia; capítulo 8: financiera; capítulo 10: bienes y servicios; capítulos 11–12: ingresos primario y secundario; capítulo 13: capital.",
+          "purpose": "Clasificar transacciones por naturaleza y residencia y distinguir cuenta corriente, capital y financiera."
+        }
+      ],
+      "questions": [
+        {
+          "type": "choice",
+          "prompt": "¿Qué afirmación interpreta correctamente la estructura?",
+          "options": [
+            "La balanza comercial de mercancías no cubre todas las transacciones de balanza de pagos.",
+            "La cuenta de mercancías describe todo flujo exterior porque las demás son formas de pago.",
+            "El canal bancario hace equivalentes renta, transferencia y préstamo.",
+            "Un saldo nacional corresponde siempre al margen del vendedor individual."
+          ],
+          "correct": 0,
+          "explanation": "La cobertura de pagos es mayor y naturaleza de flujos difiere de resultado empresarial.",
+          "id": "cex-w16-q1"
+        },
+        {
+          "type": "choice",
+          "prompt": "¿Cómo debe corregirse el panel?",
+          "options": [
+            "Agrupar entradas y separar únicamente pagos salientes.",
+            "Separar bienes, servicios, ingresos y operaciones financieras según naturaleza y residencia.",
+            "Usar transferencia bancaria como criterio para ingreso secundario en todos los ejemplos.",
+            "Eliminar financiera porque se confunde con forma de pago del contrato."
+          ],
+          "correct": 1,
+          "explanation": "La estructura metodológica permite distinguir transacciones de naturaleza diferente.",
+          "id": "cex-w16-q2"
+        },
+        {
+          "type": "matching",
+          "prompt": "Relaciona ejemplo y categoría metodológica.",
+          "pairs": [
+            {
+              "left": "Venta de mercancía a no residente",
+              "right": "Bienes de corriente"
+            },
+            {
+              "left": "Prestación a no residente",
+              "right": "Servicios de corriente"
+            },
+            {
+              "left": "Ingreso de inversión",
+              "right": "Primario de corriente"
+            },
+            {
+              "left": "Préstamo de acreedor no residente",
+              "right": "Cuenta financiera"
+            }
+          ],
+          "explanation": "Un préstamo genera obligación y no se transforma en ingreso corriente.",
+          "id": "cex-w16-q3"
+        },
+        {
+          "type": "ordering",
+          "prompt": "Ordena revisión del panel final.",
+          "items": [
+            "Identificar afirmaciones y ejemplos",
+            "Comprobar residencia y naturaleza",
+            "Relacionar componentes con metodología",
+            "Corregir alcance y conclusiones"
+          ],
+          "explanation": "La revisión fundamenta categorías antes de aceptar interpretación.",
+          "id": "cex-w16-q4"
+        },
+        {
+          "type": "crossword",
+          "prompt": "Completa claves del examen.",
+          "entries": [
+            {
+              "word": "CUENTA",
+              "clue": "Agrupación metodológica de transacciones."
+            },
+            {
+              "word": "ACTIVO",
+              "clue": "Recurso financiero distinto de mercancía."
+            },
+            {
+              "word": "PASIVO",
+              "clue": "Obligación financiera como deuda."
+            }
+          ],
+          "explanation": "Activos y pasivos no se confunden con categorías de mercancías.",
+          "id": "cex-w16-q5"
+        }
+      ]
+    }
+  ]
 };

@@ -4,12 +4,28 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="robots" content="noindex,nofollow" />
-    <meta name="theme-color" content="#141c35" />
+    <meta name="theme-color" content="#f6f5fa" />
     <meta
       name="description"
       content="SIGIN: aula de aprendizaje práctico de competencias informacionales, comercio exterior y gobierno electrónico."
     />
     <title>SIGIN · Tu aula, en acción</title>
+    <script>
+      (() => {
+        let preference = "system";
+        try {
+          const saved = localStorage.getItem("sigin-theme-v1");
+          if (["light", "dark", "system"].includes(saved)) preference = saved;
+        } catch {}
+        const theme = preference === "system"
+          ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+          : preference;
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.dataset.themePreference = preference;
+        document.documentElement.style.colorScheme = theme;
+        document.querySelector('meta[name="theme-color"]').content = theme === "dark" ? "#171b29" : "#f6f5fa";
+      })();
+    </script>
     <link rel="stylesheet" href="assets/style.css" />
   </head>
   <body>
