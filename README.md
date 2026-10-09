@@ -1,6 +1,6 @@
 # SIGIN · Aula de aprendizaje práctico
 
-Tres materias, 48 semanas y 240 retos: Alfabetización y Competencias Informacionales (GIG-502), Comercio Exterior (CEX-103-AC) y Gobierno Electrónico y Administración Pública (GIG-406). Los títulos semanales proceden del HTML y los dos sílabos proporcionados. Las actividades nuevas son simulaciones didácticas: expedientes con documentos, cifras, reglas y límites de interpretación; no describen procedimientos reales de las empresas citadas en el sílabo.
+Tres materias y 48 semanas: Alfabetización y Competencias Informacionales (GIG-502), Comercio Exterior (CEX-103-AC) y Gobierno Electrónico y Administración Pública (GIG-406). Hay 240 retos de práctica en el sitio y otros 240 retos de evaluación, organizados en 48 bancos privados de Supabase. Los títulos semanales proceden del HTML y los dos sílabos proporcionados. Las actividades nuevas son simulaciones didácticas: expedientes con documentos, cifras, reglas y límites de interpretación; no describen procedimientos reales de las empresas citadas en el sílabo.
 
 ## Desarrollo
 
@@ -24,7 +24,7 @@ npm start
 
 ## Supabase y estado real
 
-La URL y clave publicable del proyecto están en `assets/config.js`. Supabase está activo: esquema aplicado, cuenta docente y único estudiante de prueba creados, este último matriculado en las tres materias. La función de altas está desplegada y sus permisos se comprobaron con sesiones reales. Auth usa la dirección académica final, tiene el registro público desactivado y exige cambiar la clave temporal del estudiante antes de cargar el aula. Ver [docs/SUPABASE.md](docs/SUPABASE.md).
+La URL y clave publicable del proyecto están en `assets/config.js`. Supabase está activo: esquema aplicado, cuenta docente y único estudiante de prueba creados, este último matriculado en las tres materias. La función de altas está desplegada y sus permisos se comprobaron con sesiones reales. Auth usa la dirección académica final y tiene el registro público desactivado. Las altas exigen cambiar la clave temporal antes de cargar el aula; el usuario de prueba ya realizó ese cambio y la base de datos registró que dejó de usar la clave temporal. Ver [docs/SUPABASE.md](docs/SUPABASE.md).
 
 La entrada pública de vista previa está desactivada. Para usar el aula es obligatorio iniciar sesión con una cuenta válida. La vista previa se habilita únicamente dentro de las pruebas de navegador con configuración simulada. Los contenidos estáticos son públicos; los datos personales y notas se guardan en Supabase con RLS. Los ejemplos de práctica tienen respuestas públicas para aprender. Las evaluaciones reales se crean aparte con el autor docente y se guardan en el esquema privado. Nunca cargar los mismos ejercicios públicos como evaluación secreta.
 
@@ -34,7 +34,11 @@ Cuenta docente: usuario visible `DocenteULEAM`, asociado al correo configurado e
 
 RLS protege perfiles, matrículas y resultados. La evaluación valida inscripción, fechas y número de intentos, y calcula notas en una operación transaccional. No hay fallback a calificación local en una evaluación real. Los ajustes docentes conservan historial.
 
-Se comprobaron inicios de sesión remotos de ambos roles, las tres materias de la docente, el perfil propio y bloqueo por contraseña temporal del estudiante, el rechazo de altas desde el rol estudiante y el rechazo de lecturas anónimas. Una solicitud de recuperación respondió HTTP 200 y el usuario confirmó la llegada al buzón institucional; el restablecimiento completo todavía no se ejecutó como prueba. Custom SMTP no está configurado: debe prepararse antes de incorporar más estudiantes por los límites del correo predeterminado. La preparación de los 48 bancos privados y las comprobaciones adicionales de horarios y vista docente de lectura siguen en curso; las evaluaciones están cerradas.
+Se comprobaron inicios de sesión remotos de ambos roles, las tres materias de la docente, el perfil propio y bloqueo inicial por contraseña temporal del estudiante, el rechazo de altas desde el rol estudiante y el rechazo de lecturas anónimas. Una solicitud de recuperación respondió HTTP 200 y el usuario confirmó la llegada al buzón institucional. El cambio de contraseña posterior quedó registrado en el servidor; la nueva contraseña es privada y no se utilizó en pruebas del entorno. Custom SMTP debe prepararse antes de incorporar más estudiantes por los límites del correo predeterminado.
+
+Los 48 bancos privados están cargados y verificados: 16 por materia, cinco retos por semana y 240 retos de evaluación con casos distintos de la práctica. Los 48 enunciados se consultaron mediante la sesión docente real y no incluyen campos de solución. Las 48 evaluaciones permanecen cerradas deliberadamente para que la docente revise los casos con **Ver evaluación**, en modo de solo lectura, y decida el calendario.
+
+El corrector remoto se comprobó en una transacción SQL con contexto de identidad del estudiante y reversión completa: los 48 bancos calificaron respuestas correctas con 10 y erróneas con 0; reintentar el mismo identificador conservó cada resultado sin duplicarlo; los 48 bancos rechazaron un tercer intento nuevo. También se comprobaron cierre manual, plazo vencido y apertura futura. Después de revertir, quedaron cero notas guardadas, cero evaluaciones abiertas, 48 bancos y un único estudiante. La prueba no requirió conocer ni cambiar su nueva contraseña.
 
 ## Publicar y cambiar dirección
 
@@ -47,3 +51,5 @@ El repositorio está en la organización académica `siginuleam` y la dirección
 Pruebas Node: 48 semanas/240 tareas, contexto suficiente, conservación de títulos, PDF, corrección de los cinco formatos, cuadrículas, importación y matrículas múltiples. Pruebas de adaptador/Edge: autenticación servidor, recuperación, refresh concurrente, altas autorizadas y rollback. PostgreSQL16 real: RLS, servidor de notas, límites simultáneos, horarios, cambio obligatorio y publicación privada.
 
 Navegador: tres materias, cinco formatos, prácticas y evaluación de vista previa, plantilla Excel y layout en 360/390/768/1024/1440/1920 px. No equivale a validación de correo o permisos en el proyecto publicado.
+
+Sitio publicado y Supabase real: inicio docente, tres materias, 48 semanas cerradas y revisión de un banco por materia. Cada vista mostró expediente y cinco formatos, sin soluciones ni controles de entrega. La prueba fue de solo lectura y no cambió calendarios, notas ni contraseñas.

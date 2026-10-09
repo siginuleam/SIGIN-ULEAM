@@ -20,4 +20,8 @@ Después de cada publicación, comprobar que `build` y `deploy` terminen correct
 - **Redirect URLs**: incluir esa misma dirección completa, con la ruta y la barra final.
 - Secreto de la función `SIGIN_ALLOWED_ORIGINS`: `https://siginuleam.github.io`, sin ruta.
 
-Estos ajustes administrativos siguen pendientes hasta disponer de acceso a Supabase. Tras configurarlos, comprobar inicio de sesión, recuperación por correo y altas manuales/Excel desde la dirección académica. El traslado del repositorio no configura automáticamente esos servicios.
+Estos ajustes administrativos ya están configurados en Supabase. Se comprobaron inicios de sesión remotos, permisos de altas y recuperación por correo; el usuario confirmó la llegada del mensaje a su buzón institucional. La cuenta de estudiante ya registró su cambio de contraseña, cuya nueva clave permanece privada.
+
+Los 48 bancos privados están cargados. Las evaluaciones permanecen cerradas para que la docente revise sus enunciados en **Semanas y horarios → Ver evaluación** y programe fechas. El servicio de correo predeterminado permitió la prueba inicial; antes de incorporar más estudiantes se debe configurar SMTP y revisar sus cuotas.
+
+La revisión docente se comprobó en el sitio publicado con datos reales. Los 48 bancos también pasaron comprobaciones del corrector, reintentos, cuotas y horarios en una transacción SQL revertida. La verificación final confirmó cero notas guardadas y cero evaluaciones abiertas; la prueba no utilizó ni cambió la nueva contraseña del estudiante.

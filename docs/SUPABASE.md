@@ -7,10 +7,11 @@ La web exige inicio de sesión. El proyecto ya tiene las cuentas iniciales y la 
 El proyecto remoto está activo. El esquema está aplicado y la URL y clave publicable están configuradas en el repositorio. La dirección académica https://siginuleam.github.io/SIGIN-ULEAM/ también está configurada en Auth como Site URL y Redirect URL. El registro público está desactivado y Auth admite claves temporales de diez caracteres.
 
 - La cuenta docente y su perfil están creados. `DocenteULEAM` usa el correo configurado en `teacherEmail`; el inicio de sesión remoto devuelve las tres materias y el rol docente.
-- Existe únicamente el estudiante de prueba autorizado, matriculado en las tres materias. Su sesión solo puede consultar su propio perfil y exige cambiar la contraseña temporal antes de cargar el aula.
+- Existe únicamente el estudiante de prueba autorizado, matriculado en las tres materias. Su sesión solo puede consultar su propio perfil. El usuario ya cambió su contraseña y el servidor registró que dejó de usar la clave temporal; su nueva contraseña permanece privada y no se usó en pruebas del entorno. Las altas futuras siguen exigiendo ese cambio antes de cargar el aula.
 - `manage-students` está desplegada y activa, con la comprobación JWT heredada desactivada porque verifica cada sesión con Auth. Su secreto de orígenes admite `https://siginuleam.github.io`. Una petición docente sobre el estudiante existente respondió 200 y conservó la contraseña; una petición con rol estudiante fue rechazada con 403. La lectura anónima de perfiles devuelve 401.
-- Una solicitud de recuperación fue aceptada con HTTP 200 y el usuario confirmó que el mensaje llegó a su buzón institucional. El restablecimiento completo mediante ese enlace todavía no fue ejecutado como prueba. Custom SMTP no está configurado: antes de incorporar más estudiantes, prepara un proveedor SMTP y revisa los límites del servicio de correo predeterminado.
-- La creación de los 48 bancos privados y las comprobaciones adicionales de horarios y vista docente de lectura están en curso. Las evaluaciones permanecen cerradas hasta completar su preparación y revisión.
+- Una solicitud de recuperación fue aceptada con HTTP 200 y el usuario confirmó que el mensaje llegó a su buzón institucional. El cambio de contraseña posterior quedó registrado en la base de datos. Custom SMTP no está configurado: antes de incorporar más estudiantes, prepara un proveedor SMTP y revisa los límites del servicio de correo predeterminado.
+- Los 48 bancos privados están cargados y verificados: 16 por materia, cinco retos por semana, con un total de 240 retos de evaluación adicionales a los 240 de práctica. Usan expedientes nuevos y los cinco formatos. Los 48 enunciados se consultaron mediante una sesión docente real y no contienen campos de solución. Las 48 evaluaciones permanecen cerradas deliberadamente para que la docente las revise y configure el calendario.
+- El corrector remoto pasó una comprobación SQL transaccional con contexto de identidad del estudiante: 10 para respuestas correctas y 0 para erróneas en los 48 bancos; 48 reintentos con el mismo identificador devolvieron el mismo intento sin duplicarlo; los 48 bancos rechazaron un tercer intento nuevo. También se comprobaron cierre manual, plazo vencido y apertura futura. Toda la transacción se revirtió: la comprobación posterior confirmó cero notas guardadas, cero evaluaciones abiertas, 48 bancos y un único estudiante. No se necesitó conocer ni cambiar su nueva contraseña.
 
 Los pasos siguientes se conservan como instrucciones para mantener o reinstalar el proyecto; no hace falta repetir altas que ya existen. No se publican cédulas, contraseñas ni listados de personas.
 
@@ -76,7 +77,11 @@ Si ya creaste manualmente una cuenta con el mismo correo pero sin perfil, comple
 
 ### Cargar un banco desde el panel docente
 
-Cierra primero la evaluación de esa semana. En **Espacio docente → Crear evaluación**, elige semana e introduce título, objetivo y expediente con datos suficientes. Añade los retos: opciones y posición correcta; relaciones; pasos en orden; resultado numérico; o palabras y pistas del crucigrama. Incluye la explicación que se mostrará después de entregar. **Guardar evaluación privada** envía enunciados y claves separados al servidor, exige sesión docente y comprueba el formato. Después habilita la semana y configura sus fechas en **Semanas y horarios**.
+Los bancos iniciales ya están cargados. Para revisar un banco sin modificarlo ni consumir intentos, abre **Espacio docente → Semanas y horarios**, selecciona materia y semana y pulsa **Ver evaluación**. La docente puede consultar el expediente y los enunciados aunque la evaluación esté cerrada.
+
+Esta vista se comprobó en el sitio publicado con la cuenta docente y respuestas reales de Supabase: un banco de cada materia, con expediente y los cinco formatos, sin campos de solución ni controles de entrega. La comprobación no cambió calendarios, notas, matrículas ni contraseñas.
+
+Para sustituir o crear un banco, cierra primero la evaluación de esa semana. En **Espacio docente → Crear evaluación**, elige semana e introduce título, objetivo y expediente con datos suficientes. Añade los retos: opciones y posición correcta; relaciones; pasos en orden; resultado numérico; o palabras y pistas del crucigrama. Incluye la explicación que se mostrará después de entregar. **Guardar evaluación privada** envía enunciados y claves separados al servidor, exige sesión docente y comprueba el formato. Después habilita la semana y configura sus fechas en **Semanas y horarios**.
 
 La interfaz genera internamente `public_payload` (expediente y enunciados sin respuestas) y `answer_key` (claves y explicaciones). No subas esas claves al repositorio ni las distribuyas a estudiantes.
 
@@ -114,7 +119,7 @@ La plantilla ejemplifica el contrato; al estar documentada públicamente no es u
 
 Prueba con dos cuentas temporales matriculadas en materias diferentes: cada una debe ver solo su matrícula y resultados. Un alumno no debe poder escribir su rol, editar notas, acceder a perfiles ajenos, abrir otra evaluación por URL ni leer `private.assessment_keys`. Comprueba cierre, límite de intentos, entrega concurrente, cambio de contraseña, recuperación de correo y sincronización en dos dispositivos. Guarda una copia de seguridad y revisa privacidad y retención antes de cargar listados completos.
 
-El proyecto, las cuentas iniciales y la función de altas ya se comprobaron contra Supabase remoto. El usuario confirmó la llegada del correo de recuperación al buzón institucional. Sigue pendiente probar el restablecimiento completo, completar y revisar los bancos privados y comprobar los flujos de evaluación antes de usar calificaciones reales. Las pruebas locales no sustituyen esas comprobaciones externas.
+El proyecto, las cuentas iniciales, la función de altas, los 48 bancos privados y el corrector ya se comprobaron contra Supabase remoto. El usuario confirmó la llegada del correo institucional y el servidor registró su cambio de contraseña. La nueva clave se conserva en privado. La docente debe revisar los bancos y programar sus fechas antes de abrir evaluaciones. Las comprobaciones transaccionales no guardaron notas ni dejaron semanas abiertas.
 
 ## Pruebas locales del adaptador y permisos
 
