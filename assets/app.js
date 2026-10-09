@@ -1,5 +1,5 @@
 import { courses } from "./courses.js";
-import { backend, backendConfigured } from "./backend.js";
+import { backend, backendConfigured, institutionalEmail } from "./backend.js";
 import { APP_CONFIG } from "./config.js";
 import {
   initialState,
@@ -66,6 +66,8 @@ let state,
   activityMode = "practice",
   quiz = null,
   preview = [],
+  importReadVersion = 0,
+  registrationStatus = null,
   matchSelected = null,
   toastTimer;
 const themeKey = "sigin-theme-v1";
@@ -385,8 +387,21 @@ function contextMarkup(context) {
     return `<p>${escape(part.trim())}</p>`;
   }).join("");
 }
-function dossier(a) {
-  return `<article class="card context-card"><span class="eyebrow">${icon("book")} Conceptos y caso</span><h2>${escape(a.name)}</h2><span class="badge teal">${escape(a.label || "Simulación educativa")}</span><div class="learning-goal"><strong>Tu objetivo</strong><br>${escape(a.objective)}</div><div class="dossier">${contextMarkup(a.context)}</div>${a.references?.length ? `<section class="reading-resources" aria-label="Lecturas de apoyo"><h3>Una lectura para ir más lejos.</h3><p class="muted">Esta guía reúne los conceptos y el caso para responder. Estos recursos te ayudan a profundizar con una ruta de lectura clara.</p><div class="source-links">${a.references.map((resource) => {
+function examCaseContext(context) {
+  const parts = String(context || "").split(/\n\s*\n/).filter((part) => part.trim());
+  const start = parts.findIndex((part) => /^Caso breve\b/i.test(part.trim()));
+  if (start < 0)
+    return parts.filter((part) => !/^(Conceptos? claves?|Qué debes hacer|Secuencia indicada|Método propuesto|Ruta de lectura)\b/i.test(part.trim())).join("\n\n");
+  const caseParts = [parts[start]];
+  for (let i = start + 1; i < parts.length; i++) {
+    if (/^(Conceptos? claves?|Qué debes hacer|Instrucciones|Tu reto|Secuencia indicada|Método propuesto|Ruta de lectura)\b/i.test(parts[i].trim())) break;
+    caseParts.push(parts[i]);
+  }
+  return caseParts.join("\n\n");
+}
+function dossier(a, { assessment = false } = {}) {
+  const content = assessment ? examCaseContext(a.context) : a.context;
+  return `<article class="card context-card ${assessment ? "exam-case-card" : ""}"><span class="eyebrow">${icon(assessment ? "shield" : "book")} ${assessment ? "Caso del examen" : "Conceptos y caso"}</span><h2>${escape(a.name)}</h2><span class="badge teal">${escape(a.label || "Simulación educativa")}</span>${assessment ? '<p class="exam-instructions">Responde las preguntas aplicando lo aprendido en la materia. Puedes consultar esta situación y revisar tus respuestas antes de entregar.</p>' : `<div class="learning-goal"><strong>Tu objetivo</strong><br>${escape(a.objective)}</div>`}<div class="dossier">${contextMarkup(content)}</div>${!assessment && a.references?.length ? `<section class="reading-resources" aria-label="Lecturas de apoyo"><h3>Una lectura para ir más lejos.</h3><p class="muted">Esta guía reúne los conceptos y el caso para responder. Estos recursos te ayudan a profundizar con una ruta de lectura clara.</p><div class="source-links">${a.references.map((resource) => {
     let href;
     try {
       const target = new URL(resource.url, location.href);
@@ -462,20 +477,23 @@ function storeDraft() {
       }),
     );
 }
+const answerStatus = (correct) => `<span class="answer-status ${correct ? "correct" : "incorrect"}">${correct ? "✓ Correcta" : "× Incorrecta"}</span>`;
 function questionMarkup(q, v) {
+  const graded = quiz.mode === "practice" && quiz.checked;
+  const mark = (correct) => graded ? (correct ? "correct" : "incorrect") : "";
   if (q.type === "numeric")
-    return `<label for="numeric-answer">Resultado ${q.unit ? `(${escape(q.unit)})` : ""}</label><input id="numeric-answer" name="numeric" type="text" inputmode="decimal" value="${escape(v ?? "")}" placeholder="Escribe tu resultado" required><p class="muted" style="font-size:13px">Puedes usar punto o coma decimal. Revisa la unidad y el denominador.</p>`;
+    return `<label for="numeric-answer">Resultado ${q.unit ? `(${escape(q.unit)})` : ""}</label><input id="numeric-answer" class="answer-field ${mark(questionCorrect(q, v))}" name="numeric" type="text" inputmode="decimal" value="${escape(v ?? "")}" placeholder="Escribe tu resultado" required>${graded ? answerStatus(questionCorrect(q, v)) : ""}<p class="muted" style="font-size:13px">Puedes usar punto o coma decimal. Revisa la unidad y el denominador.</p>`;
   if (q.type === "matching") {
     const lefts = q.pairs?.map((p) => p.left) || q.lefts,
       rights = q.pairs?.map((p) => p.right) || q.rights,
       order = shuffleIndexes(rights.length, quiz.week * 17 + quiz.index * 7);
-    return `<p class="muted">Selecciona un elemento de la izquierda y su relación a la derecha. Puedes corregir cualquier conexión.</p><div class="matching-board"><div class="match-column">${lefts.map((left, i) => button("matchLeft", `<span class="match-number">${i + 1}</span>${escape(left)}`, `data-index="${i}" class="match-item ${matchSelected === i ? "selected" : ""} ${Number.isInteger(v?.[i]) ? "paired" : ""}" aria-pressed="${matchSelected === i}"`)).join("")}</div><div class="match-lines" aria-hidden="true">${lefts.map(() => "<span>↔</span>").join("")}</div><div class="match-column">${order
+    return `<p class="muted">Selecciona un elemento de la izquierda y su relación a la derecha. Puedes corregir cualquier conexión.</p><div class="matching-board"><div class="match-column">${lefts.map((left, i) => button("matchLeft", `<span class="match-number">${i + 1}</span>${escape(left)}${graded ? answerStatus(v?.[i] === i) : ""}`, `data-index="${i}" class="match-item ${matchSelected === i ? "selected" : ""} ${Number.isInteger(v?.[i]) ? "paired" : ""} ${mark(v?.[i] === i)}" aria-pressed="${matchSelected === i}"`)).join("")}</div><div class="match-lines" aria-hidden="true">${lefts.map(() => "<span>↔</span>").join("")}</div><div class="match-column">${order
       .map((i) => {
         const linked = (v || []).findIndex((n) => n === i);
         return button(
           "matchRight",
-          `<span class="match-number">${linked >= 0 ? linked + 1 : "·"}</span>${escape(rights[i])}`,
-          `data-index="${i}" class="match-item ${linked >= 0 ? "paired" : ""}"`,
+          `<span class="match-number">${linked >= 0 ? linked + 1 : "·"}</span>${escape(rights[i])}${graded ? answerStatus(linked === i) : ""}`,
+          `data-index="${i}" class="match-item ${linked >= 0 ? "paired" : ""} ${mark(linked === i)}"`,
         );
       })
       .join(
@@ -489,23 +507,29 @@ function questionMarkup(q, v) {
       quiz.answers[quiz.index] = v;
       storeDraft();
     }
-    return `<p class="muted">Coloca el proceso en su secuencia lógica. Usa las flechas; también funcionan con teclado.</p><div class="order-list">${v.map((item, i) => `<div class="order-item"><span class="match-number">${i + 1}</span><span class="order-text">${escape(q.items[item])}</span>${button("moveOrder", "↑", `data-index="${i}" data-direction="-1" aria-label="Subir ${escape(q.items[item])}" ${i === 0 ? "disabled" : ""}`)}${button("moveOrder", "↓", `data-index="${i}" data-direction="1" aria-label="Bajar ${escape(q.items[item])}" ${i === v.length - 1 ? "disabled" : ""}`)}</div>`).join("")}</div>`;
+    return `<p class="muted">Coloca el proceso en su secuencia lógica. Usa las flechas; también funcionan con teclado.</p><div class="order-list">${v.map((item, i) => `<div class="order-item ${mark(item === i)}"><span class="match-number">${i + 1}</span><span class="order-text">${escape(q.items[item])}${graded ? answerStatus(item === i) : ""}</span>${button("moveOrder", "↑", `data-index="${i}" data-direction="-1" aria-label="Subir ${escape(q.items[item])}" ${i === 0 ? "disabled" : ""}`)}${button("moveOrder", "↓", `data-index="${i}" data-direction="1" aria-label="Bajar ${escape(q.items[item])}" ${i === v.length - 1 ? "disabled" : ""}`)}</div>`).join("")}</div>`;
   }
   if (q.type === "crossword") {
     const layout = q.layout || crosswordLayout(q.entries);
     return `<p class="muted">Usa las pistas y los conceptos del caso. Escribe una letra por casilla, sin tildes. Las palabras comparten sus letras cuando se cruzan.</p><div class="crossword-scroll"><div class="crossword-grid" style="grid-template-columns:repeat(${layout.width},var(--cw-size,34px));grid-template-rows:repeat(${layout.height},var(--cw-size,34px))">${layout.cells
       .map((cell, i) => {
         const ref = cell.refs[0];
-        return `<div class="cw-cell" style="grid-column:${cell.column};grid-row:${cell.row}">${cell.number ? `<small>${cell.number}</small>` : ""}<input class="cw-input" maxlength="1" data-refs="${escape(JSON.stringify(cell.refs))}" data-cell="${i}" value="${escape((v?.[ref.entry] || "")[ref.letter] || "")}" aria-label="${cell.refs.map((r) => `Palabra ${r.entry + 1}, letra ${r.letter + 1}`).join("; ")}" autocomplete="off"></div>`;
+        const letter = (v?.[ref.entry] || "")[ref.letter] || "";
+        const correct = graded && normalizedWord(letter) === normalizedWord(q.entries[ref.entry].word)[ref.letter];
+        return `<div class="cw-cell ${mark(correct)}" style="grid-column:${cell.column};grid-row:${cell.row}">${cell.number ? `<small>${cell.number}</small>` : ""}<input class="cw-input" maxlength="1" data-refs="${escape(JSON.stringify(cell.refs))}" data-cell="${i}" value="${escape(letter)}" aria-label="${cell.refs.map((r) => `Palabra ${r.entry + 1}, letra ${r.letter + 1}`).join("; ")}${graded ? (correct ? "; Correcta" : "; Incorrecta") : ""}" ${graded ? `aria-invalid="${!correct}"` : ""} autocomplete="off">${graded ? `<span class="cell-status" aria-hidden="true">${correct ? "✓" : "×"}</span>` : ""}</div>`;
       })
       .join(
         "",
       )}</div></div><ol class="cw-clues">${q.entries.map((e, i) => `<li>${escape(e.clue)} <small>(${e.word ? normalizedWord(e.word).length : e.length} letras · ${layout.placed?.[i]?.dir === "down" ? "vertical" : "horizontal"})</small></li>`).join("")}</ol>`;
   }
-  return `<fieldset style="border:0;padding:0;margin:0"><legend class="sr-only">${escape(q.prompt)}</legend>${q.options.map((o, i) => `<label class="option"><input type="radio" name="choice" value="${i}" ${v === i ? "checked" : ""} required><span>${escape(o)}</span></label>`).join("")}</fieldset>`;
+  return `<fieldset style="border:0;padding:0;margin:0"><legend class="sr-only">${escape(q.prompt)}</legend>${q.options.map((o, i) => {
+    const show = graded && (i === v || i === q.correct);
+    return `<label class="option ${show ? mark(i === q.correct) : ""}"><input type="radio" name="choice" value="${i}" ${v === i ? "checked" : ""} required><span>${escape(o)}${show ? answerStatus(i === q.correct) : ""}</span></label>`;
+  }).join("")}</fieldset>`;
 }
 function quizDossier(a) {
-  return `<article class="card context-card"><details class="quiz-dossier" ${quiz.index === 0 || window.innerWidth > 900 ? "open" : ""}><summary>${icon("book")} Consultar conceptos y caso</summary>${dossier(a)}</details></article>`;
+  const assessment = quiz.mode === "assessment";
+  return `<article class="card context-card"><details class="quiz-dossier" ${quiz.index === 0 || window.innerWidth > 900 ? "open" : ""}><summary>${icon(assessment ? "shield" : "book")} ${assessment ? "Consultar el caso del examen" : "Consultar conceptos y caso"}</summary>${dossier(a, { assessment })}</details></article>`;
 }
 function renderQuiz(preserveScroll = false) {
   const previousScroll = window.scrollY;
@@ -515,7 +539,7 @@ function renderQuiz(preserveScroll = false) {
     v = quiz.answers[quiz.index],
     isCorrect = quiz.checked ? questionCorrect(q, v) : false;
   shell(
-    `${heading(`Semana ${quiz.week} · ${quiz.mode === "practice" ? "Laboratorio de práctica" : "Actividad evaluada"}`, escape(a.name), "Lee los conceptos y el caso. Aplica los criterios de esta semana para justificar cada respuesta.", button("leaveQuiz", icon("back") + "Guardar y volver"))}<p class="case-reading-note">${icon("book")}<span><strong>Antes de responder, lee los conceptos y el caso.</strong> ${quiz.mode === "practice" ? "Esta práctica te permite explorar y aprender de la explicación de cada reto." : "Este examen utiliza su propio caso. Lee esta situación y aplica los criterios de la semana para decidir."}</span></p><div class="quiz-grid"><section><article class="card"><div class="question-meta"><span>Reto ${quiz.index + 1} de ${a.questions.length}</span><span class="badge pink">${taskLabel[q.type] || "Decisión razonada"}</span></div><div class="progress" aria-label="Reto ${quiz.index + 1} de ${a.questions.length}"><span style="width:${((quiz.index + 1) / a.questions.length) * 100}%"></span></div><h2 class="question-title">${escape(q.prompt)}</h2><form id="quiz-answer">${questionMarkup(q, v)}${quiz.checked ? `<div class="feedback ${isCorrect ? "good" : ""}"><h3>${isCorrect ? "Bien razonado." : "Revisa el concepto y vuelve a intentarlo."}</h3><p>${escape(q.explanation)}</p></div>` : ""}${quiz.mode === "practice" && !quiz.checked ? '<details class="hint"><summary>Cómo abordar este reto</summary><p>Identifica el concepto que respalda tu elección. En relaciones, explica qué conecta cada idea. En secuencias, comprueba qué requisito permite pasar al siguiente paso.</p></details>' : ""}<div class="actions">${quiz.index > 0 ? button("previous", icon("back") + "Anterior") : ""}<button class="primary" type="submit">${quiz.mode === "practice" && !quiz.checked ? "Comprobar mi respuesta" : quiz.index === a.questions.length - 1 ? "Revisar antes de terminar" : "Siguiente reto"} ${icon("arrow")}</button></div><p class="error" id="quiz-error" role="alert"></p></form></article></section>${quizDossier(a)}</div>`,
+    `${heading(`Semana ${quiz.week} · ${quiz.mode === "practice" ? "Laboratorio de práctica" : "Examen semanal"}`, escape(a.name), quiz.mode === "assessment" ? "Examen semanal. Responde las preguntas del caso y revisa antes de entregar." : "Lee los conceptos y el caso. Aplica los criterios de esta semana para justificar cada respuesta.", button("leaveQuiz", icon("back") + "Guardar y volver"))}<p class="case-reading-note">${icon("book")}<span><strong>${quiz.mode === "assessment" ? "Examen: lee la situación antes de responder." : "Antes de responder, lee los conceptos y el caso."}</strong> ${quiz.mode === "practice" ? "Esta práctica te permite explorar y aprender de la explicación de cada reto." : "Este examen utiliza su propio caso. Lee esta situación y aplica los criterios de la semana para decidir."}</span></p><div class="quiz-grid"><section><article class="card"><div class="question-meta"><span>Reto ${quiz.index + 1} de ${a.questions.length}</span><span class="badge pink">${taskLabel[q.type] || "Decisión razonada"}</span></div><div class="progress" aria-label="Reto ${quiz.index + 1} de ${a.questions.length}"><span style="width:${((quiz.index + 1) / a.questions.length) * 100}%"></span></div><h2 class="question-title">${escape(q.prompt)}</h2><form id="quiz-answer">${questionMarkup(q, v)}${quiz.checked ? `<div class="feedback ${isCorrect ? "good" : ""}"><h3>${isCorrect ? "Bien razonado." : "Revisa el concepto y vuelve a intentarlo."}</h3><p>${escape(q.explanation)}</p></div>` : ""}${quiz.mode === "practice" && !quiz.checked ? '<details class="hint"><summary>Cómo abordar este reto</summary><p>Identifica el concepto que respalda tu elección. En relaciones, explica qué conecta cada idea. En secuencias, comprueba qué requisito permite pasar al siguiente paso.</p></details>' : ""}<div class="actions">${quiz.index > 0 ? button("previous", icon("back") + "Anterior") : ""}<button class="primary" type="submit">${quiz.mode === "practice" && !quiz.checked ? "Comprobar mi respuesta" : quiz.index === a.questions.length - 1 ? "Revisar antes de terminar" : "Siguiente reto"} ${icon("arrow")}</button></div><p class="error" id="quiz-error" role="alert"></p></form></article></section>${quizDossier(a)}</div>`,
     course().code,
   );
   if (preserveScroll) window.scrollTo({ top: previousScroll, left: 0, behavior: "instant" });
@@ -608,7 +632,7 @@ async function finish() {
     `${heading(prev.mode === "practice" ? "Práctica completada" : "Actividad entregada", "La clave es entender por qué.", "Revisa lo que hiciste bien y los conceptos que puedes reforzar.")}<div class="two-col"><section>${a.questions
       .map((q, i) => {
         const f = result.feedback.find((f) => f.id === q.id) || {};
-        return `<article class="card"><span class="badge ${f.correct ? "available" : "scheduled"}">${f.correct ? "Reto resuelto" : "Para reforzar"}</span><h3 style="margin-top:14px">${escape(q.prompt)}</h3><div class="review-answer" style="white-space:pre-line">${escape(answerText(q, prev.answers[i]))}</div><p>${escape(f.explanation || "Revisa los conceptos y el caso con la docente.")}</p></article>`;
+        return `<article class="card"><span class="badge ${f.correct ? "available" : "scheduled"}">${f.correct ? "Reto resuelto" : "Para reforzar"}</span><h3 style="margin-top:14px">${escape(q.prompt)}</h3><div class="review-answer ${f.correct ? "correct" : "incorrect"}" style="white-space:pre-line">${answerStatus(Boolean(f.correct))}${escape(answerText(q, prev.answers[i]))}</div><p>${escape(f.explanation || "Revisa los conceptos y el caso con la docente.")}</p></article>`;
       })
       .join(
         "",
@@ -689,7 +713,7 @@ function adminWeeks() {
   return course()
     .weeks.map((w) => {
       const s = setting(currentCourse, w.weekNumber);
-      return `<details class="week"><summary><span class="week-number">${w.weekNumber}</span><div class="week-summary-text"><h3>${escape(w.title)}</h3><span class="badge ${availability(s).kind}">${availability(s).label}</span></div><span class="chevron">${icon("chevron")}</span></summary><div class="week-content">${button("reviewAssessment", icon("eye") + "Ver evaluación", `data-week="${w.weekNumber}"`)}<p class="muted" style="font-size:13px">Revisa los conceptos, el caso y los enunciados en modo de solo lectura, incluso si la semana está cerrada.</p><form data-schedule="${w.weekNumber}"><label><input type="checkbox" name="locked" ${s.locked ? "checked" : ""}> Cerrar esta evaluación</label><p class="muted" style="font-size:13px">La práctica continúa disponible. El cierre manual prevalece sobre las fechas.</p><div class="two-equal"><div><label>Apertura (hora de Ecuador)<input type="datetime-local" name="open" value="${s.open ? localDateTime(s.open) : ""}"></label></div><div><label>Cierre (hora de Ecuador)<input type="datetime-local" name="close" value="${s.close ? localDateTime(s.close) : ""}"></label></div></div><label>Intentos máximos<input type="number" name="maxAttempts" min="1" max="10" value="${s.maxAttempts}" required></label><button type="submit" class="primary">Guardar semana</button><p role="status" class="schedule-status"></p></form></div></details>`;
+      return `<details class="week"><summary><span class="week-number">${w.weekNumber}</span><div class="week-summary-text"><h3>${escape(w.title)}</h3><span class="badge ${availability(s).kind}">${availability(s).label}</span></div><span class="chevron">${icon("chevron")}</span></summary><div class="week-content">${button("reviewAssessment", icon("eye") + "Ver evaluación", `data-week="${w.weekNumber}"`)}<p class="muted" style="font-size:13px">Revisa el caso y los enunciados en modo de solo lectura, incluso si la semana está cerrada.</p><form data-schedule="${w.weekNumber}"><label><input type="checkbox" name="locked" ${s.locked ? "checked" : ""}> Cerrar esta evaluación</label><p class="muted" style="font-size:13px">La práctica continúa disponible. El cierre manual prevalece sobre las fechas.</p><div class="two-equal"><div><label>Apertura (hora de Ecuador)<input type="datetime-local" name="open" value="${s.open ? localDateTime(s.open) : ""}"></label></div><div><label>Cierre (hora de Ecuador)<input type="datetime-local" name="close" value="${s.close ? localDateTime(s.close) : ""}"></label></div></div><label>Intentos máximos<input type="number" name="maxAttempts" min="1" max="10" value="${s.maxAttempts}" required></label><button type="submit" class="primary">Guardar semana</button><p role="status" class="schedule-status"></p></form></div></details>`;
     })
     .join("");
 }
@@ -727,7 +751,7 @@ async function reviewAssessment(week) {
   quiz = null;
   route = "assessmentReview";
   shell(
-    `${heading(`Semana ${week} · ${escape(c.code)}`, "Vista de evaluación", "Solo lectura. Consultar esta vista no consume intentos ni cambia calificaciones.", button("adminTab", icon("back") + "Volver a semanas y horarios", 'data-tab="weeks"'))}<section class="assessment-review">${dossier(assessment)}${assessment.questions.map(assessmentReviewQuestion).join("")}</section>`,
+    `${heading(`Semana ${week} · ${escape(c.code)}`, "Vista de evaluación", "Solo lectura. Consultar esta vista no consume intentos ni cambia calificaciones.", button("adminTab", icon("back") + "Volver a semanas y horarios", 'data-tab="weeks"'))}<section class="assessment-review">${dossier(assessment, { assessment:true })}${assessment.questions.map(assessmentReviewQuestion).join("")}</section>`,
     "Vista de evaluación",
   );
 }
@@ -742,7 +766,7 @@ function adminStudents() {
   const students = state.students.filter((s) =>
     s.courses.includes(currentCourse),
   );
-  return `<div class="two-equal"><article class="card"><span class="eyebrow">Alta individual</span><h2>Agregar un estudiante</h2><form id="add-student"><label>Cédula<input name="id" inputmode="numeric" pattern="[0-9]{10}" maxlength="10" required></label><label>Nombres y apellidos<input name="name" maxlength="120" required></label><label>Paralelo<input name="parallel" value="A" maxlength="30" required></label><p class="muted" style="font-size:13px">Correo: e{cédula}@live.uleam.edu.ec. La contraseña temporal será la cédula y deberá cambiarse al entrar.</p><button type="submit" class="primary">Registrar en ${escape(course().code)}</button><p id="manual-status" class="error" role="status"></p></form></article><article class="card"><span class="eyebrow">Carga revisable</span><h2>Importar desde Excel</h2><p class="muted">Descarga la plantilla, completa los datos y revisa la vista previa antes de confirmar. No cargaremos listados hasta que lo indiques.</p>${button("template", "Descargar plantilla Excel")}<label>Archivo .xlsx<input id="import-file" type="file" accept=".xlsx"></label><p class="muted" style="font-size:12px">Máximo 2000 filas y 5 MB. Cédulas como texto para conservar los ceros iniciales.</p><p id="import-status" role="status"></p><div id="import-preview"></div></article></div><article class="card"><div class="section-title"><h2>Estudiantes de la materia (${students.length})</h2><span class="badge teal">Matrículas separadas</span></div><label>Buscar por nombre o cédula<input id="student-search" type="search" placeholder="Buscar estudiante"></label><div id="student-list">${studentTable(students)}</div></article>`;
+  return `${registrationStatus?.courseId === currentCourse ? `<p id="registration-summary" class="registration-status saved-status ${registrationStatus.kind}" role="status">${escape(registrationStatus.message)}</p>` : ""}<div class="two-equal"><article class="card"><span class="eyebrow">Alta individual</span><h2>Agregar un estudiante</h2><form id="add-student" novalidate data-course="${currentCourse}"><label>Cédula<input name="id" inputmode="numeric" pattern="[0-9]{10}" maxlength="10" required></label><p class="student-email-preview"><strong>Correo de recuperación</strong><br><output id="student-email">Se genera al completar la cédula.</output></p><label>Nombres y apellidos<input name="name" minlength="2" maxlength="120" required></label><label>Paralelo<input name="parallel" value="A" maxlength="30" required></label><p class="muted" style="font-size:13px">Correo: e{cédula}@live.uleam.edu.ec. La contraseña temporal será la cédula y deberá cambiarse al entrar.</p><button type="submit" class="primary">Registrar en ${escape(course().code)}</button><p id="manual-status" class="registration-status" role="status" aria-live="polite" hidden></p></form></article><article class="card"><span class="eyebrow">Carga revisable</span><h2>Importar desde Excel</h2><p class="muted">Descarga la plantilla, completa los datos y revisa la vista previa antes de confirmar. Al confirmar, las cuentas y matrículas se guardan en la base de datos institucional.</p>${button("template", "Descargar plantilla Excel")}<label>Archivo .xlsx<input id="import-file" type="file" accept=".xlsx"></label><p class="muted" style="font-size:12px">Máximo 2000 filas y 5 MB. Cédulas como texto para conservar los ceros iniciales.</p><p id="import-status" role="status"></p><div id="import-preview"></div></article></div><article class="card"><div class="section-title"><h2 id="roster-heading">Estudiantes de la materia (${students.length})</h2><span class="badge teal">Matrículas separadas</span></div><label>Buscar por nombre o cédula<input id="student-search" type="search" placeholder="Buscar estudiante"></label><div id="student-list">${studentTable(students)}</div></article>`;
 }
 function adminResults() {
   const students = state.students.filter((s) =>
@@ -946,14 +970,21 @@ async function workbook(rows, name) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 async function importFile(file) {
-  const out = document.querySelector("#import-status");
+  const out = document.querySelector("#import-status"),
+    courseId = currentCourse,
+    version = ++importReadVersion;
+  preview = [];
+  document.querySelector("#import-preview")?.replaceChildren();
+  registrationStatus = null;
+  document.querySelector("#registration-summary")?.remove();
   try {
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) throw Error("El archivo supera 5 MB.");
-    out.textContent = "Leyendo archivo…";
+    setRegistrationStatus(out, "Leyendo archivo…", "pending");
     const Excel = await excel(),
       wb = new Excel.Workbook();
     await wb.xlsx.load(await file.arrayBuffer());
+    if (version !== importReadVersion || !out.isConnected || currentCourse !== courseId) return;
     const sheet = wb.worksheets[0];
     if (!sheet) throw Error("No hay hojas en el archivo.");
     if (sheet.rowCount > 2001)
@@ -976,37 +1007,65 @@ async function importFile(file) {
           headers.map((h, i) => [h, value(sheet.getRow(r).getCell(i + 1))]),
         ),
       );
-    preview = normalizeRows(rows, state.students, currentCourse);
+    preview = normalizeRows(rows, state.students, courseId);
     if (!preview.length) throw Error("No hay filas para importar.");
     out.textContent = `${preview.filter((r) => !r.error).length} filas válidas y ${preview.filter((r) => r.error).length} con errores. Aún no se ha guardado ninguna.`;
-    document.querySelector("#import-preview").innerHTML =
-      `<div class="table-wrap"><table><thead><tr><th>Fila</th><th>Nombre</th><th>Materia</th><th>Estado</th></tr></thead><tbody>${preview.map((r) => `<tr><td>${r.row}</td><td>${escape(r.name)}</td><td>${escape(r.courses[0])}</td><td>${escape(r.error || "Lista para registrar")}</td></tr>`).join("")}</tbody></table></div>${button("confirmImport", "Confirmar filas válidas", `class="primary" ${!preview.some((r) => !r.error) ? "disabled" : ""}`)}`;
+    out.className = "registration-status";
+    renderImportPreview();
   } catch (e) {
-    out.textContent = "No se pudo importar: " + e.message;
+    if (version === importReadVersion && out?.isConnected && currentCourse === courseId)
+      setRegistrationStatus(out, "No se pudo importar: " + e.message, "error");
   }
 }
+function renderImportPreview() {
+  const target = document.querySelector("#import-preview");
+  if (target) target.innerHTML =
+    `<div class="table-wrap"><table><thead><tr><th>Fila</th><th>Nombre</th><th>Materia</th><th>Estado</th></tr></thead><tbody>${preview.map((r) => `<tr><td>${r.row}</td><td>${escape(r.name)}</td><td>${escape(r.courses[0])}</td><td>${escape(r.error || r.registrationError || "Lista para registrar")}</td></tr>`).join("")}</tbody></table></div>${button("confirmImport", "Confirmar filas válidas", `class="primary" ${!preview.some((r) => !r.error) ? "disabled" : ""}`)}`;
+}
 async function registerRows(rows) {
+  const validRows = rows.filter((r) => !r.error);
+  if (!validRows.length) throw Error("No hay estudiantes válidos para registrar.");
   if (mode === "live") {
-    const result = await backend.provisionStudents(
-      rows.filter((r) => !r.error),
-    );
-    await refreshLiveData();
-    toast(
-      `${result.imported} registros completados; ${result.failed} pendientes.${
-        result.failed
-          ? " " +
-            result.results
-              .filter((r) => !r.ok)
-              .map((r) => r.error)
-              .join("; ")
-          : ""
-      }`,
-    );
+    const result = await backend.provisionStudents(validRows);
+    try { await refreshLiveData(); }
+    catch {
+      throw Error("El servidor respondió, pero no pudimos comprobar la lista guardada. Recarga Estudiantes antes de reintentar para evitar duplicados.");
+    }
+    for (const saved of result.results.filter((r) => r.ok)) {
+      const wanted = validRows.filter((r) => r.id === saved.id).flatMap((r) => r.courses);
+      const student = state.students.find((s) => s.id === saved.id);
+      if (!student?.uuid || !wanted.every((id) => student.courses.includes(id)))
+        throw Error("No pudimos confirmar la cuenta y su matrícula en Supabase. Recarga la lista antes de reintentar.");
+    }
+    return result;
   } else {
-    const count = commitImport(state, rows);
+    const count = commitImport(state, validRows);
     save();
-    toast(`${count} matrículas de prueba guardadas en este navegador.`);
+    return { imported: count, failed: 0, results: validRows.map((r) => ({ id:r.id, ok:true })), preview: true };
   }
+}
+function registrationMessage(result) {
+  const failures = result.results.filter((r) => !r.ok).map((r) => r.error).join("; ");
+  return `${result.imported} ${result.preview ? "matrículas de prueba guardadas en este navegador" : "cuentas y matrículas confirmadas en Supabase"}.${result.failed ? ` ${result.failed} pendientes: ${failures}` : ""}`;
+}
+function setRegistrationStatus(target, message, kind = "error") {
+  if (!target) return;
+  target.textContent = message;
+  target.className = `registration-status ${kind}`;
+  target.setAttribute("role", kind === "error" ? "alert" : "status");
+  target.hidden = false;
+  target.scrollIntoView({ block:"nearest" });
+}
+function clearPracticeFeedback() {
+  if (!quiz || quiz.mode !== "practice" || !quiz.checked) return;
+  quiz.checked = false;
+  const form = document.querySelector("#quiz-answer");
+  form?.querySelectorAll(".correct,.incorrect").forEach((node) => node.classList.remove("correct", "incorrect"));
+  form?.querySelectorAll(".answer-status,.cell-status,.feedback").forEach((node) => node.remove());
+  form?.querySelectorAll("[aria-invalid]").forEach((node) => node.removeAttribute("aria-invalid"));
+  form?.querySelectorAll(".cw-input").forEach((node) => node.setAttribute("aria-label", node.getAttribute("aria-label").replace(/; (Correcta|Incorrecta)$/, "")));
+  const submit = form?.querySelector('button[type="submit"]');
+  if (submit) submit.innerHTML = "Comprobar mi respuesta " + icon("arrow");
 }
 function captureQuestion() {
   if (!quiz) return;
@@ -1127,6 +1186,8 @@ app.addEventListener("click", async (event) => {
         identity = null;
         mode = "guest";
         liveWorkspaceReady = false;
+        registrationStatus = null;
+        preview = [];
         try {
           state = JSON.parse(localStorage.getItem(stateKey)) || initialState();
         } catch {
@@ -1211,6 +1272,11 @@ app.addEventListener("click", async (event) => {
         );
         break;
       case "confirmImport": {
+        const courseId = currentCourse;
+        registrationStatus = null;
+        document.querySelector("#registration-summary")?.remove();
+        setRegistrationStatus(document.querySelector("#import-status"), "Guardando cuentas y matrículas… Espera la confirmación.", "pending");
+        if (mode === "live") await refreshLiveData();
         const rows = normalizeRows(
           preview.map((r) => ({
             cedula: r.id,
@@ -1219,11 +1285,28 @@ app.addEventListener("click", async (event) => {
             paralelo: r.parallel,
           })),
           state.students,
-          currentCourse,
+          courseId,
         );
-        await registerRows(rows);
-        preview = [];
-        admin();
+        const result = await registerRows(rows);
+        const message = registrationMessage(result);
+        registrationStatus = { courseId, kind:result.failed ? "error" : "success", message };
+        if (result.failed) {
+          const saved = new Set(result.results.filter((r) => r.ok).map((r) => r.id));
+          preview = rows.filter((r) => !saved.has(r.id)).map((r) => ({
+            ...r, registrationError: result.results.find((savedRow) => savedRow.id === r.id && !savedRow.ok)?.error,
+          }));
+          if (route === "admin" && adminTab === "students" && currentCourse === courseId) {
+            renderImportPreview();
+            const students = state.students.filter((s) => s.courses.includes(courseId));
+            document.querySelector("#student-list").innerHTML = studentTable(students);
+            document.querySelector("#roster-heading").textContent = `Estudiantes de la materia (${students.length})`;
+            setRegistrationStatus(document.querySelector("#import-status"), message, "error");
+          }
+        } else {
+          preview = [];
+          if (route === "admin" && adminTab === "students" && currentCourse === courseId) admin();
+          else toast(message);
+        }
         break;
       }
       case "deactivateEnrollment": {
@@ -1320,6 +1403,8 @@ app.addEventListener("click", async (event) => {
         break;
     }
   } catch (e) {
+    if (action === "confirmImport")
+      setRegistrationStatus(document.querySelector("#import-status"), e.message, "error");
     toast(e.message);
     document
       .querySelector("#finish-error")
@@ -1331,42 +1416,48 @@ app.addEventListener("click", async (event) => {
 app.addEventListener("submit", async (event) => {
   event.preventDefault();
   const f = event.target,
-    b = f.querySelector('button[type="submit"]');
+    formId = f.getAttribute("id"),
+    b = f.querySelector('button[type="submit"]'),
+    originalButton = b?.innerHTML;
   if (
-    !["login-form", "recovery-form", "password-form"].includes(f.id) &&
+    !["login-form", "recovery-form", "password-form"].includes(formId) &&
     !requireWorkspace()
   )
     return;
   if (
     (f.dataset.schedule ||
-      ["add-student", "assessment-author"].includes(f.id)) &&
+      ["add-student", "assessment-author"].includes(formId)) &&
     !teacher()
   )
     return toast("Esta sección requiere una cuenta docente.");
   if (b?.disabled) return;
   if (b) b.disabled = true;
+  if (formId === "add-student") {
+    registrationStatus = null;
+    document.querySelector("#registration-summary")?.remove();
+  }
   try {
-    if (f.id === "login-form") {
+    if (formId === "login-form") {
       if (!backendConfigured)
         throw Error("La conexión institucional todavía no está configurada.");
       const d = new FormData(f);
       identity = await backend.login(d.get("username"), d.get("password"));
       await loadLive();
     }
-    if (f.id === "recovery-form") {
+    if (formId === "recovery-form") {
       const d = new FormData(f);
       await backend.recover(d.get("username"));
       document.querySelector("#recovery-status").textContent =
         "Solicitud recibida. Si la cuenta existe y el correo está habilitado, recibirás el enlace. Revisa también correo no deseado.";
     }
-    if (f.id === "password-form") {
+    if (formId === "password-form") {
       const d = new FormData(f);
       if (d.get("password") !== d.get("confirm"))
         throw Error("Las contraseñas no coinciden.");
       identity = await backend.updatePassword(d.get("password"));
       await loadLive();
     }
-    if (f.id === "quiz-answer") {
+    if (formId === "quiz-answer") {
       captureQuestion();
       const q = quiz.activity.questions[quiz.index];
       if (!answerComplete(q, quiz.answers[quiz.index]))
@@ -1409,25 +1500,47 @@ app.addEventListener("submit", async (event) => {
       }
       f.querySelector(".schedule-status").textContent = "Semana guardada.";
     }
-    if (f.id === "add-student") {
+    if (formId === "add-student") {
       const d = new FormData(f),
-        rows = normalizeRows(
+        id = String(d.get("id") || "").trim(),
+        name = String(d.get("name") || "").trim(),
+        parallel = String(d.get("parallel") || "").trim(),
+        courseId = f.dataset.course;
+      if (!/^\d{10}$/.test(id)) throw Error("Cédula: se requieren diez dígitos.");
+      if (name.length < 2 || name.length > 120) throw Error("Ingresa nombres y apellidos de entre 2 y 120 caracteres.");
+      if (!parallel || parallel.length > 30) throw Error("Indica el paralelo, con un máximo de 30 caracteres.");
+      if (!courses.some((c) => c.id === courseId)) throw Error("Selecciona una materia válida.");
+      f.setAttribute("aria-busy", "true");
+      if (b) b.textContent = "Guardando…";
+      setRegistrationStatus(f.querySelector("#manual-status"), "Guardando la cuenta y su matrícula… Espera la confirmación.", "pending");
+      if (mode === "live") await refreshLiveData();
+      const existing = state.students.find((s) => s.id === id);
+      let message;
+      if (existing?.courses.includes(courseId)) {
+        message = `Este estudiante ya está inscrito en ${courses.find((c) => c.id === courseId).code}. ${mode === "live" ? "Cuenta y matrícula confirmadas en Supabase" : "Matrícula de prueba confirmada en este navegador"}. Correo de recuperación: ${institutionalEmail(id)}.`;
+      } else {
+        const rows = normalizeRows(
           [
             {
-              cedula: d.get("id"),
-              nombre: d.get("name"),
-              paralelo: d.get("parallel"),
-              materia: currentCourse,
+              cedula: id,
+              nombre: name,
+              paralelo: parallel,
+              materia: courseId,
             },
           ],
           state.students,
-          currentCourse,
+          courseId,
         );
-      if (rows[0].error) throw Error(rows[0].error);
-      await registerRows(rows);
-      admin();
+        if (rows[0]?.error) throw Error(rows[0].error);
+        const result = await registerRows(rows);
+        if (result.failed) throw Error(registrationMessage(result));
+        message = `${registrationMessage(result)} Correo de recuperación: ${institutionalEmail(id)}.`;
+      }
+      registrationStatus = { courseId, kind:"success", message };
+      if (route === "admin" && adminTab === "students" && currentCourse === courseId) admin();
+      else toast(message);
     }
-    if (f.id === "assessment-author") {
+    if (formId === "assessment-author") {
       captureAuthor();
       if (mode !== "live")
         throw Error(
@@ -1447,10 +1560,15 @@ app.addEventListener("submit", async (event) => {
     const out = f.querySelector(
       "#login-error,#recovery-status,#password-status,#quiz-error,#manual-status,#author-status,.schedule-status",
     );
-    if (out) out.textContent = e.message;
+    if (out && formId === "add-student") setRegistrationStatus(out, e.message, "error");
+    else if (out) out.textContent = e.message;
     else toast(e.message);
   } finally {
-    if (b?.isConnected) b.disabled = false;
+    if (b?.isConnected) {
+      b.disabled = false;
+      if (formId === "add-student") b.innerHTML = originalButton;
+    }
+    f.removeAttribute("aria-busy");
   }
 });
 app.addEventListener("change", (event) => {
@@ -1488,6 +1606,7 @@ app.addEventListener("change", (event) => {
     admin();
   }
   if (quiz && el.name === "choice") {
+    clearPracticeFeedback();
     quiz.answers[quiz.index] = Number(el.value);
     quiz.checked = false;
     storeDraft();
@@ -1496,6 +1615,11 @@ app.addEventListener("change", (event) => {
 app.addEventListener("input", (event) => {
   const el = event.target;
   if (!workspaceAllowed()) return;
+  if (el.form?.getAttribute("id") === "add-student" && el.name === "id" && teacher()) {
+    const target = document.querySelector("#student-email");
+    if (target) target.textContent = /^\d{10}$/.test(el.value.trim())
+      ? institutionalEmail(el.value.trim()) : "Se genera al completar la cédula.";
+  }
   if (el.id === "student-search") {
     if (!teacher()) return;
     const q = el.value.toLocaleLowerCase("es");
@@ -1508,10 +1632,12 @@ app.addEventListener("input", (event) => {
     );
   }
   if (quiz && el.id === "numeric-answer") {
+    clearPracticeFeedback();
     quiz.checked = false;
     captureQuestion();
   }
   if (quiz && el.classList.contains("cw-input")) {
+    clearPracticeFeedback();
     const q = quiz.activity.questions[quiz.index],
       entries = q.entries,
       v =

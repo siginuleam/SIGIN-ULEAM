@@ -11,6 +11,13 @@ type StudentRow = {
   parallel?: string;
   courseGroups?: Record<string, string>;
 };
+class ServiceError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const allowedOrigins = (Deno.env.get("SIGIN_ALLOWED_ORIGINS") || "")
@@ -57,11 +64,12 @@ Deno.serve(async (request: Request) => {
     });
     const data = await response.json().catch(() => null);
     if (!response.ok)
-      throw new Error(
+      throw new ServiceError(
         data?.msg ||
           data?.message ||
           data?.error_description ||
           `Error de servicio (${response.status}).`,
+        response.status,
       );
     return data;
   }
@@ -86,6 +94,7 @@ Deno.serve(async (request: Request) => {
       return respond({ error: "Lote demasiado grande." }, 413);
     const body = JSON.parse(input);
     if (
+      !body ||
       !Array.isArray(body.students) ||
       !body.students.length ||
       body.students.length > 25
@@ -101,12 +110,27 @@ Deno.serve(async (request: Request) => {
     const seen = new Set<string>();
     const results = [];
     for (const row of body.students as StudentRow[]) {
+      if (!row || typeof row !== "object" || Array.isArray(row)) {
+        results.push({
+          id: "",
+          ok: false,
+          code: "INVALID_STUDENT",
+          error: "Fila inválida: indica cédula, nombre y materia.",
+        });
+        continue;
+      }
       const id = String(row.id || row.cedula || "").trim();
       const name = String(row.name || row.nombre || "").trim();
       const selectedCourses = Array.isArray(row.courses)
-        ? [...new Set(row.courses)]
+        ? [
+            ...new Set(
+              row.courses.map((value) =>
+                typeof value === "string" ? value.trim() : "",
+              ),
+            ),
+          ]
         : row.courseId
-          ? [row.courseId]
+          ? [typeof row.courseId === "string" ? row.courseId.trim() : ""]
           : [];
       if (
         !/^\d{10}$/.test(id) ||
@@ -118,21 +142,47 @@ Deno.serve(async (request: Request) => {
         results.push({
           id,
           ok: false,
+          code: "INVALID_STUDENT",
           error: "Cédula, nombre o materia no válidos.",
         });
         continue;
       }
       if (seen.has(id)) {
-        results.push({ id, ok: false, error: "Cédula repetida en el lote." });
+        results.push({
+          id,
+          ok: false,
+          code: "DUPLICATE_STUDENT",
+          error: "Cédula repetida en el lote.",
+        });
         continue;
       }
       seen.add(id);
       let createdUser: string | null = null;
+      let authId: string | undefined;
+      let provisioningStarted = false;
+      const groups = Object.fromEntries(
+        selectedCourses.map((course) => [
+          course,
+          String(row.courseGroups?.[course] ?? row.group ?? row.parallel ?? "")
+            .trim()
+            .slice(0, 80),
+        ]),
+      );
       try {
         const existing = await service(
           `/rest/v1/profiles?student_number=eq.${id}&select=id,role`,
         );
-        let authId = existing?.[0]?.id;
+        if (existing?.[0] && existing[0].role !== "student") {
+          results.push({
+            id,
+            ok: false,
+            code: "STUDENT_ROLE_CONFLICT",
+            error:
+              "La cédula pertenece a otro tipo de cuenta. Revisa el registro antes de matricular.",
+          });
+          continue;
+        }
+        authId = existing?.[0]?.id;
         if (!authId) {
           const user = await service("/auth/v1/admin/users", {
             method: "POST",
@@ -150,6 +200,7 @@ Deno.serve(async (request: Request) => {
         }
         if (!authId)
           throw new Error("No se recibió un identificador de cuenta.");
+        provisioningStarted = true;
         await service("/rest/v1/rpc/provision_student", {
           method: "POST",
           body: {
@@ -160,20 +211,62 @@ Deno.serve(async (request: Request) => {
             p_group: String(row.group || row.parallel || "")
               .trim()
               .slice(0, 80),
-            p_course_groups: Object.fromEntries(
-              selectedCourses.map((course) => [
-                course,
-                String(
-                  row.courseGroups?.[course] ?? row.group ?? row.parallel ?? "",
-                )
-                  .trim()
-                  .slice(0, 80),
-              ]),
-            ),
+            p_course_groups: groups,
           },
         });
         results.push({ id, ok: true, created: Boolean(createdUser) });
       } catch (error) {
+        const confirmedRejection =
+          error instanceof ServiceError &&
+          error.status >= 400 &&
+          error.status < 500;
+        if (provisioningStarted && !confirmedRejection && authId) {
+          // La respuesta puede perderse después del COMMIT. Comprobar el estado antes de
+          // informar y nunca borrar una cuenta cuya matrícula podría haberse guardado.
+          try {
+            const profiles = await service(
+              `/rest/v1/profiles?id=eq.${encodeURIComponent(authId)}&select=student_number,display_name,role`,
+            );
+            const enrollments = await service(
+              `/rest/v1/enrollments?student_id=eq.${encodeURIComponent(authId)}&select=course_id,group_name,active`,
+            );
+            if (
+              profiles?.[0]?.role === "student" &&
+              profiles[0].student_number === id &&
+              profiles[0].display_name === name &&
+              selectedCourses.every((course) =>
+                enrollments.some(
+                  (entry: {
+                    course_id: string;
+                    group_name: string;
+                    active: boolean;
+                  }) =>
+                    entry.course_id === course &&
+                    entry.active &&
+                    entry.group_name === groups[course],
+                ),
+              )
+            ) {
+              results.push({
+                id,
+                ok: true,
+                created: Boolean(createdUser),
+                reconciled: true,
+              });
+              continue;
+            }
+          } catch {
+            // Sin confirmación: conservar la cuenta y comunicar el estado incierto.
+          }
+          results.push({
+            id,
+            ok: false,
+            code: "REGISTRATION_UNCONFIRMED",
+            error:
+              "No se recibió confirmación del registro. Revisa si aparece en la lista antes de reintentar; su cuenta no se ha eliminado.",
+          });
+          continue;
+        }
         let cleanupFailed = false;
         if (createdUser)
           try {
@@ -187,6 +280,9 @@ Deno.serve(async (request: Request) => {
         results.push({
           id,
           ok: false,
+          code: cleanupFailed
+            ? "REGISTRATION_CLEANUP_REQUIRED"
+            : "REGISTRATION_FAILED",
           error: cleanupFailed
             ? "La matrícula falló y quedó una cuenta pendiente. Revísala en Authentication antes de reintentar."
             : String((error as Error).message || "No se pudo crear la cuenta."),

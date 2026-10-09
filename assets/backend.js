@@ -83,19 +83,26 @@ function errorText(data, status) {
 async function raw(path, { method = "GET", body, token, headers = {} } = {}) {
   if (!backendConfigured)
     throw new Error("La conexión institucional todavía no está configurada.");
-  const response = await fetch(
-    `${APP_CONFIG.supabaseUrl.replace(/\/$/, "")}${path}`,
-    {
-      method,
-      headers: {
-        apikey: APP_CONFIG.supabasePublishableKey,
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...headers,
+  let response;
+  try {
+    response = await fetch(
+      `${APP_CONFIG.supabaseUrl.replace(/\/$/, "")}${path}`,
+      {
+        method,
+        headers: {
+          apikey: APP_CONFIG.supabasePublishableKey,
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...headers,
+        },
+        ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
       },
-      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
-    },
-  );
+    );
+  } catch {
+    throw new Error(
+      "No se pudo conectar con el servidor. Revisa tu conexión y vuelve a intentar.",
+    );
+  }
   const text = await response.text();
   let data;
   try {
@@ -321,20 +328,35 @@ export const backend = Object.freeze({
       throw new Error("Selecciona al menos un estudiante válido.");
     const grouped = new Map();
     for (const row of rows) {
+      if (!row || typeof row !== "object" || Array.isArray(row))
+        throw new Error(
+          "Revisa las filas: cada estudiante necesita cédula, nombre y materia.",
+        );
       const id = String(row.id || row.cedula || "").trim();
       const name = String(row.name || row.nombre || "").trim();
       const courses = Array.isArray(row.courses)
-        ? row.courses
+        ? [
+            ...new Set(
+              row.courses.map((value) =>
+                typeof value === "string" ? value.trim() : "",
+              ),
+            ),
+          ]
         : row.courseId
-          ? [row.courseId]
+          ? [typeof row.courseId === "string" ? row.courseId.trim() : ""]
           : [];
+      if (!/^\d{10}$/.test(id))
+        throw new Error("Cédula: se requieren diez dígitos.");
+      if (name.length < 2 || name.length > 120)
+        throw new Error("Ingresa nombres y apellidos de entre 2 y 120 caracteres.");
+      if (!courses.length || courses.some((value) => !value))
+        throw new Error("Selecciona la materia para registrar al estudiante.");
       const existing = grouped.get(id);
       if (existing && existing.name !== name)
         throw new Error(
           "La misma cédula tiene nombres diferentes. Revisa las filas antes de registrar.",
         );
       const entry = existing || {
-        ...row,
         id,
         name,
         courses: [],
@@ -360,11 +382,49 @@ export const backend = Object.freeze({
     const results = [];
     // Cada lote tiene resultados explícitos; las filas fallidas pueden reintentarse sin duplicar matrículas.
     for (let start = 0; start < students.length; start += 25) {
-      const part = await api("/functions/v1/manage-students", {
-        method: "POST",
-        body: { students: students.slice(start, start + 25) },
-      });
-      results.push(...part.results);
+      const batch = students.slice(start, start + 25);
+      try {
+        const part = await api("/functions/v1/manage-students", {
+          method: "POST",
+          body: { students: batch },
+        });
+        const expected = new Set(batch.map((row) => row.id));
+        if (
+          !Array.isArray(part?.results) ||
+          part.results.length !== batch.length ||
+          part.results.some(
+            (row) =>
+              !row ||
+              typeof row.ok !== "boolean" ||
+              (!row.ok && typeof row.error !== "string") ||
+              !expected.delete(row.id),
+          ) ||
+          expected.size
+        )
+          throw new Error(
+            "El servidor no confirmó todos los registros. Revisa la lista antes de reintentar.",
+          );
+        results.push(...part.results);
+      } catch (error) {
+        // Una respuesta perdida no demuestra que el servidor no haya guardado el lote.
+        // Conservar los resultados anteriores y no enviar los lotes restantes.
+        const message =
+          error instanceof Error
+            ? error.message
+            : "No se pudo confirmar el registro.";
+        for (const row of students.slice(start))
+          results.push({
+            id: row.id,
+            ok: false,
+            code: batch.includes(row)
+              ? "REGISTRATION_UNCONFIRMED"
+              : "REGISTRATION_NOT_SENT",
+            error: batch.includes(row)
+              ? `${message} No se recibió confirmación de este registro; revisa si aparece en la lista antes de reintentar.`
+              : "Este registro no se envió porque se interrumpió el lote anterior.",
+          });
+        break;
+      }
     }
     return {
       results,

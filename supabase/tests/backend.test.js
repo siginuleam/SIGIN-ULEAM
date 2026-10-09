@@ -275,3 +275,38 @@ test("submission forwards a stable nonce so a retry does not consume another att
   );
   assert.equal(h.requests.at(-1).body.p_submission_id, nonce);
 });
+
+test("student registration validates rows before sending any account request", async () => {
+  const h=await signedHarness();
+  const before=h.requests.length;
+  for (const row of [null,{id:fixtureId,name:"P",courses:["gig-502"]},{id:"bad",name:"Prueba",courses:["gig-502"]},{id:fixtureId,name:"Prueba",courses:[]}])
+    await assert.rejects(h.backend.provisionStudents([row]),/filas|caracteres|dígitos|materia/);
+  assert.equal(h.requests.length,before);
+});
+
+test("an incomplete registration response cannot be reported as success", async () => {
+  const h=await signedHarness(request=>request.url.endsWith("/functions/v1/manage-students")?{body:{results:[]}}:undefined);
+  const result=await h.backend.provisionStudents([{id:fixtureId,name:"Prueba",courses:["gig-502"]}]);
+  assert.equal(result.imported,0);
+  assert.equal(result.failed,1);
+  assert.equal(result.results[0].code,"REGISTRATION_UNCONFIRMED");
+  assert.match(result.results[0].error,/servidor no confirmó/);
+});
+
+test("an interrupted import preserves prior confirmations and does not send later batches", async () => {
+  let calls=0;
+  const h=await signedHarness(request=>{
+    if(!request.url.endsWith("/functions/v1/manage-students")) return undefined;
+    calls++;
+    if(calls===2) throw new TypeError("Fetch failed");
+    return {body:{results:request.body.students.map(row=>({id:row.id,ok:true}))}};
+  });
+  const rows=Array.from({length:51},(_,i)=>({id:String(i+20).padStart(10,"0"),name:"Estudiante de prueba",courses:["gig-502"]}));
+  const result=await h.backend.provisionStudents(rows);
+  assert.equal(calls,2);
+  assert.equal(result.imported,25);
+  assert.equal(result.failed,26);
+  assert.equal(result.results[25].code,"REGISTRATION_UNCONFIRMED");
+  assert.match(result.results[25].error,/conectar con el servidor/);
+  assert.equal(result.results[50].code,"REGISTRATION_NOT_SENT");
+});

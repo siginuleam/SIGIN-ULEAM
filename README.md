@@ -19,6 +19,8 @@ npm start
 - Portada ilustrada original y paleta suave. Escritorio con navegación lateral y contenido que aprovecha el ancho; móvil con menú y tarjetas apiladas.
 - Configuración de apariencia clara, oscura o del sistema, conservada en el navegador antes y después de iniciar sesión.
 - Materias separadas; semanas agrupadas por unidad. **Práctica y examen** permite elegir modalidad, materia y semana directamente. La práctica es libre; el examen respeta matrícula, calendario e intentos.
+- La práctica marca cada respuesta correcta en verde y cada incorrecta en rojo, con etiquetas de texto. Al editar se retira la corrección anterior. El examen muestra su caso y consignas sin lecturas, conceptos de apoyo ni pistas; la corrección aparece después de entregar.
+- El alta manual y Excel muestran validación, guardado pendiente y resultados persistentes. La confirmación consulta perfiles y matrículas en Supabase; no se agregan filas optimistas. La cédula genera automáticamente el correo de recuperación, y repetir una matrícula existente no crea otra cuenta ni cambia su contraseña.
 - Cinco preguntas por semana: dos decisiones razonadas, relaciones de conceptos, una secuencia justificada y un crucigrama. Las actividades incluidas no exigen cálculos. Cada respuesta recibe una explicación y los casos contienen la información necesaria para resolverlos.
 - Lecturas complementarias con enlace a un documento o apartado concreto, autor, sección sugerida y propósito de lectura.
 - Panel docente: horarios de Ecuador, límite de intentos, autor de evaluaciones privadas de cuatro formatos, estudiantes manuales/Excel con vista previa, exportación y ajuste de notas con motivo.

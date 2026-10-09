@@ -54,6 +54,23 @@ with sync_playwright() as p:
    assert public_page.evaluate('document.documentElement.scrollWidth<=innerWidth'),(appearance,width)
    for selector in ['#username','#password']:input_readable(public_page.locator(selector))
    if width in [1440,360]:public_page.screenshot(path=f'/tmp/sigin-login-{appearance}-{width}.png',full_page=True)
+  # The artwork comes before the headline, with a usable login CTA in the first
+  # screen at ordinary laptop/phone sizes. On desktop the two columns coexist.
+  for width,height in [(1366,768),(360,844)]:
+   public_page.set_viewport_size({'width':width,'height':height})
+   public_page.evaluate("window.scrollTo({top:0,left:0,behavior:'instant'})")
+   art=public_page.locator('.learning-landscape').bounding_box()
+   headline=public_page.locator('.landing h1').bounding_box()
+   login=public_page.locator('.login-panel').bounding_box()
+   submit=public_page.locator('#login-form [type="submit"]').bounding_box()
+   assert art['y']+art['height']<=headline['y']+1,(width,art,headline)
+   assert art['y']>=0 and art['y']+art['height']<=height and art['width']>0,(width,art)
+   assert submit['y']+submit['height']<=height,(width,submit)
+   if width>1000:
+    assert art['x']+art['width']<login['x'],(art,login)
+    assert art['y']<login['y']+login['height'] and login['y']<art['y']+art['height'],(art,login)
+   else:assert login['y']>=headline['y']+headline['height']-1,(headline,login)
+   public_page.screenshot(path=f'/tmp/sigin-hero-verified-{appearance}-{width}.png',full_page=True)
  assert surfaces['light']!=surfaces['dark'],'The login panel did not follow the selected theme'
  choose_theme(public_page,'system',guest=True)
  public_page.emulate_media(color_scheme='dark')
@@ -99,16 +116,18 @@ with sync_playwright() as p:
  page.screenshot(path='/tmp/sigin-home-desktop.png',full_page=True)
  def width_ok():assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth'),page.url
  captured_quizzes=set()
- def answer(q):
-  page.set_viewport_size({'width':390,'height':900})
-  if q['type']=='choice':page.get_by_label(q['options'][q['correct']],exact=True).check()
+ def fill_answer(q,incorrect=False):
+  if q['type']=='choice':page.locator('input[name="choice"][value="%s"]'%((q['correct']+1)%len(q['options']) if incorrect else q['correct'])).check()
   elif q['type']=='matching':
    for i,pair in enumerate(q['pairs']):
+    right=q['pairs'][1-i]['right'] if incorrect and i<2 else pair['right']
     page.locator('.match-column').nth(0).locator('button').nth(i).click()
-    page.locator('.match-column').nth(1).get_by_role('button').filter(has_text=pair['right']).click()
+    page.locator('.match-column').nth(1).get_by_role('button').filter(has_text=right).click()
   elif q['type'] in ('ordering','order'):
-   for target,text in enumerate(q['items']):
-    texts=page.locator('.order-text').all_text_contents()
+   sequence=list(q['items'])
+   if incorrect:sequence[0],sequence[1]=sequence[1],sequence[0]
+   for target,text in enumerate(sequence):
+    texts=page.locator('.order-text').evaluate_all("nodes=>nodes.map(node=>Array.from(node.childNodes).filter(child=>child.nodeType===Node.TEXT_NODE).map(child=>child.textContent).join(''))")
     current=texts.index(text)
     while current>target:
      page.locator('.order-item').nth(current).get_by_role('button').nth(0).click();current-=1
@@ -117,6 +136,37 @@ with sync_playwright() as p:
     cell=page.locator('.cw-input').nth(i)
     ref=json.loads(cell.get_attribute('data-refs'))[0]
     cell.fill(word(q['entries'][ref['entry']]['word'])[ref['letter']])
+   if incorrect:
+    first=page.locator('.cw-input').first
+    first.fill('Z' if first.input_value()!='Z' else 'Q')
+ def feedback_controls(q,correct):
+  kind={'choice':'.option','matching':'.match-item','ordering':'.order-item','order':'.order-item','crossword':'.cw-cell'}[q['type']]
+  fields=page.locator('#quiz-answer '+kind)
+  if q['type']=='choice':fields=fields.filter(has=page.locator('input:checked'))
+  expected='correct' if correct else 'incorrect'
+  assert fields.filter(has=page.locator('input:checked')).count()==1 if q['type']=='choice' else True
+  assert fields.locator('xpath=self::*[contains(concat(" ",normalize-space(@class)," ")," '+expected+' ")]').count()>0,(q['id'],expected)
+  if correct:
+   assert fields.count()==page.locator('#quiz-answer '+kind+'.correct').count(),q['id']
+   assert page.locator('#quiz-answer .incorrect').count()==0,q['id']
+  elif q['type']!='choice':
+   assert page.locator('#quiz-answer '+kind+'.correct').count()>0,'Mixed correct/incorrect parts should have individual feedback'
+  else:
+   assert page.locator('input[name="choice"][value="%s"]'%q['correct']).locator('..').evaluate("el=>el.classList.contains('correct')"),'Wrong selection should also identify the actual correct alternative'
+  for status in ['correct','incorrect']:
+   nodes=page.locator('#quiz-answer '+kind+'.'+status)
+   for index in range(nodes.count()):
+    colors=nodes.nth(index).evaluate("""el=>{const s=getComputedStyle(el);return [s.borderTopColor,s.backgroundColor].map(v=>v.match(/[\\d.]+/g).slice(0,3).map(Number));}""")
+    assert any((rgb[1]>rgb[0] and rgb[1]>rgb[2]) if status=='correct' else (rgb[0]>rgb[1] and rgb[0]>rgb[2]) for rgb in colors),(q['id'],status,colors)
+  if q['type']=='crossword':
+   assert page.locator('#quiz-answer .cell-status').count()==page.locator('.cw-input').count()
+   for cell in page.locator('.cw-input').all():
+    assert re.search(r'; (?:Correcta|Incorrecta)$',cell.get_attribute('aria-label'))
+    assert cell.get_attribute('aria-invalid') in ('true','false')
+  else:assert page.locator('#quiz-answer .answer-status').count()>0,'Feedback needs text as well as color'
+ def answer(q,assessment=False):
+  page.set_viewport_size({'width':390,'height':900})
+  fill_answer(q)
   dossier_panel=page.locator('.quiz-dossier')
   if dossier_panel.get_attribute('open') is None:dossier_panel.locator('summary').click()
   for appearance in ['light','dark']:
@@ -132,10 +182,14 @@ with sync_playwright() as p:
     assert page.locator('#quiz-answer').is_visible()
     reading=page.locator('.quiz-dossier .dossier')
     assert reading.evaluate('el=>el.scrollHeight<=el.clientHeight+1'),'Concepts/case clipped inside a nested scroller'
-    for heading in ['Conceptos clave','Caso breve','Qué debes hacer']:
+    for heading in (['Caso breve'] if assessment else ['Conceptos clave','Caso breve','Qué debes hacer']):
      assert reading.get_by_role('heading',name=re.compile('^'+re.escape(heading)+r'(?:\s*[:·—–-].*)?$',re.I)).is_visible()
+    if assessment:
+     assert page.locator('.reading-resources,.source-links,.hint,.feedback,.answer-status').count()==0
+     assert reading.get_by_role('heading',name=re.compile('^Conceptos',re.I)).count()==0
+     assert page.locator('#quiz-answer .correct,#quiz-answer .incorrect').count()==0
     if width==360:
-     instructions=reading.get_by_role('heading',name=re.compile(r'^Qué debes hacer',re.I))
+     instructions=page.locator('.quiz-dossier .exam-instructions') if assessment else reading.get_by_role('heading',name=re.compile(r'^Qué debes hacer|^Instrucciones',re.I))
      instructions.scroll_into_view_if_needed()
      assert reading.evaluate('el=>el.scrollTop')==0
      assert page.locator('.quiz-grid > .context-card').evaluate('el=>el.scrollTop')==0
@@ -155,9 +209,16 @@ with sync_playwright() as p:
   assert page.locator('.case-reading-note').is_visible()
   assert page.locator('.quiz-dossier').get_attribute('open') is not None
   for i,q in enumerate(c['activities'][0]['questions']):
+   if c['id']==data[0]['id']:
+    fill_answer(q,incorrect=True)
+    page.get_by_role('button',name='Comprobar mi respuesta',exact=False).click()
+    assert page.get_by_role('heading',name='Revisa el concepto y vuelve a intentarlo.').is_visible(),q['id']
+    feedback_controls(q,False)
    answer(q)
+   assert page.locator('#quiz-answer .correct,#quiz-answer .incorrect,.feedback,.answer-status').count()==0,'Changing an answer retained stale correctness feedback'
    page.get_by_role('button',name='Comprobar mi respuesta',exact=False).click()
    assert page.get_by_role('heading',name='Bien razonado.').is_visible(),q['id']
+   if c['id']==data[0]['id']:feedback_controls(q,True)
    page.get_by_role('button',name='Revisar antes de terminar' if i==4 else 'Siguiente reto',exact=False).click()
   page.get_by_role('button',name='Confirmar y terminar').click()
   assert page.locator('.result-big').inner_text().startswith('10.0')
@@ -175,7 +236,7 @@ with sync_playwright() as p:
  assert page.locator('#quiz-answer').count()==0
  page.locator('[data-action="beginQuiz"][data-week="1"][data-mode="assessment"]').click()
  for i,q in enumerate(c['activities'][0]['questions']):
-  answer(q)
+  answer(q,assessment=True)
   page.get_by_role('button',name='Revisar antes de terminar' if i==4 else 'Siguiente reto',exact=False).click()
  page.get_by_role('button',name='Confirmar y terminar').click()
  assert page.locator('.result-big').inner_text().startswith('10.0')
@@ -210,5 +271,5 @@ with sync_playwright() as p:
  page.reload();page.locator('#login-form').wait_for()
  expect(page.locator('html')).to_have_attribute('data-theme','light')
  assert not errors,errors
- print('PASS: illustrated landing; persistent light/dark/system themes; readable login inputs; anonymous access closed; direct practice/exam and closed-exam guard; 3 courses; four interaction types without numeric questions; Excel roundtrip; 6 widths in both themes; no JS errors')
+ print('PASS: artwork before headline + first-screen login laptop/phone; persistent themes; readable inputs; anonymous access closed; direct enrolled practice/exam; incorrect/correct controls red/green + text for four interaction types with retry clearing; assessment case without theory/resources/hints; Excel roundtrip; six widths; no JS errors')
  browser.close()

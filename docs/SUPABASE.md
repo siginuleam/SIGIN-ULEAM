@@ -63,6 +63,8 @@ supabase functions deploy manage-students
 
 El panel permite alta manual o Excel con revisión. Cada persona tiene un perfil y puede matricularse en varias materias. El servidor genera su correo institucional y usa temporalmente su cédula como contraseña. La matrícula la autoriza la docente; eso no verifica que el buzón exista. La cuenta no puede consultar cursos ni enviar evaluaciones hasta cambiar la clave. Para verificar la titularidad del correo, inicia el cambio desde el enlace de recuperación enviado al buzón.
 
+Al pulsar **Registrar**, el panel valida los campos y muestra **Guardando…**. Solo confirma el alta después de volver a leer el perfil y las matrículas desde Supabase. El correo se muestra antes del envío y se forma como `e{cédula}@live.uleam.edu.ec`; el sistema asocia ese destino de recuperación, no crea el buzón de Microsoft. Las matrículas existentes se reconocen sin volver a crear la cuenta. Excel conserva las filas pendientes y permite reintentar únicamente esas filas. Si se interrumpe una respuesta, consulta la lista antes de reintentar: la función comprueba el estado guardado y protege una cuenta cuyo resultado todavía no puede confirmar.
+
 Si ya creaste manualmente una cuenta con el mismo correo pero sin perfil, completa su perfil/matrícula desde SQL Editor o elimínala si era una prueba vacía; el servicio no reasigna cuentas ajenas por coincidencia de correo.
 
 ## 5. Evaluaciones privadas
